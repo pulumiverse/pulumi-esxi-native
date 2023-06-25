@@ -7,9 +7,9 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
 
-namespace Pulumi.ESXiNative
+namespace Pulumi.EsxiNative
 {
-    [ESXiNativeResourceType("pulumi:providers:esxi-native")]
+    [EsxiNativeResourceType("pulumi:providers:esxi-native")]
     public partial class Provider : Pulumi.ProviderResource
     {
         /// <summary>

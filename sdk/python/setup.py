@@ -39,11 +39,18 @@ def readme():
 
 setup(name='pulumi_esxi_native',
       version=VERSION,
+      description="VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
       long_description=readme(),
       long_description_content_type='text/markdown',
       cmdclass={
           'install': InstallPluginCommand,
       },
+      keywords='esxi esxi-native vsphere infrastructure on-prem',
+      url='https://github.com/edmondshtogu/pulumi-esxi-native',
+      project_urls={
+          'Repository': 'https://github.com/edmondshtogu/pulumi-esxi-native'
+      },
+      license='Apache-2.0',
       packages=find_packages(),
       package_data={
           'pulumi_esxi_native': [

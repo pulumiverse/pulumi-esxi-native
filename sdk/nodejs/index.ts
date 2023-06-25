@@ -6,17 +6,29 @@ import * as utilities from "./utilities";
 
 // Export members:
 export * from "./provider";
-export * from "./random";
+export * from "./virtualMachine";
+
+// Export enums:
+export * from "./types/enums";
+
+// Export sub-modules:
+import * as config from "./config";
+import * as types from "./types";
+
+export {
+    config,
+    types,
+};
 
 // Import resources to register:
-import { Random } from "./random";
+import { VirtualMachine } from "./virtualMachine";
 
 const _module = {
     version: utilities.getVersion(),
     construct: (name: string, type: string, urn: string): pulumi.Resource => {
         switch (type) {
-            case "esxi-native:index:Random":
-                return new Random(name, <any>undefined, { urn })
+            case "esxi-native:index:VirtualMachine":
+                return new VirtualMachine(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }

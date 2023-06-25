@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Pulumi Corp.</Authors>
-    <Company>Pulumi Corp.</Company>
-    <Description></Description>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl></RepositoryUrl>
+    <Authors>Edmond Shtogu</Authors>
+    <Company>Edmond Shtogu</Company>
+    <Description>VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/edmondshtogu/pulumi-esxi-native</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/edmondshtogu/pulumi-esxi-native</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
 
     <TargetFramework>netcoreapp3.1</TargetFramework>

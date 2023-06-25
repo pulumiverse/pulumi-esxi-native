@@ -5,12 +5,13 @@
     "description": "VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
     "keywords": [
         "esxi",
+        "esxi-native",
         "vsphere",
         "infrastructure",
         "on-prem"
     ],
     "homepage": "https://github.com/edmondshtogu/pulumi-esxi-native",
-    "license": "Apache License",
+    "license": "Apache-2.0",
     "repository": "https://github.com/edmondshtogu/pulumi-esxi-native",
     "logoUrl": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/fa724ca8721330922afc7056dc3ff648015423c336131364294def9378041324.png",
     "publisher": "Edmond Shtogu",
@@ -55,6 +56,7 @@
     },
     "types": {
         "esxi-native:index:BootDiskType": {
+            "type": "string",
             "enum": [
                 {
                     "name": "Thin",
@@ -71,6 +73,7 @@
             ]
         },
         "esxi-native:index:BootFirmwareType": {
+            "type": "string",
             "enum": [
                 {
                     "name": "BIOS",
@@ -121,28 +124,6 @@
         }
     },
     "resources": {
-        "esxi-native:index:Random": {
-            "properties": {
-                "length": {
-                    "type": "integer"
-                },
-                "result": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "length",
-                "result"
-            ],
-            "inputProperties": {
-                "length": {
-                    "type": "integer"
-                }
-            },
-            "requiredInputs": [
-                "length"
-            ]
-        },
         "esxi-native:index:VirtualMachine": {
             "required": [
                 "name",
@@ -372,7 +353,7 @@
         },
         "go": {
             "generateResourceContainerTypes": true,
-            "importBasePath": "github.com/pulumi/pulumi-esxi-native/sdk/go/esxi"
+            "importBasePath": "github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi"
         },
         "nodejs": {
             "dependencies": {

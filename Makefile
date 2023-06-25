@@ -2,8 +2,8 @@ PROJECT_NAME := Pulumi esxi-native Resource Provider
 
 PACK             := esxi-native
 PACKDIR          := sdk
-PROJECT          := github.com/pulumi/pulumi-esxi-native
-NODE_MODULE_NAME := @pulumi/esxi-native
+PROJECT          := github.com/edmondshtogu/pulumi-esxi-native
+NODE_MODULE_NAME := @edmondshtogu/pulumi-esxi-native
 NUGET_PKG_NAME   := Pulumi.ESXiNative
 
 PROVIDER        := pulumi-resource-${PACK}

@@ -1,6 +1,16 @@
 {
     "name": "@pulumi/esxi-native",
     "version": "${VERSION}",
+    "keywords": [
+        "esxi",
+        "esxi-native",
+        "vsphere",
+        "infrastructure",
+        "on-prem"
+    ],
+    "homepage": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "repository": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "license": "Apache-2.0",
     "scripts": {
         "build": "tsc",
         "install": "node scripts/install-pulumi-plugin.js resource esxi-native ${VERSION}"
