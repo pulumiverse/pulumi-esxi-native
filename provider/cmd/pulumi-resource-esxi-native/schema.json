@@ -1,6 +1,125 @@
 {
     "name": "esxi-native",
+    "displayName": "ESXi Native",
     "version": "0.0.1",
+    "description": "VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
+    "keywords": [
+        "esxi",
+        "vsphere",
+        "infrastructure",
+        "on-prem"
+    ],
+    "homepage": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "license": "Apache License",
+    "repository": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "logoUrl": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/fa724ca8721330922afc7056dc3ff648015423c336131364294def9378041324.png",
+    "publisher": "Edmond Shtogu",
+    "config": {
+        "variables": {
+            "host": {
+                "type": "string",
+                "description": "ESXi Host Name config"
+            },
+            "sshPort": {
+                "type": "string",
+                "description": "ESXi Host SSH Port config",
+                "default": "22"
+            },
+            "sslPort": {
+                "type": "string",
+                "description": "ESXi Host SSL Port config",
+                "default": "443"
+            },
+            "username": {
+                "type": "string",
+                "description": "ESXi Username config",
+                "default": "root"
+            },
+            "password": {
+                "type": "string",
+                "description": "ESXi Password config"
+            },
+            "ovfToolDatastoreName": {
+                "type": "string",
+                "description": "ESXi Datastore Name config were ovftool will be configured"
+            }
+        },
+        "required": [
+            "host",
+            "password",
+            "ovfToolDatastoreName"
+        ]
+    },
+    "provider": {
+
+    },
+    "types": {
+        "esxi-native:index:BootDiskType": {
+            "enum": [
+                {
+                    "name": "Thin",
+                    "value": "thin"
+                },
+                {
+                    "name": "ZeroedThick",
+                    "value": "zeroedthick"
+                },
+                {
+                    "name": "EagerZeroedThick",
+                    "value": "eagerzeroedthick"
+                }
+            ]
+        },
+        "esxi-native:index:BootFirmwareType": {
+            "enum": [
+                {
+                    "name": "BIOS",
+                    "value": "bios"
+                },
+                {
+                    "name": "EFI",
+                    "value": "efi"
+                }
+            ]
+        },
+        "esxi-native:index:NetworkInterface": {
+            "type": "object",
+            "properties": {
+                "virtualNetwork": {
+                    "type": "string"
+                },
+                "macAddress": {
+                    "type": "string"
+                },
+                "nicType": {
+                    "type": "string"
+                }
+            }
+        },
+        "esxi-native:index:VirtualDisk": {
+            "type": "object",
+            "properties": {
+                "virtualDiskId": {
+                    "type": "string"
+                },
+                "slot": {
+                    "type": "string",
+                    "description": "SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed."
+                }
+            }
+        },
+        "esxi-native:index:ConfigItem": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        }
+    },
     "resources": {
         "esxi-native:index:Random": {
             "properties": {
@@ -23,7 +142,227 @@
             "requiredInputs": [
                 "length"
             ]
+        },
+        "esxi-native:index:VirtualMachine": {
+            "required": [
+                "name",
+                "diskStore",
+                "resourcePoolName",
+                "memSize",
+                "numVCpus",
+                "os"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "esxi vm name."
+                },
+                "bootFirmware": {
+                    "type": "string",
+                    "description": "Boot type('efi' is boot uefi mode)"
+                },
+                "diskStore": {
+                    "type": "string",
+                    "description": "esxi diskstore for boot disk."
+                },
+                "resourcePoolName": {
+                    "type": "string",
+                    "description": "Resource pool name to place vm."
+                },
+                "bootDiskSize": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:BootFirmwareType",
+                    "description": "VM boot disk size. Will expand boot disk to this size."
+                },
+                "bootDiskType": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:BootDiskType",
+                    "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
+                },
+                "memSize": {
+                    "type": "string",
+                    "description": "VM memory size."
+                },
+                "numVCpus": {
+                    "type": "string",
+                    "description": "VM number of virtual cpus."
+                },
+                "virtualHWVer": {
+                    "type": "string",
+                    "description": "VM Virtual HW version."
+                },
+                "os": {
+                    "type": "string",
+                    "description": "VM OS type."
+                },
+                "networkInterfaces": {
+                    "type": "array",
+                    "description": "VM network interfaces.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:NetworkInterface"
+                    }
+                },
+                "power": {
+                    "type": "string",
+                    "description": "VM power state."
+                },
+                "ipAddress": {
+                    "type": "string",
+                    "description": "The IP address reported by VMWare tools."
+                },
+                "startupTimeout": {
+                    "type": "integer",
+                    "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.",
+                    "default": 600
+                },
+                "shutdownTimeout": {
+                    "type": "integer",
+                    "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.",
+                    "default": 600
+                },
+                "virtualDisks": {
+                    "type": "array",
+                    "description": "VM virtual disks.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:VirtualDisk"
+                    }
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "VM memory size."
+                },
+                "info": {
+                    "type": "array",
+                    "description": "pass data to VM",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                    }
+                }
+            },
+            "requiredInputs": [
+                "diskStore",
+                "resourcePoolName",
+                "memSize",
+                "numVCpus",
+                "os"
+            ],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "esxi vm name.",
+                    "willReplaceOnChanges": true
+                },
+                "cloneFromVirtualMachine": {
+                    "type": "string",
+                    "description": "Source vm path on esxi host to clone.",
+                    "willReplaceOnChanges": true
+                },
+                "ovfHostPathSource": {
+                    "type": "string",
+                    "description": "Path on esxi host of ovf files.",
+                    "willReplaceOnChanges": true
+                },
+                "ovfSourceLocalPath": {
+                    "type": "string",
+                    "description": "Local path to source ovf files.",
+                    "willReplaceOnChanges": true
+                },
+                "bootFirmware": {
+                    "type": "string",
+                    "default": "bios",
+                    "$ref": "#/types/esxi-native:index:BootFirmwareType",
+                    "description": "Boot type('efi' is boot uefi mode)"
+                },
+                "diskStore": {
+                    "type": "string",
+                    "description": "esxi diskstore for boot disk.",
+                    "willReplaceOnChanges": true
+                },
+                "resourcePoolName": {
+                    "type": "string",
+                    "default": "/",
+                    "description": "Resource pool name to place vm.",
+                    "willReplaceOnChanges": true
+                },
+                "bootDiskType": {
+                    "type": "string",
+                    "default": "thin",
+                    "$ref": "#/types/esxi-native:index:BootDiskType",
+                    "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
+                },
+                "memSize": {
+                    "type": "string",
+                    "description": "VM memory size."
+                },
+                "numVCpus": {
+                    "type": "integer",
+                    "description": "VM number of virtual cpus."
+                },
+                "virtualHWVer": {
+                    "type": "string",
+                    "description": "VM Virtual HW version."
+                },
+                "os": {
+                    "type": "string",
+                    "description": "VM OS type."
+                },
+                "networkInterfaces": {
+                    "type": "array",
+                    "description": "VM network interfaces.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:NetworkInterface"
+                    }
+                },
+                "power": {
+                    "type": "string",
+                    "description": "VM power state."
+                },
+                "startupTimeout": {
+                    "type": "integer",
+                    "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)",
+                    "default": 600
+                },
+                "shutdownTimeout": {
+                    "type": "integer",
+                    "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)",
+                    "default": 600
+                },
+                "virtualDisks": {
+                    "type": "array",
+                    "description": "VM virtual disks.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:VirtualDisk"
+                    }
+                },
+                "ovfProperties": {
+                    "type": "array",
+                    "description": "VM OVF properties.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                    }
+                },
+                "ovfPropertiesTimer": {
+                    "type": "integer",
+                    "description": "The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)",
+                    "default": 6000
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "VM memory size."
+                },
+                "info": {
+                    "type": "array",
+                    "description": "pass data to VM",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                    },
+                    "willReplaceOnChanges": true
+                }
+            }
         }
+    },
+    "functions": {
+
     },
     "language": {
         "csharp": {
