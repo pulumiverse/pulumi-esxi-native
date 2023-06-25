@@ -15,6 +15,7 @@
     "files": [
         "config/index.ts",
         "config/vars.ts",
+        "getVirtualMachine.ts",
         "index.ts",
         "provider.ts",
         "types/enums/index.ts",

@@ -1,5 +1,9 @@
-import * as esxi from "@pulumi/esxi-native";
+import * as esxi from "@edmondshtogu/pulumi-esxi-native";
 
-const random = new esxi.Random("my-random", { length: 24 });
-
-export const output = random.result;
+// const random = new esxi.VirtualMachine("my-random", {
+//     bootDiskType: "thin",
+//     bootFirmware: "bios",
+//
+// });
+//
+// export const output = random.result;

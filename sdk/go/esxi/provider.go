@@ -7,20 +7,53 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.
 type Provider struct {
 	pulumi.ProviderResourceState
+
+	// ESXi Host Name config
+	Host pulumi.StringOutput `pulumi:"host"`
+	// ESXi Datastore Name config were ovftool will be configured
+	OvfToolDatastoreName pulumi.StringOutput `pulumi:"ovfToolDatastoreName"`
+	// ESXi Password config
+	Password pulumi.StringOutput `pulumi:"password"`
+	// ESXi Host SSH Port config
+	SshPort pulumi.StringPtrOutput `pulumi:"sshPort"`
+	// ESXi Host SSL Port config
+	SslPort pulumi.StringPtrOutput `pulumi:"sslPort"`
+	// ESXi Username config
+	Username pulumi.StringPtrOutput `pulumi:"username"`
 }
 
 // NewProvider registers a new resource with the given unique name, arguments, and options.
 func NewProvider(ctx *pulumi.Context,
 	name string, args *ProviderArgs, opts ...pulumi.ResourceOption) (*Provider, error) {
 	if args == nil {
-		args = &ProviderArgs{}
+		return nil, errors.New("missing one or more required arguments")
 	}
 
+	if args.Host == nil {
+		return nil, errors.New("invalid value for required argument 'Host'")
+	}
+	if args.OvfToolDatastoreName == nil {
+		return nil, errors.New("invalid value for required argument 'OvfToolDatastoreName'")
+	}
+	if args.Password == nil {
+		return nil, errors.New("invalid value for required argument 'Password'")
+	}
+	if isZero(args.SshPort) {
+		args.SshPort = pulumi.StringPtr("22")
+	}
+	if isZero(args.SslPort) {
+		args.SslPort = pulumi.StringPtr("443")
+	}
+	if isZero(args.Username) {
+		args.Username = pulumi.StringPtr("root")
+	}
 	var resource Provider
 	err := ctx.RegisterResource("pulumi:providers:esxi-native", name, args, &resource, opts...)
 	if err != nil {
@@ -30,10 +63,34 @@ func NewProvider(ctx *pulumi.Context,
 }
 
 type providerArgs struct {
+	// ESXi Host Name config
+	Host string `pulumi:"host"`
+	// ESXi Datastore Name config were ovftool will be configured
+	OvfToolDatastoreName string `pulumi:"ovfToolDatastoreName"`
+	// ESXi Password config
+	Password string `pulumi:"password"`
+	// ESXi Host SSH Port config
+	SshPort *string `pulumi:"sshPort"`
+	// ESXi Host SSL Port config
+	SslPort *string `pulumi:"sslPort"`
+	// ESXi Username config
+	Username *string `pulumi:"username"`
 }
 
 // The set of arguments for constructing a Provider resource.
 type ProviderArgs struct {
+	// ESXi Host Name config
+	Host pulumi.StringInput
+	// ESXi Datastore Name config were ovftool will be configured
+	OvfToolDatastoreName pulumi.StringInput
+	// ESXi Password config
+	Password pulumi.StringInput
+	// ESXi Host SSH Port config
+	SshPort pulumi.StringPtrInput
+	// ESXi Host SSL Port config
+	SslPort pulumi.StringPtrInput
+	// ESXi Username config
+	Username pulumi.StringPtrInput
 }
 
 func (ProviderArgs) ElementType() reflect.Type {
@@ -71,6 +128,36 @@ func (o ProviderOutput) ToProviderOutput() ProviderOutput {
 
 func (o ProviderOutput) ToProviderOutputWithContext(ctx context.Context) ProviderOutput {
 	return o
+}
+
+// ESXi Host Name config
+func (o ProviderOutput) Host() pulumi.StringOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringOutput { return v.Host }).(pulumi.StringOutput)
+}
+
+// ESXi Datastore Name config were ovftool will be configured
+func (o ProviderOutput) OvfToolDatastoreName() pulumi.StringOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringOutput { return v.OvfToolDatastoreName }).(pulumi.StringOutput)
+}
+
+// ESXi Password config
+func (o ProviderOutput) Password() pulumi.StringOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringOutput { return v.Password }).(pulumi.StringOutput)
+}
+
+// ESXi Host SSH Port config
+func (o ProviderOutput) SshPort() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringPtrOutput { return v.SshPort }).(pulumi.StringPtrOutput)
+}
+
+// ESXi Host SSL Port config
+func (o ProviderOutput) SslPort() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringPtrOutput { return v.SslPort }).(pulumi.StringPtrOutput)
+}
+
+// ESXi Username config
+func (o ProviderOutput) Username() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Provider) pulumi.StringPtrOutput { return v.Username }).(pulumi.StringPtrOutput)
 }
 
 func init() {

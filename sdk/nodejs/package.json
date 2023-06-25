@@ -1,5 +1,5 @@
 {
-    "name": "@pulumi/esxi-native",
+    "name": "@edmondshtogu/pulumi-esxi-native",
     "version": "${VERSION}",
     "keywords": [
         "esxi",

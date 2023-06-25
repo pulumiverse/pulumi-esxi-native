@@ -4,6 +4,9 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
+/**
+ * The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.
+ */
 export class Provider extends pulumi.ProviderResource {
     /** @internal */
     public static readonly __pulumiType = 'esxi-native';
@@ -19,6 +22,30 @@ export class Provider extends pulumi.ProviderResource {
         return obj['__pulumiType'] === Provider.__pulumiType;
     }
 
+    /**
+     * ESXi Host Name config
+     */
+    public readonly host!: pulumi.Output<string>;
+    /**
+     * ESXi Datastore Name config were ovftool will be configured
+     */
+    public readonly ovfToolDatastoreName!: pulumi.Output<string>;
+    /**
+     * ESXi Password config
+     */
+    public readonly password!: pulumi.Output<string>;
+    /**
+     * ESXi Host SSH Port config
+     */
+    public readonly sshPort!: pulumi.Output<string | undefined>;
+    /**
+     * ESXi Host SSL Port config
+     */
+    public readonly sslPort!: pulumi.Output<string | undefined>;
+    /**
+     * ESXi Username config
+     */
+    public readonly username!: pulumi.Output<string | undefined>;
 
     /**
      * Create a Provider resource with the given unique name, arguments, and options.
@@ -27,10 +54,25 @@ export class Provider extends pulumi.ProviderResource {
      * @param args The arguments to use to populate this resource's properties.
      * @param opts A bag of options that control this resource's behavior.
      */
-    constructor(name: string, args?: ProviderArgs, opts?: pulumi.ResourceOptions) {
+    constructor(name: string, args: ProviderArgs, opts?: pulumi.ResourceOptions) {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         {
+            if ((!args || args.host === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'host'");
+            }
+            if ((!args || args.ovfToolDatastoreName === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'ovfToolDatastoreName'");
+            }
+            if ((!args || args.password === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'password'");
+            }
+            resourceInputs["host"] = args ? args.host : undefined;
+            resourceInputs["ovfToolDatastoreName"] = args ? args.ovfToolDatastoreName : undefined;
+            resourceInputs["password"] = args ? args.password : undefined;
+            resourceInputs["sshPort"] = (args ? args.sshPort : undefined) ?? "22";
+            resourceInputs["sslPort"] = (args ? args.sslPort : undefined) ?? "443";
+            resourceInputs["username"] = (args ? args.username : undefined) ?? "root";
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Provider.__pulumiType, name, resourceInputs, opts);
@@ -41,4 +83,28 @@ export class Provider extends pulumi.ProviderResource {
  * The set of arguments for constructing a Provider resource.
  */
 export interface ProviderArgs {
+    /**
+     * ESXi Host Name config
+     */
+    host: pulumi.Input<string>;
+    /**
+     * ESXi Datastore Name config were ovftool will be configured
+     */
+    ovfToolDatastoreName: pulumi.Input<string>;
+    /**
+     * ESXi Password config
+     */
+    password: pulumi.Input<string>;
+    /**
+     * ESXi Host SSH Port config
+     */
+    sshPort?: pulumi.Input<string>;
+    /**
+     * ESXi Host SSL Port config
+     */
+    sslPort?: pulumi.Input<string>;
+    /**
+     * ESXi Username config
+     */
+    username?: pulumi.Input<string>;
 }
