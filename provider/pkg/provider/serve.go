@@ -24,7 +24,7 @@ import (
 func Serve(providerName, version string, pulumiSchema []byte) {
 	// Start gRPC service.
 	err := provider.Main(providerName, func(host *provider.HostClient) (rpc.ResourceProviderServer, error) {
-		return makeProvider(host, providerName, version, pulumiSchema)
+		return newESXiNativeProvider(host, providerName, version, pulumiSchema)
 	})
 	if err != nil {
 		cmdutil.ExitError(err.Error())

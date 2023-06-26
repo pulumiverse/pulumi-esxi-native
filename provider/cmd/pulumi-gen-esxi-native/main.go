@@ -34,7 +34,7 @@ import (
 // TemplateDir is the path to the base directory for code generator templates.
 var TemplateDir string
 
-// BaseDir is the path to the base pulumi-xyz directory.
+// BaseDir is the path to the base pulumi-esxi-native directory.
 var BaseDir string
 
 // Language is the SDK language.
