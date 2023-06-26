@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative.Inputs
 {
 
-    public sealed class VirtualDiskArgs : Pulumi.ResourceArgs
+    public sealed class VMVirtualDiskArgs : Pulumi.ResourceArgs
     {
         /// <summary>
         /// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
@@ -21,7 +21,7 @@ namespace Pulumi.EsxiNative.Inputs
         [Input("virtualDiskId")]
         public Input<string>? VirtualDiskId { get; set; }
 
-        public VirtualDiskArgs()
+        public VMVirtualDiskArgs()
         {
         }
     }

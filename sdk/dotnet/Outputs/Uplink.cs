@@ -7,19 +7,21 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
 
-namespace Pulumi.EsxiNative.Inputs
+namespace Pulumi.EsxiNative.Outputs
 {
 
-    public sealed class ConfigItemArgs : Pulumi.ResourceArgs
+    [OutputType]
+    public sealed class Uplink
     {
-        [Input("key")]
-        public Input<string>? Key { get; set; }
+        /// <summary>
+        /// Uplink name.
+        /// </summary>
+        public readonly string Name;
 
-        [Input("value")]
-        public Input<string>? Value { get; set; }
-
-        public ConfigItemArgs()
+        [OutputConstructor]
+        private Uplink(string name)
         {
+            Name = name;
         }
     }
 }

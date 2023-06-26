@@ -22,21 +22,21 @@ class VirtualMachineArgs:
                  num_v_cpus: pulumi.Input[int],
                  os: pulumi.Input[str],
                  resource_pool_name: pulumi.Input[str],
-                 boot_disk_type: Optional[pulumi.Input['BootDiskType']] = None,
+                 boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
-                 info: Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]] = None,
+                 info: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]] = None,
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input['NetworkInterfaceArgs']]]] = None,
                  notes: Optional[pulumi.Input[str]] = None,
                  ovf_host_path_source: Optional[pulumi.Input[str]] = None,
-                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]] = None,
+                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source_local_path: Optional[pulumi.Input[str]] = None,
                  power: Optional[pulumi.Input[str]] = None,
                  shutdown_timeout: Optional[pulumi.Input[int]] = None,
                  startup_timeout: Optional[pulumi.Input[int]] = None,
-                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input['VirtualDiskArgs']]]] = None,
+                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]]] = None,
                  virtual_hw_ver: Optional[pulumi.Input[str]] = None):
         """
         The set of arguments for constructing a VirtualMachine resource.
@@ -45,21 +45,21 @@ class VirtualMachineArgs:
         :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
-        :param pulumi.Input['BootDiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
+        :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
         :param pulumi.Input['BootFirmwareType'] boot_firmware: Boot type('efi' is boot uefi mode)
         :param pulumi.Input[str] clone_from_virtual_machine: Source vm path on esxi host to clone.
-        :param pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]] info: pass data to VM
+        :param pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]] info: pass data to VM
         :param pulumi.Input[str] name: esxi vm name.
         :param pulumi.Input[Sequence[pulumi.Input['NetworkInterfaceArgs']]] network_interfaces: VM network interfaces.
         :param pulumi.Input[str] notes: VM memory size.
         :param pulumi.Input[str] ovf_host_path_source: Path on esxi host of ovf files.
-        :param pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]] ovf_properties: VM OVF properties.
+        :param pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]] ovf_properties: VM OVF properties.
         :param pulumi.Input[int] ovf_properties_timer: The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
         :param pulumi.Input[str] ovf_source_local_path: Local path to source ovf files.
         :param pulumi.Input[str] power: VM power state.
         :param pulumi.Input[int] shutdown_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
         :param pulumi.Input[int] startup_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
-        :param pulumi.Input[Sequence[pulumi.Input['VirtualDiskArgs']]] virtual_disks: VM virtual disks.
+        :param pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]] virtual_disks: VM virtual disks.
         :param pulumi.Input[str] virtual_hw_ver: VM Virtual HW version.
         """
         pulumi.set(__self__, "disk_store", disk_store)
@@ -174,14 +174,14 @@ class VirtualMachineArgs:
 
     @property
     @pulumi.getter(name="bootDiskType")
-    def boot_disk_type(self) -> Optional[pulumi.Input['BootDiskType']]:
+    def boot_disk_type(self) -> Optional[pulumi.Input['DiskType']]:
         """
         VM boot disk type. thin, zeroedthick, eagerzeroedthick
         """
         return pulumi.get(self, "boot_disk_type")
 
     @boot_disk_type.setter
-    def boot_disk_type(self, value: Optional[pulumi.Input['BootDiskType']]):
+    def boot_disk_type(self, value: Optional[pulumi.Input['DiskType']]):
         pulumi.set(self, "boot_disk_type", value)
 
     @property
@@ -210,14 +210,14 @@ class VirtualMachineArgs:
 
     @property
     @pulumi.getter
-    def info(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]]:
+    def info(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]]:
         """
         pass data to VM
         """
         return pulumi.get(self, "info")
 
     @info.setter
-    def info(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]]):
+    def info(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]]):
         pulumi.set(self, "info", value)
 
     @property
@@ -270,14 +270,14 @@ class VirtualMachineArgs:
 
     @property
     @pulumi.getter(name="ovfProperties")
-    def ovf_properties(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]]:
+    def ovf_properties(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]]:
         """
         VM OVF properties.
         """
         return pulumi.get(self, "ovf_properties")
 
     @ovf_properties.setter
-    def ovf_properties(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['ConfigItemArgs']]]]):
+    def ovf_properties(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]]):
         pulumi.set(self, "ovf_properties", value)
 
     @property
@@ -342,14 +342,14 @@ class VirtualMachineArgs:
 
     @property
     @pulumi.getter(name="virtualDisks")
-    def virtual_disks(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['VirtualDiskArgs']]]]:
+    def virtual_disks(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]]]:
         """
         VM virtual disks.
         """
         return pulumi.get(self, "virtual_disks")
 
     @virtual_disks.setter
-    def virtual_disks(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['VirtualDiskArgs']]]]):
+    def virtual_disks(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]]]):
         pulumi.set(self, "virtual_disks", value)
 
     @property
@@ -370,11 +370,11 @@ class VirtualMachine(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 boot_disk_type: Optional[pulumi.Input['BootDiskType']] = None,
+                 boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
                  disk_store: Optional[pulumi.Input[str]] = None,
-                 info: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]]] = None,
+                 info: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  mem_size: Optional[pulumi.Input[str]] = None,
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]]] = None,
@@ -382,25 +382,25 @@ class VirtualMachine(pulumi.CustomResource):
                  num_v_cpus: Optional[pulumi.Input[int]] = None,
                  os: Optional[pulumi.Input[str]] = None,
                  ovf_host_path_source: Optional[pulumi.Input[str]] = None,
-                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]]] = None,
+                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source_local_path: Optional[pulumi.Input[str]] = None,
                  power: Optional[pulumi.Input[str]] = None,
                  resource_pool_name: Optional[pulumi.Input[str]] = None,
                  shutdown_timeout: Optional[pulumi.Input[int]] = None,
                  startup_timeout: Optional[pulumi.Input[int]] = None,
-                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VirtualDiskArgs']]]]] = None,
+                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VMVirtualDiskArgs']]]]] = None,
                  virtual_hw_ver: Optional[pulumi.Input[str]] = None,
                  __props__=None):
         """
         Create a VirtualMachine resource with the given unique name, props, and options.
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input['BootDiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
+        :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
         :param pulumi.Input['BootFirmwareType'] boot_firmware: Boot type('efi' is boot uefi mode)
         :param pulumi.Input[str] clone_from_virtual_machine: Source vm path on esxi host to clone.
         :param pulumi.Input[str] disk_store: esxi diskstore for boot disk.
-        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]] info: pass data to VM
+        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]] info: pass data to VM
         :param pulumi.Input[str] mem_size: VM memory size.
         :param pulumi.Input[str] name: esxi vm name.
         :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]] network_interfaces: VM network interfaces.
@@ -408,14 +408,14 @@ class VirtualMachine(pulumi.CustomResource):
         :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[str] ovf_host_path_source: Path on esxi host of ovf files.
-        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]] ovf_properties: VM OVF properties.
+        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]] ovf_properties: VM OVF properties.
         :param pulumi.Input[int] ovf_properties_timer: The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
         :param pulumi.Input[str] ovf_source_local_path: Local path to source ovf files.
         :param pulumi.Input[str] power: VM power state.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input[int] shutdown_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
         :param pulumi.Input[int] startup_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
-        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VirtualDiskArgs']]]] virtual_disks: VM virtual disks.
+        :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VMVirtualDiskArgs']]]] virtual_disks: VM virtual disks.
         :param pulumi.Input[str] virtual_hw_ver: VM Virtual HW version.
         """
         ...
@@ -441,11 +441,11 @@ class VirtualMachine(pulumi.CustomResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 boot_disk_type: Optional[pulumi.Input['BootDiskType']] = None,
+                 boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
                  disk_store: Optional[pulumi.Input[str]] = None,
-                 info: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]]] = None,
+                 info: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  mem_size: Optional[pulumi.Input[str]] = None,
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]]] = None,
@@ -453,14 +453,14 @@ class VirtualMachine(pulumi.CustomResource):
                  num_v_cpus: Optional[pulumi.Input[int]] = None,
                  os: Optional[pulumi.Input[str]] = None,
                  ovf_host_path_source: Optional[pulumi.Input[str]] = None,
-                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['ConfigItemArgs']]]]] = None,
+                 ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source_local_path: Optional[pulumi.Input[str]] = None,
                  power: Optional[pulumi.Input[str]] = None,
                  resource_pool_name: Optional[pulumi.Input[str]] = None,
                  shutdown_timeout: Optional[pulumi.Input[int]] = None,
                  startup_timeout: Optional[pulumi.Input[int]] = None,
-                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VirtualDiskArgs']]]]] = None,
+                 virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['VMVirtualDiskArgs']]]]] = None,
                  virtual_hw_ver: Optional[pulumi.Input[str]] = None,
                  __props__=None):
         if opts is None:
@@ -565,7 +565,7 @@ class VirtualMachine(pulumi.CustomResource):
 
     @property
     @pulumi.getter(name="bootDiskSize")
-    def boot_disk_size(self) -> pulumi.Output[Optional['BootFirmwareType']]:
+    def boot_disk_size(self) -> pulumi.Output[Optional[str]]:
         """
         VM boot disk size. Will expand boot disk to this size.
         """
@@ -573,7 +573,7 @@ class VirtualMachine(pulumi.CustomResource):
 
     @property
     @pulumi.getter(name="bootDiskType")
-    def boot_disk_type(self) -> pulumi.Output[Optional['BootDiskType']]:
+    def boot_disk_type(self) -> pulumi.Output[Optional['DiskType']]:
         """
         VM boot disk type. thin, zeroedthick, eagerzeroedthick
         """
@@ -581,7 +581,7 @@ class VirtualMachine(pulumi.CustomResource):
 
     @property
     @pulumi.getter(name="bootFirmware")
-    def boot_firmware(self) -> pulumi.Output[Optional[str]]:
+    def boot_firmware(self) -> pulumi.Output[Optional['BootFirmwareType']]:
         """
         Boot type('efi' is boot uefi mode)
         """
@@ -597,7 +597,7 @@ class VirtualMachine(pulumi.CustomResource):
 
     @property
     @pulumi.getter
-    def info(self) -> pulumi.Output[Optional[Sequence['outputs.ConfigItem']]]:
+    def info(self) -> pulumi.Output[Optional[Sequence['outputs.KeyValuePair']]]:
         """
         pass data to VM
         """
@@ -693,7 +693,7 @@ class VirtualMachine(pulumi.CustomResource):
 
     @property
     @pulumi.getter(name="virtualDisks")
-    def virtual_disks(self) -> pulumi.Output[Optional[Sequence['outputs.VirtualDisk']]]:
+    def virtual_disks(self) -> pulumi.Output[Optional[Sequence['outputs.VMVirtualDisk']]]:
         """
         VM virtual disks.
         """

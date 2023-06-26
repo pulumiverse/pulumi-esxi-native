@@ -2,17 +2,17 @@
 // *** Do not edit by hand unless you're certain you know what you are doing! ***
 
 
-export const BootDiskType = {
-    Thin: "thin",
-    ZeroedThick: "zeroedthick",
-    EagerZeroedThick: "eagerzeroedthick",
-} as const;
-
-export type BootDiskType = (typeof BootDiskType)[keyof typeof BootDiskType];
-
 export const BootFirmwareType = {
     BIOS: "bios",
     EFI: "efi",
 } as const;
 
 export type BootFirmwareType = (typeof BootFirmwareType)[keyof typeof BootFirmwareType];
+
+export const DiskType = {
+    Thin: "thin",
+    ZeroedThick: "zeroedthick",
+    EagerZeroedThick: "eagerzeroedthick",
+} as const;
+
+export type DiskType = (typeof DiskType)[keyof typeof DiskType];

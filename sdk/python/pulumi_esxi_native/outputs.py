@@ -11,13 +11,14 @@ from . import _utilities
 from ._enums import *
 
 __all__ = [
-    'ConfigItem',
+    'KeyValuePair',
     'NetworkInterface',
-    'VirtualDisk',
+    'Uplink',
+    'VMVirtualDisk',
 ]
 
 @pulumi.output_type
-class ConfigItem(dict):
+class KeyValuePair(dict):
     def __init__(__self__, *,
                  key: Optional[str] = None,
                  value: Optional[str] = None):
@@ -88,7 +89,25 @@ class NetworkInterface(dict):
 
 
 @pulumi.output_type
-class VirtualDisk(dict):
+class Uplink(dict):
+    def __init__(__self__, *,
+                 name: str):
+        """
+        :param str name: Uplink name.
+        """
+        pulumi.set(__self__, "name", name)
+
+    @property
+    @pulumi.getter
+    def name(self) -> str:
+        """
+        Uplink name.
+        """
+        return pulumi.get(self, "name")
+
+
+@pulumi.output_type
+class VMVirtualDisk(dict):
     @staticmethod
     def __key_warning(key: str):
         suggest = None
@@ -96,14 +115,14 @@ class VirtualDisk(dict):
             suggest = "virtual_disk_id"
 
         if suggest:
-            pulumi.log.warn(f"Key '{key}' not found in VirtualDisk. Access the value via the '{suggest}' property getter instead.")
+            pulumi.log.warn(f"Key '{key}' not found in VMVirtualDisk. Access the value via the '{suggest}' property getter instead.")
 
     def __getitem__(self, key: str) -> Any:
-        VirtualDisk.__key_warning(key)
+        VMVirtualDisk.__key_warning(key)
         return super().__getitem__(key)
 
     def get(self, key: str, default = None) -> Any:
-        VirtualDisk.__key_warning(key)
+        VMVirtualDisk.__key_warning(key)
         return super().get(key, default)
 
     def __init__(__self__, *,

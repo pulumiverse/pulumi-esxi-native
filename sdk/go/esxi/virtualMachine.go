@@ -15,15 +15,15 @@ type VirtualMachine struct {
 	pulumi.CustomResourceState
 
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize BootFirmwareTypePtrOutput `pulumi:"bootDiskSize"`
+	BootDiskSize pulumi.StringPtrOutput `pulumi:"bootDiskSize"`
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
-	BootDiskType BootDiskTypePtrOutput `pulumi:"bootDiskType"`
+	BootDiskType DiskTypePtrOutput `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
-	BootFirmware pulumi.StringPtrOutput `pulumi:"bootFirmware"`
+	BootFirmware BootFirmwareTypePtrOutput `pulumi:"bootFirmware"`
 	// esxi diskstore for boot disk.
 	DiskStore pulumi.StringOutput `pulumi:"diskStore"`
 	// pass data to VM
-	Info ConfigItemArrayOutput `pulumi:"info"`
+	Info KeyValuePairArrayOutput `pulumi:"info"`
 	// The IP address reported by VMWare tools.
 	IpAddress pulumi.StringPtrOutput `pulumi:"ipAddress"`
 	// VM memory size.
@@ -47,7 +47,7 @@ type VirtualMachine struct {
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.
 	StartupTimeout pulumi.IntPtrOutput `pulumi:"startupTimeout"`
 	// VM virtual disks.
-	VirtualDisks VirtualDiskArrayOutput `pulumi:"virtualDisks"`
+	VirtualDisks VMVirtualDiskArrayOutput `pulumi:"virtualDisks"`
 	// VM Virtual HW version.
 	VirtualHWVer pulumi.StringPtrOutput `pulumi:"virtualHWVer"`
 }
@@ -72,7 +72,7 @@ func NewVirtualMachine(ctx *pulumi.Context,
 		return nil, errors.New("invalid value for required argument 'Os'")
 	}
 	if isZero(args.BootDiskType) {
-		args.BootDiskType = BootDiskType("thin")
+		args.BootDiskType = DiskType("thin")
 	}
 	if isZero(args.BootFirmware) {
 		args.BootFirmware = BootFirmwareType("bios")
@@ -122,7 +122,7 @@ func (VirtualMachineState) ElementType() reflect.Type {
 
 type virtualMachineArgs struct {
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
-	BootDiskType *BootDiskType `pulumi:"bootDiskType"`
+	BootDiskType *DiskType `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
 	BootFirmware *BootFirmwareType `pulumi:"bootFirmware"`
 	// Source vm path on esxi host to clone.
@@ -130,7 +130,7 @@ type virtualMachineArgs struct {
 	// esxi diskstore for boot disk.
 	DiskStore string `pulumi:"diskStore"`
 	// pass data to VM
-	Info []ConfigItem `pulumi:"info"`
+	Info []KeyValuePair `pulumi:"info"`
 	// VM memory size.
 	MemSize string `pulumi:"memSize"`
 	// esxi vm name.
@@ -146,7 +146,7 @@ type virtualMachineArgs struct {
 	// Path on esxi host of ovf files.
 	OvfHostPathSource *string `pulumi:"ovfHostPathSource"`
 	// VM OVF properties.
-	OvfProperties []ConfigItem `pulumi:"ovfProperties"`
+	OvfProperties []KeyValuePair `pulumi:"ovfProperties"`
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer *int `pulumi:"ovfPropertiesTimer"`
 	// Local path to source ovf files.
@@ -160,7 +160,7 @@ type virtualMachineArgs struct {
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
 	StartupTimeout *int `pulumi:"startupTimeout"`
 	// VM virtual disks.
-	VirtualDisks []VirtualDisk `pulumi:"virtualDisks"`
+	VirtualDisks []VMVirtualDisk `pulumi:"virtualDisks"`
 	// VM Virtual HW version.
 	VirtualHWVer *string `pulumi:"virtualHWVer"`
 }
@@ -168,7 +168,7 @@ type virtualMachineArgs struct {
 // The set of arguments for constructing a VirtualMachine resource.
 type VirtualMachineArgs struct {
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
-	BootDiskType BootDiskTypePtrInput
+	BootDiskType DiskTypePtrInput
 	// Boot type('efi' is boot uefi mode)
 	BootFirmware BootFirmwareTypePtrInput
 	// Source vm path on esxi host to clone.
@@ -176,7 +176,7 @@ type VirtualMachineArgs struct {
 	// esxi diskstore for boot disk.
 	DiskStore pulumi.StringInput
 	// pass data to VM
-	Info ConfigItemArrayInput
+	Info KeyValuePairArrayInput
 	// VM memory size.
 	MemSize pulumi.StringInput
 	// esxi vm name.
@@ -192,7 +192,7 @@ type VirtualMachineArgs struct {
 	// Path on esxi host of ovf files.
 	OvfHostPathSource pulumi.StringPtrInput
 	// VM OVF properties.
-	OvfProperties ConfigItemArrayInput
+	OvfProperties KeyValuePairArrayInput
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer pulumi.IntPtrInput
 	// Local path to source ovf files.
@@ -206,7 +206,7 @@ type VirtualMachineArgs struct {
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
 	StartupTimeout pulumi.IntPtrInput
 	// VM virtual disks.
-	VirtualDisks VirtualDiskArrayInput
+	VirtualDisks VMVirtualDiskArrayInput
 	// VM Virtual HW version.
 	VirtualHWVer pulumi.StringPtrInput
 }
@@ -299,18 +299,18 @@ func (o VirtualMachineOutput) ToVirtualMachineOutputWithContext(ctx context.Cont
 }
 
 // VM boot disk size. Will expand boot disk to this size.
-func (o VirtualMachineOutput) BootDiskSize() BootFirmwareTypePtrOutput {
-	return o.ApplyT(func(v *VirtualMachine) BootFirmwareTypePtrOutput { return v.BootDiskSize }).(BootFirmwareTypePtrOutput)
+func (o VirtualMachineOutput) BootDiskSize() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualMachine) pulumi.StringPtrOutput { return v.BootDiskSize }).(pulumi.StringPtrOutput)
 }
 
 // VM boot disk type. thin, zeroedthick, eagerzeroedthick
-func (o VirtualMachineOutput) BootDiskType() BootDiskTypePtrOutput {
-	return o.ApplyT(func(v *VirtualMachine) BootDiskTypePtrOutput { return v.BootDiskType }).(BootDiskTypePtrOutput)
+func (o VirtualMachineOutput) BootDiskType() DiskTypePtrOutput {
+	return o.ApplyT(func(v *VirtualMachine) DiskTypePtrOutput { return v.BootDiskType }).(DiskTypePtrOutput)
 }
 
 // Boot type('efi' is boot uefi mode)
-func (o VirtualMachineOutput) BootFirmware() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *VirtualMachine) pulumi.StringPtrOutput { return v.BootFirmware }).(pulumi.StringPtrOutput)
+func (o VirtualMachineOutput) BootFirmware() BootFirmwareTypePtrOutput {
+	return o.ApplyT(func(v *VirtualMachine) BootFirmwareTypePtrOutput { return v.BootFirmware }).(BootFirmwareTypePtrOutput)
 }
 
 // esxi diskstore for boot disk.
@@ -319,8 +319,8 @@ func (o VirtualMachineOutput) DiskStore() pulumi.StringOutput {
 }
 
 // pass data to VM
-func (o VirtualMachineOutput) Info() ConfigItemArrayOutput {
-	return o.ApplyT(func(v *VirtualMachine) ConfigItemArrayOutput { return v.Info }).(ConfigItemArrayOutput)
+func (o VirtualMachineOutput) Info() KeyValuePairArrayOutput {
+	return o.ApplyT(func(v *VirtualMachine) KeyValuePairArrayOutput { return v.Info }).(KeyValuePairArrayOutput)
 }
 
 // The IP address reported by VMWare tools.
@@ -379,8 +379,8 @@ func (o VirtualMachineOutput) StartupTimeout() pulumi.IntPtrOutput {
 }
 
 // VM virtual disks.
-func (o VirtualMachineOutput) VirtualDisks() VirtualDiskArrayOutput {
-	return o.ApplyT(func(v *VirtualMachine) VirtualDiskArrayOutput { return v.VirtualDisks }).(VirtualDiskArrayOutput)
+func (o VirtualMachineOutput) VirtualDisks() VMVirtualDiskArrayOutput {
+	return o.ApplyT(func(v *VirtualMachine) VMVirtualDiskArrayOutput { return v.VirtualDisks }).(VMVirtualDiskArrayOutput)
 }
 
 // VM Virtual HW version.

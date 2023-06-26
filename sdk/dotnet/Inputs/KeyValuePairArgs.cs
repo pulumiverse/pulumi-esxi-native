@@ -7,23 +7,19 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
 
-namespace Pulumi.EsxiNative.Outputs
+namespace Pulumi.EsxiNative.Inputs
 {
 
-    [OutputType]
-    public sealed class ConfigItem
+    public sealed class KeyValuePairArgs : Pulumi.ResourceArgs
     {
-        public readonly string? Key;
-        public readonly string? Value;
+        [Input("key")]
+        public Input<string>? Key { get; set; }
 
-        [OutputConstructor]
-        private ConfigItem(
-            string? key,
+        [Input("value")]
+        public Input<string>? Value { get; set; }
 
-            string? value)
+        public KeyValuePairArgs()
         {
-            Key = key;
-            Value = value;
         }
     }
 }

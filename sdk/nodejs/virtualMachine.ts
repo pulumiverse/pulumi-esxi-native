@@ -35,15 +35,15 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    public /*out*/ readonly bootDiskSize!: pulumi.Output<enums.BootFirmwareType | undefined>;
+    public /*out*/ readonly bootDiskSize!: pulumi.Output<string | undefined>;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
-    public readonly bootDiskType!: pulumi.Output<enums.BootDiskType | undefined>;
+    public readonly bootDiskType!: pulumi.Output<enums.DiskType | undefined>;
     /**
      * Boot type('efi' is boot uefi mode)
      */
-    public readonly bootFirmware!: pulumi.Output<string | undefined>;
+    public readonly bootFirmware!: pulumi.Output<enums.BootFirmwareType | undefined>;
     /**
      * esxi diskstore for boot disk.
      */
@@ -51,7 +51,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * pass data to VM
      */
-    public readonly info!: pulumi.Output<outputs.ConfigItem[] | undefined>;
+    public readonly info!: pulumi.Output<outputs.KeyValuePair[] | undefined>;
     /**
      * The IP address reported by VMWare tools.
      */
@@ -99,7 +99,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM virtual disks.
      */
-    public readonly virtualDisks!: pulumi.Output<outputs.VirtualDisk[] | undefined>;
+    public readonly virtualDisks!: pulumi.Output<outputs.VMVirtualDisk[] | undefined>;
     /**
      * VM Virtual HW version.
      */
@@ -186,7 +186,7 @@ export interface VirtualMachineArgs {
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
-    bootDiskType?: pulumi.Input<enums.BootDiskType>;
+    bootDiskType?: pulumi.Input<enums.DiskType>;
     /**
      * Boot type('efi' is boot uefi mode)
      */
@@ -202,7 +202,7 @@ export interface VirtualMachineArgs {
     /**
      * pass data to VM
      */
-    info?: pulumi.Input<pulumi.Input<inputs.ConfigItemArgs>[]>;
+    info?: pulumi.Input<pulumi.Input<inputs.KeyValuePairArgs>[]>;
     /**
      * VM memory size.
      */
@@ -234,7 +234,7 @@ export interface VirtualMachineArgs {
     /**
      * VM OVF properties.
      */
-    ovfProperties?: pulumi.Input<pulumi.Input<inputs.ConfigItemArgs>[]>;
+    ovfProperties?: pulumi.Input<pulumi.Input<inputs.KeyValuePairArgs>[]>;
     /**
      * The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
      */
@@ -262,7 +262,7 @@ export interface VirtualMachineArgs {
     /**
      * VM virtual disks.
      */
-    virtualDisks?: pulumi.Input<pulumi.Input<inputs.VirtualDiskArgs>[]>;
+    virtualDisks?: pulumi.Input<pulumi.Input<inputs.VMVirtualDiskArgs>[]>;
     /**
      * VM Virtual HW version.
      */

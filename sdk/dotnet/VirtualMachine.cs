@@ -16,19 +16,19 @@ namespace Pulumi.EsxiNative
         /// VM boot disk size. Will expand boot disk to this size.
         /// </summary>
         [Output("bootDiskSize")]
-        public Output<Pulumi.EsxiNative.BootFirmwareType?> BootDiskSize { get; private set; } = null!;
+        public Output<string?> BootDiskSize { get; private set; } = null!;
 
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
         [Output("bootDiskType")]
-        public Output<Pulumi.EsxiNative.BootDiskType?> BootDiskType { get; private set; } = null!;
+        public Output<Pulumi.EsxiNative.DiskType?> BootDiskType { get; private set; } = null!;
 
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
         /// </summary>
         [Output("bootFirmware")]
-        public Output<string?> BootFirmware { get; private set; } = null!;
+        public Output<Pulumi.EsxiNative.BootFirmwareType?> BootFirmware { get; private set; } = null!;
 
         /// <summary>
         /// esxi diskstore for boot disk.
@@ -40,7 +40,7 @@ namespace Pulumi.EsxiNative
         /// pass data to VM
         /// </summary>
         [Output("info")]
-        public Output<ImmutableArray<Outputs.ConfigItem>> Info { get; private set; } = null!;
+        public Output<ImmutableArray<Outputs.KeyValuePair>> Info { get; private set; } = null!;
 
         /// <summary>
         /// The IP address reported by VMWare tools.
@@ -112,7 +112,7 @@ namespace Pulumi.EsxiNative
         /// VM virtual disks.
         /// </summary>
         [Output("virtualDisks")]
-        public Output<ImmutableArray<Outputs.VirtualDisk>> VirtualDisks { get; private set; } = null!;
+        public Output<ImmutableArray<Outputs.VMVirtualDisk>> VirtualDisks { get; private set; } = null!;
 
         /// <summary>
         /// VM Virtual HW version.
@@ -169,7 +169,7 @@ namespace Pulumi.EsxiNative
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
         [Input("bootDiskType")]
-        public Input<Pulumi.EsxiNative.BootDiskType>? BootDiskType { get; set; }
+        public Input<Pulumi.EsxiNative.DiskType>? BootDiskType { get; set; }
 
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
@@ -190,14 +190,14 @@ namespace Pulumi.EsxiNative
         public Input<string> DiskStore { get; set; } = null!;
 
         [Input("info")]
-        private InputList<Inputs.ConfigItemArgs>? _info;
+        private InputList<Inputs.KeyValuePairArgs>? _info;
 
         /// <summary>
         /// pass data to VM
         /// </summary>
-        public InputList<Inputs.ConfigItemArgs> Info
+        public InputList<Inputs.KeyValuePairArgs> Info
         {
-            get => _info ?? (_info = new InputList<Inputs.ConfigItemArgs>());
+            get => _info ?? (_info = new InputList<Inputs.KeyValuePairArgs>());
             set => _info = value;
         }
 
@@ -250,14 +250,14 @@ namespace Pulumi.EsxiNative
         public Input<string>? OvfHostPathSource { get; set; }
 
         [Input("ovfProperties")]
-        private InputList<Inputs.ConfigItemArgs>? _ovfProperties;
+        private InputList<Inputs.KeyValuePairArgs>? _ovfProperties;
 
         /// <summary>
         /// VM OVF properties.
         /// </summary>
-        public InputList<Inputs.ConfigItemArgs> OvfProperties
+        public InputList<Inputs.KeyValuePairArgs> OvfProperties
         {
-            get => _ovfProperties ?? (_ovfProperties = new InputList<Inputs.ConfigItemArgs>());
+            get => _ovfProperties ?? (_ovfProperties = new InputList<Inputs.KeyValuePairArgs>());
             set => _ovfProperties = value;
         }
 
@@ -298,14 +298,14 @@ namespace Pulumi.EsxiNative
         public Input<int>? StartupTimeout { get; set; }
 
         [Input("virtualDisks")]
-        private InputList<Inputs.VirtualDiskArgs>? _virtualDisks;
+        private InputList<Inputs.VMVirtualDiskArgs>? _virtualDisks;
 
         /// <summary>
         /// VM virtual disks.
         /// </summary>
-        public InputList<Inputs.VirtualDiskArgs> VirtualDisks
+        public InputList<Inputs.VMVirtualDiskArgs> VirtualDisks
         {
-            get => _virtualDisks ?? (_virtualDisks = new InputList<Inputs.VirtualDiskArgs>());
+            get => _virtualDisks ?? (_virtualDisks = new InputList<Inputs.VMVirtualDiskArgs>());
             set => _virtualDisks = value;
         }
 
@@ -317,7 +317,7 @@ namespace Pulumi.EsxiNative
 
         public VirtualMachineArgs()
         {
-            BootDiskType = Pulumi.EsxiNative.BootDiskType.Thin;
+            BootDiskType = Pulumi.EsxiNative.DiskType.Thin;
             BootFirmware = Pulumi.EsxiNative.BootFirmwareType.BIOS;
             OvfPropertiesTimer = 6000;
             ResourcePoolName = "/";

@@ -27,15 +27,15 @@ export interface GetVirtualMachineResult {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    readonly bootDiskSize?: enums.BootFirmwareType;
+    readonly bootDiskSize?: string;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
-    readonly bootDiskType?: enums.BootDiskType;
+    readonly bootDiskType?: enums.DiskType;
     /**
      * Boot type('efi' is boot uefi mode)
      */
-    readonly bootFirmware?: string;
+    readonly bootFirmware?: enums.BootFirmwareType;
     /**
      * esxi diskstore for boot disk.
      */
@@ -43,7 +43,7 @@ export interface GetVirtualMachineResult {
     /**
      * pass data to VM
      */
-    readonly info?: outputs.ConfigItem[];
+    readonly info?: outputs.KeyValuePair[];
     /**
      * The IP address reported by VMWare tools.
      */
@@ -91,7 +91,7 @@ export interface GetVirtualMachineResult {
     /**
      * VM virtual disks.
      */
-    readonly virtualDisks?: outputs.VirtualDisk[];
+    readonly virtualDisks?: outputs.VMVirtualDisk[];
     /**
      * VM Virtual HW version.
      */

@@ -8,35 +8,6 @@ using Pulumi;
 namespace Pulumi.EsxiNative
 {
     [EnumType]
-    public readonly struct BootDiskType : IEquatable<BootDiskType>
-    {
-        private readonly string _value;
-
-        private BootDiskType(string value)
-        {
-            _value = value ?? throw new ArgumentNullException(nameof(value));
-        }
-
-        public static BootDiskType Thin { get; } = new BootDiskType("thin");
-        public static BootDiskType ZeroedThick { get; } = new BootDiskType("zeroedthick");
-        public static BootDiskType EagerZeroedThick { get; } = new BootDiskType("eagerzeroedthick");
-
-        public static bool operator ==(BootDiskType left, BootDiskType right) => left.Equals(right);
-        public static bool operator !=(BootDiskType left, BootDiskType right) => !left.Equals(right);
-
-        public static explicit operator string(BootDiskType value) => value._value;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object? obj) => obj is BootDiskType other && Equals(other);
-        public bool Equals(BootDiskType other) => string.Equals(_value, other._value, StringComparison.Ordinal);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
-
-        public override string ToString() => _value;
-    }
-
-    [EnumType]
     public readonly struct BootFirmwareType : IEquatable<BootFirmwareType>
     {
         private readonly string _value;
@@ -57,6 +28,35 @@ namespace Pulumi.EsxiNative
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool Equals(object? obj) => obj is BootFirmwareType other && Equals(other);
         public bool Equals(BootFirmwareType other) => string.Equals(_value, other._value, StringComparison.Ordinal);
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+
+        public override string ToString() => _value;
+    }
+
+    [EnumType]
+    public readonly struct DiskType : IEquatable<DiskType>
+    {
+        private readonly string _value;
+
+        private DiskType(string value)
+        {
+            _value = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public static DiskType Thin { get; } = new DiskType("thin");
+        public static DiskType ZeroedThick { get; } = new DiskType("zeroedthick");
+        public static DiskType EagerZeroedThick { get; } = new DiskType("eagerzeroedthick");
+
+        public static bool operator ==(DiskType left, DiskType right) => left.Equals(right);
+        public static bool operator !=(DiskType left, DiskType right) => !left.Equals(right);
+
+        public static explicit operator string(DiskType value) => value._value;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override bool Equals(object? obj) => obj is DiskType other && Equals(other);
+        public bool Equals(DiskType other) => string.Equals(_value, other._value, StringComparison.Ordinal);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int GetHashCode() => _value?.GetHashCode() ?? 0;

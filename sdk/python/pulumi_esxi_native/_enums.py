@@ -5,17 +5,17 @@
 from enum import Enum
 
 __all__ = [
-    'BootDiskType',
     'BootFirmwareType',
+    'DiskType',
 ]
-
-
-class BootDiskType(str, Enum):
-    THIN = "thin"
-    ZEROED_THICK = "zeroedthick"
-    EAGER_ZEROED_THICK = "eagerzeroedthick"
 
 
 class BootFirmwareType(str, Enum):
     BIOS = "bios"
     EFI = "efi"
+
+
+class DiskType(str, Enum):
+    THIN = "thin"
+    ZEROED_THICK = "zeroedthick"
+    EAGER_ZEROED_THICK = "eagerzeroedthick"

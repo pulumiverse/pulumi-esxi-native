@@ -18,11 +18,14 @@
         "getVirtualMachine.ts",
         "index.ts",
         "provider.ts",
+        "resourcePool.ts",
         "types/enums/index.ts",
         "types/index.ts",
         "types/input.ts",
         "types/output.ts",
         "utilities.ts",
-        "virtualMachine.ts"
+        "virtualDisk.ts",
+        "virtualMachine.ts",
+        "virtualSwitch.ts"
     ]
 }

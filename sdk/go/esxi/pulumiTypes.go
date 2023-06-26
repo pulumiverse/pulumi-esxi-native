@@ -10,104 +10,104 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-type ConfigItem struct {
+type KeyValuePair struct {
 	Key   *string `pulumi:"key"`
 	Value *string `pulumi:"value"`
 }
 
-// ConfigItemInput is an input type that accepts ConfigItemArgs and ConfigItemOutput values.
-// You can construct a concrete instance of `ConfigItemInput` via:
+// KeyValuePairInput is an input type that accepts KeyValuePairArgs and KeyValuePairOutput values.
+// You can construct a concrete instance of `KeyValuePairInput` via:
 //
-//          ConfigItemArgs{...}
-type ConfigItemInput interface {
+//          KeyValuePairArgs{...}
+type KeyValuePairInput interface {
 	pulumi.Input
 
-	ToConfigItemOutput() ConfigItemOutput
-	ToConfigItemOutputWithContext(context.Context) ConfigItemOutput
+	ToKeyValuePairOutput() KeyValuePairOutput
+	ToKeyValuePairOutputWithContext(context.Context) KeyValuePairOutput
 }
 
-type ConfigItemArgs struct {
+type KeyValuePairArgs struct {
 	Key   pulumi.StringPtrInput `pulumi:"key"`
 	Value pulumi.StringPtrInput `pulumi:"value"`
 }
 
-func (ConfigItemArgs) ElementType() reflect.Type {
-	return reflect.TypeOf((*ConfigItem)(nil)).Elem()
+func (KeyValuePairArgs) ElementType() reflect.Type {
+	return reflect.TypeOf((*KeyValuePair)(nil)).Elem()
 }
 
-func (i ConfigItemArgs) ToConfigItemOutput() ConfigItemOutput {
-	return i.ToConfigItemOutputWithContext(context.Background())
+func (i KeyValuePairArgs) ToKeyValuePairOutput() KeyValuePairOutput {
+	return i.ToKeyValuePairOutputWithContext(context.Background())
 }
 
-func (i ConfigItemArgs) ToConfigItemOutputWithContext(ctx context.Context) ConfigItemOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(ConfigItemOutput)
+func (i KeyValuePairArgs) ToKeyValuePairOutputWithContext(ctx context.Context) KeyValuePairOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(KeyValuePairOutput)
 }
 
-// ConfigItemArrayInput is an input type that accepts ConfigItemArray and ConfigItemArrayOutput values.
-// You can construct a concrete instance of `ConfigItemArrayInput` via:
+// KeyValuePairArrayInput is an input type that accepts KeyValuePairArray and KeyValuePairArrayOutput values.
+// You can construct a concrete instance of `KeyValuePairArrayInput` via:
 //
-//          ConfigItemArray{ ConfigItemArgs{...} }
-type ConfigItemArrayInput interface {
+//          KeyValuePairArray{ KeyValuePairArgs{...} }
+type KeyValuePairArrayInput interface {
 	pulumi.Input
 
-	ToConfigItemArrayOutput() ConfigItemArrayOutput
-	ToConfigItemArrayOutputWithContext(context.Context) ConfigItemArrayOutput
+	ToKeyValuePairArrayOutput() KeyValuePairArrayOutput
+	ToKeyValuePairArrayOutputWithContext(context.Context) KeyValuePairArrayOutput
 }
 
-type ConfigItemArray []ConfigItemInput
+type KeyValuePairArray []KeyValuePairInput
 
-func (ConfigItemArray) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]ConfigItem)(nil)).Elem()
+func (KeyValuePairArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]KeyValuePair)(nil)).Elem()
 }
 
-func (i ConfigItemArray) ToConfigItemArrayOutput() ConfigItemArrayOutput {
-	return i.ToConfigItemArrayOutputWithContext(context.Background())
+func (i KeyValuePairArray) ToKeyValuePairArrayOutput() KeyValuePairArrayOutput {
+	return i.ToKeyValuePairArrayOutputWithContext(context.Background())
 }
 
-func (i ConfigItemArray) ToConfigItemArrayOutputWithContext(ctx context.Context) ConfigItemArrayOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(ConfigItemArrayOutput)
+func (i KeyValuePairArray) ToKeyValuePairArrayOutputWithContext(ctx context.Context) KeyValuePairArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(KeyValuePairArrayOutput)
 }
 
-type ConfigItemOutput struct{ *pulumi.OutputState }
+type KeyValuePairOutput struct{ *pulumi.OutputState }
 
-func (ConfigItemOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*ConfigItem)(nil)).Elem()
+func (KeyValuePairOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*KeyValuePair)(nil)).Elem()
 }
 
-func (o ConfigItemOutput) ToConfigItemOutput() ConfigItemOutput {
+func (o KeyValuePairOutput) ToKeyValuePairOutput() KeyValuePairOutput {
 	return o
 }
 
-func (o ConfigItemOutput) ToConfigItemOutputWithContext(ctx context.Context) ConfigItemOutput {
+func (o KeyValuePairOutput) ToKeyValuePairOutputWithContext(ctx context.Context) KeyValuePairOutput {
 	return o
 }
 
-func (o ConfigItemOutput) Key() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v ConfigItem) *string { return v.Key }).(pulumi.StringPtrOutput)
+func (o KeyValuePairOutput) Key() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v KeyValuePair) *string { return v.Key }).(pulumi.StringPtrOutput)
 }
 
-func (o ConfigItemOutput) Value() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v ConfigItem) *string { return v.Value }).(pulumi.StringPtrOutput)
+func (o KeyValuePairOutput) Value() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v KeyValuePair) *string { return v.Value }).(pulumi.StringPtrOutput)
 }
 
-type ConfigItemArrayOutput struct{ *pulumi.OutputState }
+type KeyValuePairArrayOutput struct{ *pulumi.OutputState }
 
-func (ConfigItemArrayOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]ConfigItem)(nil)).Elem()
+func (KeyValuePairArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]KeyValuePair)(nil)).Elem()
 }
 
-func (o ConfigItemArrayOutput) ToConfigItemArrayOutput() ConfigItemArrayOutput {
+func (o KeyValuePairArrayOutput) ToKeyValuePairArrayOutput() KeyValuePairArrayOutput {
 	return o
 }
 
-func (o ConfigItemArrayOutput) ToConfigItemArrayOutputWithContext(ctx context.Context) ConfigItemArrayOutput {
+func (o KeyValuePairArrayOutput) ToKeyValuePairArrayOutputWithContext(ctx context.Context) KeyValuePairArrayOutput {
 	return o
 }
 
-func (o ConfigItemArrayOutput) Index(i pulumi.IntInput) ConfigItemOutput {
-	return pulumi.All(o, i).ApplyT(func(vs []interface{}) ConfigItem {
-		return vs[0].([]ConfigItem)[vs[1].(int)]
-	}).(ConfigItemOutput)
+func (o KeyValuePairArrayOutput) Index(i pulumi.IntInput) KeyValuePairOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) KeyValuePair {
+		return vs[0].([]KeyValuePair)[vs[1].(int)]
+	}).(KeyValuePairOutput)
 }
 
 type NetworkInterface struct {
@@ -216,120 +216,221 @@ func (o NetworkInterfaceArrayOutput) Index(i pulumi.IntInput) NetworkInterfaceOu
 	}).(NetworkInterfaceOutput)
 }
 
-type VirtualDisk struct {
+type Uplink struct {
+	// Uplink name.
+	Name string `pulumi:"name"`
+}
+
+// UplinkInput is an input type that accepts UplinkArgs and UplinkOutput values.
+// You can construct a concrete instance of `UplinkInput` via:
+//
+//          UplinkArgs{...}
+type UplinkInput interface {
+	pulumi.Input
+
+	ToUplinkOutput() UplinkOutput
+	ToUplinkOutputWithContext(context.Context) UplinkOutput
+}
+
+type UplinkArgs struct {
+	// Uplink name.
+	Name pulumi.StringInput `pulumi:"name"`
+}
+
+func (UplinkArgs) ElementType() reflect.Type {
+	return reflect.TypeOf((*Uplink)(nil)).Elem()
+}
+
+func (i UplinkArgs) ToUplinkOutput() UplinkOutput {
+	return i.ToUplinkOutputWithContext(context.Background())
+}
+
+func (i UplinkArgs) ToUplinkOutputWithContext(ctx context.Context) UplinkOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(UplinkOutput)
+}
+
+// UplinkArrayInput is an input type that accepts UplinkArray and UplinkArrayOutput values.
+// You can construct a concrete instance of `UplinkArrayInput` via:
+//
+//          UplinkArray{ UplinkArgs{...} }
+type UplinkArrayInput interface {
+	pulumi.Input
+
+	ToUplinkArrayOutput() UplinkArrayOutput
+	ToUplinkArrayOutputWithContext(context.Context) UplinkArrayOutput
+}
+
+type UplinkArray []UplinkInput
+
+func (UplinkArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]Uplink)(nil)).Elem()
+}
+
+func (i UplinkArray) ToUplinkArrayOutput() UplinkArrayOutput {
+	return i.ToUplinkArrayOutputWithContext(context.Background())
+}
+
+func (i UplinkArray) ToUplinkArrayOutputWithContext(ctx context.Context) UplinkArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(UplinkArrayOutput)
+}
+
+type UplinkOutput struct{ *pulumi.OutputState }
+
+func (UplinkOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*Uplink)(nil)).Elem()
+}
+
+func (o UplinkOutput) ToUplinkOutput() UplinkOutput {
+	return o
+}
+
+func (o UplinkOutput) ToUplinkOutputWithContext(ctx context.Context) UplinkOutput {
+	return o
+}
+
+// Uplink name.
+func (o UplinkOutput) Name() pulumi.StringOutput {
+	return o.ApplyT(func(v Uplink) string { return v.Name }).(pulumi.StringOutput)
+}
+
+type UplinkArrayOutput struct{ *pulumi.OutputState }
+
+func (UplinkArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]Uplink)(nil)).Elem()
+}
+
+func (o UplinkArrayOutput) ToUplinkArrayOutput() UplinkArrayOutput {
+	return o
+}
+
+func (o UplinkArrayOutput) ToUplinkArrayOutputWithContext(ctx context.Context) UplinkArrayOutput {
+	return o
+}
+
+func (o UplinkArrayOutput) Index(i pulumi.IntInput) UplinkOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) Uplink {
+		return vs[0].([]Uplink)[vs[1].(int)]
+	}).(UplinkOutput)
+}
+
+type VMVirtualDisk struct {
 	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
 	Slot          *string `pulumi:"slot"`
 	VirtualDiskId *string `pulumi:"virtualDiskId"`
 }
 
-// VirtualDiskInput is an input type that accepts VirtualDiskArgs and VirtualDiskOutput values.
-// You can construct a concrete instance of `VirtualDiskInput` via:
+// VMVirtualDiskInput is an input type that accepts VMVirtualDiskArgs and VMVirtualDiskOutput values.
+// You can construct a concrete instance of `VMVirtualDiskInput` via:
 //
-//          VirtualDiskArgs{...}
-type VirtualDiskInput interface {
+//          VMVirtualDiskArgs{...}
+type VMVirtualDiskInput interface {
 	pulumi.Input
 
-	ToVirtualDiskOutput() VirtualDiskOutput
-	ToVirtualDiskOutputWithContext(context.Context) VirtualDiskOutput
+	ToVMVirtualDiskOutput() VMVirtualDiskOutput
+	ToVMVirtualDiskOutputWithContext(context.Context) VMVirtualDiskOutput
 }
 
-type VirtualDiskArgs struct {
+type VMVirtualDiskArgs struct {
 	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
 	Slot          pulumi.StringPtrInput `pulumi:"slot"`
 	VirtualDiskId pulumi.StringPtrInput `pulumi:"virtualDiskId"`
 }
 
-func (VirtualDiskArgs) ElementType() reflect.Type {
-	return reflect.TypeOf((*VirtualDisk)(nil)).Elem()
+func (VMVirtualDiskArgs) ElementType() reflect.Type {
+	return reflect.TypeOf((*VMVirtualDisk)(nil)).Elem()
 }
 
-func (i VirtualDiskArgs) ToVirtualDiskOutput() VirtualDiskOutput {
-	return i.ToVirtualDiskOutputWithContext(context.Background())
+func (i VMVirtualDiskArgs) ToVMVirtualDiskOutput() VMVirtualDiskOutput {
+	return i.ToVMVirtualDiskOutputWithContext(context.Background())
 }
 
-func (i VirtualDiskArgs) ToVirtualDiskOutputWithContext(ctx context.Context) VirtualDiskOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(VirtualDiskOutput)
+func (i VMVirtualDiskArgs) ToVMVirtualDiskOutputWithContext(ctx context.Context) VMVirtualDiskOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(VMVirtualDiskOutput)
 }
 
-// VirtualDiskArrayInput is an input type that accepts VirtualDiskArray and VirtualDiskArrayOutput values.
-// You can construct a concrete instance of `VirtualDiskArrayInput` via:
+// VMVirtualDiskArrayInput is an input type that accepts VMVirtualDiskArray and VMVirtualDiskArrayOutput values.
+// You can construct a concrete instance of `VMVirtualDiskArrayInput` via:
 //
-//          VirtualDiskArray{ VirtualDiskArgs{...} }
-type VirtualDiskArrayInput interface {
+//          VMVirtualDiskArray{ VMVirtualDiskArgs{...} }
+type VMVirtualDiskArrayInput interface {
 	pulumi.Input
 
-	ToVirtualDiskArrayOutput() VirtualDiskArrayOutput
-	ToVirtualDiskArrayOutputWithContext(context.Context) VirtualDiskArrayOutput
+	ToVMVirtualDiskArrayOutput() VMVirtualDiskArrayOutput
+	ToVMVirtualDiskArrayOutputWithContext(context.Context) VMVirtualDiskArrayOutput
 }
 
-type VirtualDiskArray []VirtualDiskInput
+type VMVirtualDiskArray []VMVirtualDiskInput
 
-func (VirtualDiskArray) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]VirtualDisk)(nil)).Elem()
+func (VMVirtualDiskArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]VMVirtualDisk)(nil)).Elem()
 }
 
-func (i VirtualDiskArray) ToVirtualDiskArrayOutput() VirtualDiskArrayOutput {
-	return i.ToVirtualDiskArrayOutputWithContext(context.Background())
+func (i VMVirtualDiskArray) ToVMVirtualDiskArrayOutput() VMVirtualDiskArrayOutput {
+	return i.ToVMVirtualDiskArrayOutputWithContext(context.Background())
 }
 
-func (i VirtualDiskArray) ToVirtualDiskArrayOutputWithContext(ctx context.Context) VirtualDiskArrayOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(VirtualDiskArrayOutput)
+func (i VMVirtualDiskArray) ToVMVirtualDiskArrayOutputWithContext(ctx context.Context) VMVirtualDiskArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(VMVirtualDiskArrayOutput)
 }
 
-type VirtualDiskOutput struct{ *pulumi.OutputState }
+type VMVirtualDiskOutput struct{ *pulumi.OutputState }
 
-func (VirtualDiskOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*VirtualDisk)(nil)).Elem()
+func (VMVirtualDiskOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*VMVirtualDisk)(nil)).Elem()
 }
 
-func (o VirtualDiskOutput) ToVirtualDiskOutput() VirtualDiskOutput {
+func (o VMVirtualDiskOutput) ToVMVirtualDiskOutput() VMVirtualDiskOutput {
 	return o
 }
 
-func (o VirtualDiskOutput) ToVirtualDiskOutputWithContext(ctx context.Context) VirtualDiskOutput {
+func (o VMVirtualDiskOutput) ToVMVirtualDiskOutputWithContext(ctx context.Context) VMVirtualDiskOutput {
 	return o
 }
 
 // SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
-func (o VirtualDiskOutput) Slot() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v VirtualDisk) *string { return v.Slot }).(pulumi.StringPtrOutput)
+func (o VMVirtualDiskOutput) Slot() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v VMVirtualDisk) *string { return v.Slot }).(pulumi.StringPtrOutput)
 }
 
-func (o VirtualDiskOutput) VirtualDiskId() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v VirtualDisk) *string { return v.VirtualDiskId }).(pulumi.StringPtrOutput)
+func (o VMVirtualDiskOutput) VirtualDiskId() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v VMVirtualDisk) *string { return v.VirtualDiskId }).(pulumi.StringPtrOutput)
 }
 
-type VirtualDiskArrayOutput struct{ *pulumi.OutputState }
+type VMVirtualDiskArrayOutput struct{ *pulumi.OutputState }
 
-func (VirtualDiskArrayOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]VirtualDisk)(nil)).Elem()
+func (VMVirtualDiskArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]VMVirtualDisk)(nil)).Elem()
 }
 
-func (o VirtualDiskArrayOutput) ToVirtualDiskArrayOutput() VirtualDiskArrayOutput {
+func (o VMVirtualDiskArrayOutput) ToVMVirtualDiskArrayOutput() VMVirtualDiskArrayOutput {
 	return o
 }
 
-func (o VirtualDiskArrayOutput) ToVirtualDiskArrayOutputWithContext(ctx context.Context) VirtualDiskArrayOutput {
+func (o VMVirtualDiskArrayOutput) ToVMVirtualDiskArrayOutputWithContext(ctx context.Context) VMVirtualDiskArrayOutput {
 	return o
 }
 
-func (o VirtualDiskArrayOutput) Index(i pulumi.IntInput) VirtualDiskOutput {
-	return pulumi.All(o, i).ApplyT(func(vs []interface{}) VirtualDisk {
-		return vs[0].([]VirtualDisk)[vs[1].(int)]
-	}).(VirtualDiskOutput)
+func (o VMVirtualDiskArrayOutput) Index(i pulumi.IntInput) VMVirtualDiskOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) VMVirtualDisk {
+		return vs[0].([]VMVirtualDisk)[vs[1].(int)]
+	}).(VMVirtualDiskOutput)
 }
 
 func init() {
-	pulumi.RegisterInputType(reflect.TypeOf((*ConfigItemInput)(nil)).Elem(), ConfigItemArgs{})
-	pulumi.RegisterInputType(reflect.TypeOf((*ConfigItemArrayInput)(nil)).Elem(), ConfigItemArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*KeyValuePairInput)(nil)).Elem(), KeyValuePairArgs{})
+	pulumi.RegisterInputType(reflect.TypeOf((*KeyValuePairArrayInput)(nil)).Elem(), KeyValuePairArray{})
 	pulumi.RegisterInputType(reflect.TypeOf((*NetworkInterfaceInput)(nil)).Elem(), NetworkInterfaceArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*NetworkInterfaceArrayInput)(nil)).Elem(), NetworkInterfaceArray{})
-	pulumi.RegisterInputType(reflect.TypeOf((*VirtualDiskInput)(nil)).Elem(), VirtualDiskArgs{})
-	pulumi.RegisterInputType(reflect.TypeOf((*VirtualDiskArrayInput)(nil)).Elem(), VirtualDiskArray{})
-	pulumi.RegisterOutputType(ConfigItemOutput{})
-	pulumi.RegisterOutputType(ConfigItemArrayOutput{})
+	pulumi.RegisterInputType(reflect.TypeOf((*UplinkInput)(nil)).Elem(), UplinkArgs{})
+	pulumi.RegisterInputType(reflect.TypeOf((*UplinkArrayInput)(nil)).Elem(), UplinkArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*VMVirtualDiskInput)(nil)).Elem(), VMVirtualDiskArgs{})
+	pulumi.RegisterInputType(reflect.TypeOf((*VMVirtualDiskArrayInput)(nil)).Elem(), VMVirtualDiskArray{})
+	pulumi.RegisterOutputType(KeyValuePairOutput{})
+	pulumi.RegisterOutputType(KeyValuePairArrayOutput{})
 	pulumi.RegisterOutputType(NetworkInterfaceOutput{})
 	pulumi.RegisterOutputType(NetworkInterfaceArrayOutput{})
-	pulumi.RegisterOutputType(VirtualDiskOutput{})
-	pulumi.RegisterOutputType(VirtualDiskArrayOutput{})
+	pulumi.RegisterOutputType(UplinkOutput{})
+	pulumi.RegisterOutputType(UplinkArrayOutput{})
+	pulumi.RegisterOutputType(VMVirtualDiskOutput{})
+	pulumi.RegisterOutputType(VMVirtualDiskArrayOutput{})
 }

@@ -121,7 +121,7 @@
         }
     },
     "types": {
-        "esxi-native:index:BootDiskType": {
+        "esxi-native:index:DiskType": {
             "type": "string",
             "enum": [
                 {
@@ -165,7 +165,7 @@
                 }
             }
         },
-        "esxi-native:index:VirtualDisk": {
+        "esxi-native:index:VMVirtualDisk": {
             "type": "object",
             "properties": {
                 "virtualDiskId": {
@@ -177,7 +177,17 @@
                 }
             }
         },
-        "esxi-native:index:ConfigItem": {
+        "esxi-native:index:Uplink": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Uplink name."
+                }
+            },
+            "required": ["name"]
+        },
+        "esxi-native:index:KeyValuePair": {
             "type": "object",
             "properties": {
                 "key": {
@@ -206,6 +216,7 @@
                 },
                 "bootFirmware": {
                     "type": "string",
+                    "$ref": "#/types/esxi-native:index:BootFirmwareType",
                     "description": "Boot type('efi' is boot uefi mode)"
                 },
                 "diskStore": {
@@ -218,12 +229,11 @@
                 },
                 "bootDiskSize": {
                     "type": "string",
-                    "$ref": "#/types/esxi-native:index:BootFirmwareType",
                     "description": "VM boot disk size. Will expand boot disk to this size."
                 },
                 "bootDiskType": {
                     "type": "string",
-                    "$ref": "#/types/esxi-native:index:BootDiskType",
+                    "$ref": "#/types/esxi-native:index:DiskType",
                     "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                 },
                 "memSize": {
@@ -271,7 +281,7 @@
                     "type": "array",
                     "description": "VM virtual disks.",
                     "items": {
-                        "$ref": "#/types/esxi-native:index:VirtualDisk"
+                        "$ref": "#/types/esxi-native:index:VMVirtualDisk"
                     }
                 },
                 "notes": {
@@ -282,7 +292,7 @@
                     "type": "array",
                     "description": "pass data to VM",
                     "items": {
-                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                        "$ref": "#/types/esxi-native:index:KeyValuePair"
                     }
                 }
             },
@@ -334,7 +344,7 @@
                 "bootDiskType": {
                     "type": "string",
                     "default": "thin",
-                    "$ref": "#/types/esxi-native:index:BootDiskType",
+                    "$ref": "#/types/esxi-native:index:DiskType",
                     "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                 },
                 "memSize": {
@@ -378,14 +388,14 @@
                     "type": "array",
                     "description": "VM virtual disks.",
                     "items": {
-                        "$ref": "#/types/esxi-native:index:VirtualDisk"
+                        "$ref": "#/types/esxi-native:index:VMVirtualDisk"
                     }
                 },
                 "ovfProperties": {
                     "type": "array",
                     "description": "VM OVF properties.",
                     "items": {
-                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                        "$ref": "#/types/esxi-native:index:KeyValuePair"
                     }
                 },
                 "ovfPropertiesTimer": {
@@ -401,9 +411,234 @@
                     "type": "array",
                     "description": "pass data to VM",
                     "items": {
-                        "$ref": "#/types/esxi-native:index:ConfigItem"
+                        "$ref": "#/types/esxi-native:index:KeyValuePair"
                     },
                     "willReplaceOnChanges": true
+                }
+            }
+        },
+        "esxi-native:index:ResourcePool": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Resource Pool Name"
+                },
+                "cpuMin": {
+                    "type": "integer",
+                    "description": "CPU minimum (in MHz)."
+                },
+                "cpuMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow CPU resources from parent?"
+                },
+                "cpuMax": {
+                    "type": "integer",
+                    "description": "CPU maximum (in MHz)."
+                },
+                "cpuShares": {
+                    "type": "string",
+                    "description": "CPU shares (low/normal/high/<custom>)."
+                },
+                "memMin": {
+                    "type": "integer",
+                    "description": "Memory minimum (in MB)."
+                },
+                "memMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow memory resources from parent?"
+                },
+                "memMax": {
+                    "type": "integer",
+                    "description": "Memory maximum (in MB)."
+                },
+                "memShares": {
+                    "type": "string",
+                    "description": "Memory shares (low/normal/high/<custom>)."
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "requiredInputs": [],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "Resource Pool Name"
+                },
+                "cpuMin": {
+                    "type": "integer",
+                    "description": "CPU minimum (in MHz)."
+                },
+                "cpuMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow CPU resources from parent?"
+                },
+                "cpuMax": {
+                    "type": "integer",
+                    "description": "CPU maximum (in MHz)."
+                },
+                "cpuShares": {
+                    "type": "string",
+                    "description": "CPU shares (low/normal/high/<custom>)."
+                },
+                "memMin": {
+                    "type": "integer",
+                    "description": "Memory minimum (in MB)."
+                },
+                "memMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow memory resources from parent?"
+                },
+                "memMax": {
+                    "type": "integer",
+                    "description": "Memory maximum (in MB)."
+                },
+                "memShares": {
+                    "type": "string",
+                    "description": "Memory shares (low/normal/high/<custom>)."
+                }
+            }
+        },
+        "esxi-native:index:VirtualDisk": {
+            "properties": {
+                "diskStore": {
+                    "type": "string",
+                    "description": "Disk Store."
+                },
+                "directory": {
+                    "type": "string",
+                    "description": "Disk directory."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Disk Name."
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Virtual Disk size in GB."
+                },
+                "diskType": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:DiskType",
+                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)"
+                }
+            },
+            "required": [
+                "name",
+                "diskStore",
+                "directory",
+                "diskType"
+            ],
+            "requiredInputs": [
+                "diskStore",
+                "directory",
+                "diskType"
+            ],
+            "inputProperties": {
+                "diskStore": {
+                    "type": "string",
+                    "description": "Disk Store.",
+                    "willReplaceOnChanges": true
+                },
+                "directory": {
+                    "type": "string",
+                    "description": "Disk directory.",
+                    "willReplaceOnChanges": true
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Disk Name.",
+                    "willReplaceOnChanges": true
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Virtual Disk size in GB.",
+                    "default": 1
+                },
+                "diskType": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:DiskType",
+                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)",
+                    "willReplaceOnChanges": true
+                }
+            }
+        },
+        "esxi-native:index:VirtualSwitch": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Switch name."
+                },
+                "ports": {
+                    "type": "integer",
+                    "description": "Virtual Switch number of ports. (1-4096)"
+                },
+                "mtu": {
+                    "type": "integer",
+                    "description": "Virtual Switch mtu. (1280-9000)"
+                },
+                "linkDiscoveryMode": {
+                    "type": "string",
+                    "description": "Virtual Switch Link Discovery Mode."
+                },
+                "promiscuousMode": {
+                    "type": "boolean",
+                    "description": "Promiscuous mode (true=Accept/false=Reject)."
+                },
+                "macChanges": {
+                    "type": "boolean",
+                    "description": "MAC address changes (true=Accept/false=Reject)."
+                },
+                "forgedTransmits": {
+                    "type": "boolean",
+                    "description": "Forged transmits (true=Accept/false=Reject)."
+                },
+                "uplinks": {
+                    "type": "array",
+                    "description": "Uplink configuration.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:Uplink"
+                    }
+                }
+            },
+            "required": ["name"],
+            "requiredInputs": [],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Switch name.",
+                    "willReplaceOnChanges": true
+                },
+                "ports": {
+                    "type": "integer",
+                    "description": "Virtual Switch number of ports. (1-4096)"
+                },
+                "mtu": {
+                    "type": "integer",
+                    "description": "Virtual Switch mtu. (1280-9000)"
+                },
+                "linkDiscoveryMode": {
+                    "type": "string",
+                    "description": "Virtual Switch Link Discovery Mode."
+                },
+                "promiscuousMode": {
+                    "type": "boolean",
+                    "description": "Promiscuous mode (true=Accept/false=Reject)."
+                },
+                "macChanges": {
+                    "type": "boolean",
+                    "description": "MAC address changes (true=Accept/false=Reject)."
+                },
+                "forgedTransmits": {
+                    "type": "boolean",
+                    "description": "Forged transmits (true=Accept/false=Reject)."
+                },
+                "uplinks": {
+                    "type": "array",
+                    "description": "Uplink configuration.",
+                    "items": {
+                        "$ref": "#/types/esxi-native:index:Uplink"
+                    }
                 }
             }
         }
@@ -429,6 +664,7 @@
                     },
                     "bootFirmware": {
                         "type": "string",
+                        "$ref": "#/types/esxi-native:index:BootFirmwareType",
                         "description": "Boot type('efi' is boot uefi mode)"
                     },
                     "diskStore": {
@@ -441,12 +677,11 @@
                     },
                     "bootDiskSize": {
                         "type": "string",
-                        "$ref": "#/types/esxi-native:index:BootFirmwareType",
                         "description": "VM boot disk size. Will expand boot disk to this size."
                     },
                     "bootDiskType": {
                         "type": "string",
-                        "$ref": "#/types/esxi-native:index:BootDiskType",
+                        "$ref": "#/types/esxi-native:index:DiskType",
                         "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                     },
                     "memSize": {
@@ -494,7 +729,7 @@
                         "type": "array",
                         "description": "VM virtual disks.",
                         "items": {
-                            "$ref": "#/types/esxi-native:index:VirtualDisk"
+                            "$ref": "#/types/esxi-native:index:VMVirtualDisk"
                         }
                     },
                     "notes": {
@@ -505,7 +740,7 @@
                         "type": "array",
                         "description": "pass data to VM",
                         "items": {
-                            "$ref": "#/types/esxi-native:index:ConfigItem"
+                            "$ref": "#/types/esxi-native:index:KeyValuePair"
                         }
                     }
                 }

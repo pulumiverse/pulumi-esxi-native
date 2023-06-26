@@ -4,7 +4,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { input as inputs, output as outputs, enums } from "../types";
 
-export interface ConfigItem {
+export interface KeyValuePair {
     key?: string;
     value?: string;
 }
@@ -15,7 +15,14 @@ export interface NetworkInterface {
     virtualNetwork?: string;
 }
 
-export interface VirtualDisk {
+export interface Uplink {
+    /**
+     * Uplink name.
+     */
+    name: string;
+}
+
+export interface VMVirtualDisk {
     /**
      * SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
      */

@@ -11,13 +11,14 @@ from . import _utilities
 from ._enums import *
 
 __all__ = [
-    'ConfigItemArgs',
+    'KeyValuePairArgs',
     'NetworkInterfaceArgs',
-    'VirtualDiskArgs',
+    'UplinkArgs',
+    'VMVirtualDiskArgs',
 ]
 
 @pulumi.input_type
-class ConfigItemArgs:
+class KeyValuePairArgs:
     def __init__(__self__, *,
                  key: Optional[pulumi.Input[str]] = None,
                  value: Optional[pulumi.Input[str]] = None):
@@ -87,7 +88,29 @@ class NetworkInterfaceArgs:
 
 
 @pulumi.input_type
-class VirtualDiskArgs:
+class UplinkArgs:
+    def __init__(__self__, *,
+                 name: pulumi.Input[str]):
+        """
+        :param pulumi.Input[str] name: Uplink name.
+        """
+        pulumi.set(__self__, "name", name)
+
+    @property
+    @pulumi.getter
+    def name(self) -> pulumi.Input[str]:
+        """
+        Uplink name.
+        """
+        return pulumi.get(self, "name")
+
+    @name.setter
+    def name(self, value: pulumi.Input[str]):
+        pulumi.set(self, "name", value)
+
+
+@pulumi.input_type
+class VMVirtualDiskArgs:
     def __init__(__self__, *,
                  slot: Optional[pulumi.Input[str]] = None,
                  virtual_disk_id: Optional[pulumi.Input[str]] = None):

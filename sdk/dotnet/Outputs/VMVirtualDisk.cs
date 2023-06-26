@@ -11,7 +11,7 @@ namespace Pulumi.EsxiNative.Outputs
 {
 
     [OutputType]
-    public sealed class VirtualDisk
+    public sealed class VMVirtualDisk
     {
         /// <summary>
         /// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
@@ -20,7 +20,7 @@ namespace Pulumi.EsxiNative.Outputs
         public readonly string? VirtualDiskId;
 
         [OutputConstructor]
-        private VirtualDisk(
+        private VMVirtualDisk(
             string? slot,
 
             string? virtualDiskId)

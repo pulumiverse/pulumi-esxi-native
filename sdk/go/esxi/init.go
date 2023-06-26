@@ -20,8 +20,14 @@ func (m *module) Version() semver.Version {
 
 func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi.Resource, err error) {
 	switch typ {
+	case "esxi-native:index:ResourcePool":
+		r = &ResourcePool{}
+	case "esxi-native:index:VirtualDisk":
+		r = &VirtualDisk{}
 	case "esxi-native:index:VirtualMachine":
 		r = &VirtualMachine{}
+	case "esxi-native:index:VirtualSwitch":
+		r = &VirtualSwitch{}
 	default:
 		return nil, fmt.Errorf("unknown resource type: %s", typ)
 	}

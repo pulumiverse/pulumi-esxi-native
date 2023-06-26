@@ -52,15 +52,15 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM boot disk size. Will expand boot disk to this size.
         /// </summary>
-        public readonly Pulumi.EsxiNative.BootFirmwareType? BootDiskSize;
+        public readonly string? BootDiskSize;
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
-        public readonly Pulumi.EsxiNative.BootDiskType? BootDiskType;
+        public readonly Pulumi.EsxiNative.DiskType? BootDiskType;
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
         /// </summary>
-        public readonly string? BootFirmware;
+        public readonly Pulumi.EsxiNative.BootFirmwareType? BootFirmware;
         /// <summary>
         /// esxi diskstore for boot disk.
         /// </summary>
@@ -68,7 +68,7 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// pass data to VM
         /// </summary>
-        public readonly ImmutableArray<Outputs.ConfigItem> Info;
+        public readonly ImmutableArray<Outputs.KeyValuePair> Info;
         /// <summary>
         /// The IP address reported by VMWare tools.
         /// </summary>
@@ -116,7 +116,7 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM virtual disks.
         /// </summary>
-        public readonly ImmutableArray<Outputs.VirtualDisk> VirtualDisks;
+        public readonly ImmutableArray<Outputs.VMVirtualDisk> VirtualDisks;
         /// <summary>
         /// VM Virtual HW version.
         /// </summary>
@@ -124,15 +124,15 @@ namespace Pulumi.EsxiNative
 
         [OutputConstructor]
         private GetVirtualMachineResult(
-            Pulumi.EsxiNative.BootFirmwareType? bootDiskSize,
+            string? bootDiskSize,
 
-            Pulumi.EsxiNative.BootDiskType? bootDiskType,
+            Pulumi.EsxiNative.DiskType? bootDiskType,
 
-            string? bootFirmware,
+            Pulumi.EsxiNative.BootFirmwareType? bootFirmware,
 
             string? diskStore,
 
-            ImmutableArray<Outputs.ConfigItem> info,
+            ImmutableArray<Outputs.KeyValuePair> info,
 
             string? ipAddress,
 
@@ -156,7 +156,7 @@ namespace Pulumi.EsxiNative
 
             int? startupTimeout,
 
-            ImmutableArray<Outputs.VirtualDisk> virtualDisks,
+            ImmutableArray<Outputs.VMVirtualDisk> virtualDisks,
 
             string? virtualHWVer)
         {

@@ -78,7 +78,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="bootDiskSize")
-    def boot_disk_size(self) -> Optional['BootFirmwareType']:
+    def boot_disk_size(self) -> Optional[str]:
         """
         VM boot disk size. Will expand boot disk to this size.
         """
@@ -86,7 +86,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="bootDiskType")
-    def boot_disk_type(self) -> Optional['BootDiskType']:
+    def boot_disk_type(self) -> Optional['DiskType']:
         """
         VM boot disk type. thin, zeroedthick, eagerzeroedthick
         """
@@ -94,7 +94,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="bootFirmware")
-    def boot_firmware(self) -> Optional[str]:
+    def boot_firmware(self) -> Optional['BootFirmwareType']:
         """
         Boot type('efi' is boot uefi mode)
         """
@@ -110,7 +110,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter
-    def info(self) -> Optional[Sequence['outputs.ConfigItem']]:
+    def info(self) -> Optional[Sequence['outputs.KeyValuePair']]:
         """
         pass data to VM
         """
@@ -206,7 +206,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="virtualDisks")
-    def virtual_disks(self) -> Optional[Sequence['outputs.VirtualDisk']]:
+    def virtual_disks(self) -> Optional[Sequence['outputs.VMVirtualDisk']]:
         """
         VM virtual disks.
         """

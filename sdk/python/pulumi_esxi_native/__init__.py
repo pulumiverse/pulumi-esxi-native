@@ -8,7 +8,10 @@ import typing
 from ._enums import *
 from .get_virtual_machine import *
 from .provider import *
+from .resource_pool import *
+from .virtual_disk import *
 from .virtual_machine import *
+from .virtual_switch import *
 from ._inputs import *
 from . import outputs
 
@@ -27,7 +30,10 @@ _utilities.register(
   "mod": "index",
   "fqn": "pulumi_esxi_native",
   "classes": {
-   "esxi-native:index:VirtualMachine": "VirtualMachine"
+   "esxi-native:index:ResourcePool": "ResourcePool",
+   "esxi-native:index:VirtualDisk": "VirtualDisk",
+   "esxi-native:index:VirtualMachine": "VirtualMachine",
+   "esxi-native:index:VirtualSwitch": "VirtualSwitch"
   }
  }
 ]

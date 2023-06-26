@@ -7,7 +7,10 @@ import * as utilities from "./utilities";
 // Export members:
 export * from "./getVirtualMachine";
 export * from "./provider";
+export * from "./resourcePool";
+export * from "./virtualDisk";
 export * from "./virtualMachine";
+export * from "./virtualSwitch";
 
 // Export enums:
 export * from "./types/enums";
@@ -22,14 +25,23 @@ export {
 };
 
 // Import resources to register:
+import { ResourcePool } from "./resourcePool";
+import { VirtualDisk } from "./virtualDisk";
 import { VirtualMachine } from "./virtualMachine";
+import { VirtualSwitch } from "./virtualSwitch";
 
 const _module = {
     version: utilities.getVersion(),
     construct: (name: string, type: string, urn: string): pulumi.Resource => {
         switch (type) {
+            case "esxi-native:index:ResourcePool":
+                return new ResourcePool(name, <any>undefined, { urn })
+            case "esxi-native:index:VirtualDisk":
+                return new VirtualDisk(name, <any>undefined, { urn })
             case "esxi-native:index:VirtualMachine":
                 return new VirtualMachine(name, <any>undefined, { urn })
+            case "esxi-native:index:VirtualSwitch":
+                return new VirtualSwitch(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }
