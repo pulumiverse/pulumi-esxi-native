@@ -2,6 +2,7 @@ package esxi
 
 import (
 	"fmt"
+	"github.com/golang/glog"
 	"io/ioutil"
 	"log"
 	"os"
@@ -49,29 +50,30 @@ func NewHost(host, sshPort, sslPort, user, pass, ovfLoc string) Host {
 }
 
 func (h *Host) ValidateCreds() error {
-	log.Printf("[validateEsxiCreds]\n")
-
 	var remoteCmd string
 	var err error
 
 	remoteCmd = fmt.Sprintf("vmware --version")
-	_, err = h.execute(remoteCmd, "Connectivity test, get vmware version")
+	_, err = h.Execute(remoteCmd, "Connectivity test, get vmware version")
 	if err != nil {
 		return fmt.Errorf("Failed to connect to esxi host: %s\n", err)
 	}
 
-	h.execute("mkdir -p ~", "Create home directory if missing")
+	h.Execute("mkdir -p ~", "Create home directory if missing")
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// connect to esxi host using ssh
-func (h *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
+// Connect to esxi host using ssh
+func (h *Host) Connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	//attempt := 10
 	for attempt > 0 {
 		client, err := ssh.Dial("tcp", h.Connection.getSshConnection(), h.ClientConfig)
 		if err != nil {
-			log.Printf("[runRemoteSshCommand] Retry connection: %d\n", attempt)
+			log.Printf("[ESXi][Connect] Retry: %d\n", attempt)
 			attempt -= 1
 			time.Sleep(1 * time.Second)
 		} else {
@@ -92,8 +94,8 @@ func (h *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	return nil, nil, fmt.Errorf("client connection error")
 }
 
-func (h *Host) execute(command string, shortCmdDesc string) (string, error) {
-	log.Println("[execute] :" + shortCmdDesc)
+func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
+	glog.V(9).Infof("Execute: %s", shortCmdDesc)
 
 	var attempt int
 
@@ -102,20 +104,27 @@ func (h *Host) execute(command string, shortCmdDesc string) (string, error) {
 	} else {
 		attempt = 10
 	}
-	client, session, err := h.connect(attempt)
+	client, session, err := h.Connect(attempt)
 	if err != nil {
-		log.Println("[execute] Failed err: " + err.Error())
-		return "Failed to ssh to esxi host", err
+		glog.V(9).Infof("Execute: Failed connecting to host! %s", err.Error())
+		return "Failed to connect to esxi host", err
 	}
 
 	stdoutRaw, err := session.CombinedOutput(command)
 	stdout := strings.TrimSpace(string(stdoutRaw))
 
 	if stdout == "<unset>" {
-		return "Failed to ssh to esxi host or Management Agent has been restarted", err
+		return "Failed to connect to esxi host or Management Agent has been restarted", err
 	}
 
-	log.Printf("[execute] cmd:/%s/\n stdout:/%s/\nstderr:/%s/\n", command, stdout, err)
+	logMessage := fmt.Sprintf("Execute: cmd => %s", command)
+	if len(stdout) > 0 {
+		logMessage = fmt.Sprintf("%s\n\tstdout => %s\n", logMessage, stdout)
+	}
+	if err != nil {
+		logMessage = fmt.Sprintf("%s\tstderr => %s\n", logMessage, err)
+	}
+	glog.V(9).Infof(logMessage)
 
 	closeErr := client.Close()
 	if closeErr != nil {
@@ -124,9 +133,8 @@ func (h *Host) execute(command string, shortCmdDesc string) (string, error) {
 	return stdout, closeErr
 }
 
-//  Function to scp file to esxi host.
-func (h *Host) WriteContentToFile(content string, path string, shortCmdDesc string) (string, error) {
-	log.Println("[writeContentToRemoteFile] :" + shortCmdDesc)
+func (h *Host) CopyFile(content string, path string, shortCmdDesc string) (string, error) {
+	glog.V(9).Infof("CopyFile: %s", shortCmdDesc)
 
 	f, _ := ioutil.TempFile("", "")
 	_, err := fmt.Fprintln(f, content)
@@ -139,16 +147,16 @@ func (h *Host) WriteContentToFile(content string, path string, shortCmdDesc stri
 	}
 	defer os.Remove(f.Name())
 
-	client, session, err := h.connect(10)
+	client, session, err := h.Connect(10)
 	if err != nil {
-		log.Println("[writeContentToRemoteFile] Failed err: " + err.Error())
-		return "Failed to ssh to esxi host", err
+		glog.V(9).Infof("CopyFile: Failed connecting to host! %s", err.Error())
+		return "Failed connection to host!", err
 	}
 
 	err = scp.CopyPath(f.Name(), path, session)
 	if err != nil {
-		log.Println("[writeContentToRemoteFile] Failed err: " + err.Error())
-		return "Failed to scp file to esxi host", err
+		glog.V(9).Infof("CopyFile: Failed copying the file! %s", err.Error())
+		return "Failed to copy file to esxi host!", err
 	}
 
 	closeErr := client.Close()

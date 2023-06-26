@@ -11,6 +11,7 @@ CODEGEN         := pulumi-gen-${PACK}
 VERSION         ?= $(shell pulumictl get version)
 PROVIDER_PATH   := provider
 VERSION_PATH     := ${PROVIDER_PATH}/pkg/version.Version
+VERSION_FLAGS   := -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}"
 
 SCHEMA_FILE     := provider/cmd/pulumi-resource-esxi-native/schema.json
 GOPATH			:= $(shell go env GOPATH)
@@ -23,7 +24,7 @@ ensure::
 	cd sdk && go mod tidy
 
 gen::
-	(cd provider && go build -o $(WORKING_DIR)/bin/${CODEGEN} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" ${PROJECT}/${PROVIDER_PATH}/cmd/$(CODEGEN))
+	(cd provider && go build -o $(WORKING_DIR)/bin/${CODEGEN} $(VERSION_FLAGS) ${PROJECT}/${PROVIDER_PATH}/cmd/$(CODEGEN))
 
 provider::
 	(cd provider && VERSION=${VERSION} go generate cmd/${PROVIDER}/main.go)
@@ -83,8 +84,10 @@ lint::
 	done
 
 
-install:: install_nodejs_sdk install_dotnet_sdk
-	cp $(WORKING_DIR)/bin/${PROVIDER} ${GOPATH}/bin
+install_provider::
+	(cd provider && go install $(VERSION_FLAGS) ${PROJECT}/${PROVIDER_PATH}/cmd/$(PROVIDER))
+
+install:: install_nodejs_sdk install_dotnet_sdk install_provider
 
 
 GO_TEST 	 := go test -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM}
@@ -110,3 +113,7 @@ install_go_sdk::
 install_nodejs_sdk::
 	-yarn unlink --cwd $(WORKING_DIR)/sdk/nodejs/bin
 	yarn link --cwd $(WORKING_DIR)/sdk/nodejs/bin
+
+
+up_simple_test:: provider install_provider install_nodejs_sdk
+	pulumi up --cwd examples/simple/ --yes --skip-preview

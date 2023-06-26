@@ -24,8 +24,8 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// ESXi Datastore Name config were ovftool will be configured
         /// </summary>
-        [Output("ovfToolDatastoreName")]
-        public Output<string> OvfToolDatastoreName { get; private set; } = null!;
+        [Output("ovfToolLocation")]
+        public Output<string> OvfToolLocation { get; private set; } = null!;
 
         /// <summary>
         /// ESXi Password config
@@ -88,8 +88,8 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// ESXi Datastore Name config were ovftool will be configured
         /// </summary>
-        [Input("ovfToolDatastoreName", required: true)]
-        public Input<string> OvfToolDatastoreName { get; set; } = null!;
+        [Input("ovfToolLocation", required: true)]
+        public Input<string> OvfToolLocation { get; set; } = null!;
 
         /// <summary>
         /// ESXi Password config

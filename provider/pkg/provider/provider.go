@@ -17,22 +17,20 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/provider/esxi"
+	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	"github.com/golang/glog"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/pkg/errors"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"math/rand"
-	"os"
-	"time"
-
 	"github.com/pulumi/pulumi/pkg/v3/resource/provider"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/rpcutil/rpcerror"
+	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"os"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
@@ -50,7 +48,7 @@ func makeCancellationContext() *cancellationContext {
 	}
 }
 
-type cfnProvider struct {
+type esxiProvider struct {
 	pulumirpc.UnimplementedResourceProviderServer
 
 	host     *provider.HostClient
@@ -62,14 +60,15 @@ type cfnProvider struct {
 
 	pulumiSchema []byte
 
-	esxi *esxi.Host
+	esxi   *esxi.Host
+	mapper *esxi.Mapper
 }
 
-var _ pulumirpc.ResourceProviderServer = (*cfnProvider)(nil)
+var _ pulumirpc.ResourceProviderServer = (*esxiProvider)(nil)
 
 func newESXiNativeProvider(host *provider.HostClient, name, version string, pulumiSchema []byte) (
 	pulumirpc.ResourceProviderServer, error) {
-	return &cfnProvider{
+	return &esxiProvider{
 		host:         host,
 		canceler:     makeCancellationContext(),
 		name:         name,
@@ -79,7 +78,7 @@ func newESXiNativeProvider(host *provider.HostClient, name, version string, pulu
 }
 
 // Attach sends the engine address to an already running plugin.
-func (p *cfnProvider) Attach(context context.Context, req *pulumirpc.PluginAttach) (*emptypb.Empty, error) {
+func (p *esxiProvider) Attach(_ context.Context, req *pulumirpc.PluginAttach) (*emptypb.Empty, error) {
 	host, err := provider.NewHostClient(req.GetAddress())
 	if err != nil {
 		return nil, err
@@ -89,23 +88,22 @@ func (p *cfnProvider) Attach(context context.Context, req *pulumirpc.PluginAttac
 }
 
 // Call dynamically executes a method in the provider associated with a component resource.
-func (p *cfnProvider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
+func (p *esxiProvider) Call(_ context.Context, _ *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "call is not yet implemented")
 }
 
 // Construct creates a new component resource.
-func (p *cfnProvider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
+func (p *esxiProvider) Construct(_ context.Context, _ *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "construct is not yet implemented")
 }
 
 // CheckConfig validates the configuration for this provider.
-func (p *cfnProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
-	// TODO: here we validate the connection
+func (p *esxiProvider) CheckConfig(_ context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	return &pulumirpc.CheckResponse{Inputs: req.GetNews()}, nil
 }
 
 // DiffConfig diffs the configuration for this provider.
-func (p *cfnProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *esxiProvider) DiffConfig(_ context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.DiffConfig(%s)", p.name, urn)
 	glog.V(9).Infof("%s executing", label)
@@ -144,7 +142,7 @@ func (p *cfnProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest
 }
 
 // Configure configures the resource provider with "globals" that control its behavior.
-func (p *cfnProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	vars := req.GetVariables()
 
 	var host, user, pass, sshPort, sslPort, ovfLoc string
@@ -179,6 +177,8 @@ func (p *cfnProvider) Configure(_ context.Context, req *pulumirpc.ConfigureReque
 		return nil, err
 	}
 
+	p.mapper = esxi.NewMapper()
+
 	p.configured = true
 
 	return &pulumirpc.ConfigureResponse{
@@ -187,14 +187,41 @@ func (p *cfnProvider) Configure(_ context.Context, req *pulumirpc.ConfigureReque
 }
 
 // Invoke dynamically executes a built-in function in the provider.
-func (p *cfnProvider) Invoke(_ context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
-	tok := req.GetTok()
-	return nil, fmt.Errorf("unknown Invoke token '%s'", tok)
+func (p *esxiProvider) Invoke(_ context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
+	// Unmarshal arguments.
+	token := req.GetTok()
+
+	inputs, err := plugin.UnmarshalProperties(req.GetArgs(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.Invoke(%s).inputs", p.name, token),
+		KeepUnknowns: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Process Invoke call.
+	var result resource.PropertyMap
+	invoked, err := p.mapper.Invoke(token, inputs, p.esxi)
+	if err != nil {
+		return nil, err
+	}
+	result = invoked.(resource.PropertyMap)
+
+	res, err := plugin.MarshalProperties(result, plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.Invoke(%s).outputs", p.name, token),
+		KeepUnknowns: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pulumirpc.InvokeResponse{Return: res}, nil
 }
 
 // StreamInvoke dynamically executes a built-in function in the provider. The result is streamed
 // back as a series of messages.
-func (p *cfnProvider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.ResourceProvider_StreamInvokeServer) error {
+func (p *esxiProvider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.ResourceProvider_StreamInvokeServer) error {
 	tok := req.GetTok()
 	return fmt.Errorf("unknown StreamInvoke token '%s'", tok)
 }
@@ -205,7 +232,7 @@ func (p *cfnProvider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirp
 // representation of the properties as present in the program inputs. Though this rule is not
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are using for detecting and rendering diffs.
-func (p *cfnProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *esxiProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -214,7 +241,7 @@ func (p *cfnProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
-func (p *cfnProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *esxiProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Diff(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -243,47 +270,47 @@ func (p *cfnProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pu
 	}, nil
 }
 
-// Create allocates a new instance of the provided resource and returns its unique ID afterwards.
-func (p *cfnProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
+// Create allocates a new instance of the provided resource and returns its unique ID afterward.
+func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	urn := resource.URN(req.GetUrn())
-	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	token := string(urn.Type())
 
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
+	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
+	glog.V(9).Infof("%s executing", label)
+
+	// Deserialize RPC inputs.
+	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.properties", label),
+		KeepUnknowns: true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "malformed resource inputs")
+	}
+
+	// Process Create call.
+	var result resource.PropertyMap
+	created, err := p.mapper.Create(token, inputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
+	result = created.(resource.PropertyMap)
 
-	// Replace the below random number implementation with logic specific to your provider
-	if !inputs["length"].IsNumber() {
-		return nil, fmt.Errorf("expected input property 'length' of type 'number' but got '%s", inputs["length"].TypeString())
-	}
-
-	n := int(inputs["length"].NumberValue())
-
-	// Actually "create" the random number
-	result := makeRandom(n)
-
-	outputs := map[string]interface{}{
-		"length": n,
-		"result": result,
-	}
-
-	outputProperties, err := plugin.MarshalProperties(
-		resource.NewPropertyMapFromMap(outputs),
+	outputProperties, err := plugin.MarshalProperties(result,
 		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &pulumirpc.CreateResponse{
-		Id:         result,
+		Id:         "result",
 		Properties: outputProperties,
 	}, nil
 }
 
 // Read the current live state associated with a resource.
-func (p *cfnProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
+func (p *esxiProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Read(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -292,7 +319,7 @@ func (p *cfnProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pu
 }
 
 // Update updates an existing resource with new values.
-func (p *cfnProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
+func (p *esxiProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -303,7 +330,7 @@ func (p *cfnProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) 
 
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
-func (p *cfnProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
+func (p *esxiProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -313,14 +340,14 @@ func (p *cfnProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) 
 }
 
 // GetPluginInfo returns generic information about this plugin, like its version.
-func (p *cfnProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
+func (p *esxiProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
 	return &pulumirpc.PluginInfo{
 		Version: p.version,
 	}, nil
 }
 
 // GetSchema returns the JSON-serialized schema for the provider.
-func (p *cfnProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
+func (p *esxiProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
 	if v := req.GetVersion(); v != 0 {
 		return nil, fmt.Errorf("unsupported schema version %d", v)
 	}
@@ -332,8 +359,8 @@ func (p *cfnProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaReq
 // creation error or an initialization error). Since Cancel is advisory and non-blocking, it is up
 // to the host to decide how long to wait after Cancel is called before (e.g.)
 // hard-closing any gRPC connection.
-func (p *cfnProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
-	// TODO
+func (p *esxiProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
+	p.canceler.cancel()
 	return &pbempty.Empty{}, nil
 }
 
@@ -349,13 +376,13 @@ func varsOrEnv(vars map[string]string, key string, env ...string) (string, bool)
 	return "", false
 }
 
-func makeRandom(length int) string {
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	charset := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	result := make([]rune, length)
-	for i := range result {
-		result[i] = charset[seededRand.Intn(len(charset))]
+// The last known state of the object is included in the error so that it can be check pointed.
+func partialError(id string, err error, state *structpb.Struct, inputs *structpb.Struct) error {
+	detail := pulumirpc.ErrorResourceInitFailed{
+		Id:         id,
+		Properties: state,
+		Reasons:    []string{err.Error()},
+		Inputs:     inputs,
 	}
-	return string(result)
+	return rpcerror.WithDetails(rpcerror.New(codes.Unknown, err.Error()), &detail)
 }

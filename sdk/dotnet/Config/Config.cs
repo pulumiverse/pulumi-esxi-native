@@ -42,14 +42,14 @@ namespace Pulumi.EsxiNative
             set => _host.Set(value);
         }
 
-        private static readonly __Value<string?> _ovfToolDatastoreName = new __Value<string?>(() => __config.Get("ovfToolDatastoreName"));
+        private static readonly __Value<string?> _ovfToolLocation = new __Value<string?>(() => __config.Get("ovfToolLocation"));
         /// <summary>
         /// ESXi Datastore Name config were ovftool will be configured
         /// </summary>
-        public static string? OvfToolDatastoreName
+        public static string? OvfToolLocation
         {
-            get => _ovfToolDatastoreName.Get();
-            set => _ovfToolDatastoreName.Set(value);
+            get => _ovfToolLocation.Get();
+            set => _ovfToolLocation.Set(value);
         }
 
         private static readonly __Value<string?> _password = new __Value<string?>(() => __config.Get("password"));

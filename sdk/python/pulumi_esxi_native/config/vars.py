@@ -23,11 +23,11 @@ class _ExportableConfig(types.ModuleType):
         return __config__.get('host')
 
     @property
-    def ovf_tool_datastore_name(self) -> Optional[str]:
+    def ovf_tool_location(self) -> Optional[str]:
         """
         ESXi Datastore Name config were ovftool will be configured
         """
-        return __config__.get('ovfToolDatastoreName')
+        return __config__.get('ovfToolLocation')
 
     @property
     def password(self) -> Optional[str]:

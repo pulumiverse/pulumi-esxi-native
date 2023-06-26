@@ -15,7 +15,7 @@ __all__ = ['ProviderArgs', 'Provider']
 class ProviderArgs:
     def __init__(__self__, *,
                  host: pulumi.Input[str],
-                 ovf_tool_datastore_name: pulumi.Input[str],
+                 ovf_tool_location: pulumi.Input[str],
                  password: pulumi.Input[str],
                  ssh_port: Optional[pulumi.Input[str]] = None,
                  ssl_port: Optional[pulumi.Input[str]] = None,
@@ -23,14 +23,14 @@ class ProviderArgs:
         """
         The set of arguments for constructing a Provider resource.
         :param pulumi.Input[str] host: ESXi Host Name config
-        :param pulumi.Input[str] ovf_tool_datastore_name: ESXi Datastore Name config were ovftool will be configured
+        :param pulumi.Input[str] ovf_tool_location: ESXi Datastore Name config were ovftool will be configured
         :param pulumi.Input[str] password: ESXi Password config
         :param pulumi.Input[str] ssh_port: ESXi Host SSH Port config
         :param pulumi.Input[str] ssl_port: ESXi Host SSL Port config
         :param pulumi.Input[str] username: ESXi Username config
         """
         pulumi.set(__self__, "host", host)
-        pulumi.set(__self__, "ovf_tool_datastore_name", ovf_tool_datastore_name)
+        pulumi.set(__self__, "ovf_tool_location", ovf_tool_location)
         pulumi.set(__self__, "password", password)
         if ssh_port is None:
             ssh_port = '22'
@@ -58,16 +58,16 @@ class ProviderArgs:
         pulumi.set(self, "host", value)
 
     @property
-    @pulumi.getter(name="ovfToolDatastoreName")
-    def ovf_tool_datastore_name(self) -> pulumi.Input[str]:
+    @pulumi.getter(name="ovfToolLocation")
+    def ovf_tool_location(self) -> pulumi.Input[str]:
         """
         ESXi Datastore Name config were ovftool will be configured
         """
-        return pulumi.get(self, "ovf_tool_datastore_name")
+        return pulumi.get(self, "ovf_tool_location")
 
-    @ovf_tool_datastore_name.setter
-    def ovf_tool_datastore_name(self, value: pulumi.Input[str]):
-        pulumi.set(self, "ovf_tool_datastore_name", value)
+    @ovf_tool_location.setter
+    def ovf_tool_location(self, value: pulumi.Input[str]):
+        pulumi.set(self, "ovf_tool_location", value)
 
     @property
     @pulumi.getter
@@ -124,7 +124,7 @@ class Provider(pulumi.ProviderResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  host: Optional[pulumi.Input[str]] = None,
-                 ovf_tool_datastore_name: Optional[pulumi.Input[str]] = None,
+                 ovf_tool_location: Optional[pulumi.Input[str]] = None,
                  password: Optional[pulumi.Input[str]] = None,
                  ssh_port: Optional[pulumi.Input[str]] = None,
                  ssl_port: Optional[pulumi.Input[str]] = None,
@@ -136,7 +136,7 @@ class Provider(pulumi.ProviderResource):
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[str] host: ESXi Host Name config
-        :param pulumi.Input[str] ovf_tool_datastore_name: ESXi Datastore Name config were ovftool will be configured
+        :param pulumi.Input[str] ovf_tool_location: ESXi Datastore Name config were ovftool will be configured
         :param pulumi.Input[str] password: ESXi Password config
         :param pulumi.Input[str] ssh_port: ESXi Host SSH Port config
         :param pulumi.Input[str] ssl_port: ESXi Host SSL Port config
@@ -167,7 +167,7 @@ class Provider(pulumi.ProviderResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  host: Optional[pulumi.Input[str]] = None,
-                 ovf_tool_datastore_name: Optional[pulumi.Input[str]] = None,
+                 ovf_tool_location: Optional[pulumi.Input[str]] = None,
                  password: Optional[pulumi.Input[str]] = None,
                  ssh_port: Optional[pulumi.Input[str]] = None,
                  ssl_port: Optional[pulumi.Input[str]] = None,
@@ -189,9 +189,9 @@ class Provider(pulumi.ProviderResource):
             if host is None and not opts.urn:
                 raise TypeError("Missing required property 'host'")
             __props__.__dict__["host"] = host
-            if ovf_tool_datastore_name is None and not opts.urn:
-                raise TypeError("Missing required property 'ovf_tool_datastore_name'")
-            __props__.__dict__["ovf_tool_datastore_name"] = ovf_tool_datastore_name
+            if ovf_tool_location is None and not opts.urn:
+                raise TypeError("Missing required property 'ovf_tool_location'")
+            __props__.__dict__["ovf_tool_location"] = ovf_tool_location
             if password is None and not opts.urn:
                 raise TypeError("Missing required property 'password'")
             __props__.__dict__["password"] = password
@@ -219,12 +219,12 @@ class Provider(pulumi.ProviderResource):
         return pulumi.get(self, "host")
 
     @property
-    @pulumi.getter(name="ovfToolDatastoreName")
-    def ovf_tool_datastore_name(self) -> pulumi.Output[str]:
+    @pulumi.getter(name="ovfToolLocation")
+    def ovf_tool_location(self) -> pulumi.Output[str]:
         """
         ESXi Datastore Name config were ovftool will be configured
         """
-        return pulumi.get(self, "ovf_tool_datastore_name")
+        return pulumi.get(self, "ovf_tool_location")
 
     @property
     @pulumi.getter

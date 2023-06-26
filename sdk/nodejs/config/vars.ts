@@ -21,10 +21,10 @@ Object.defineProperty(exports, "host", {
 /**
  * ESXi Datastore Name config were ovftool will be configured
  */
-export declare const ovfToolDatastoreName: string | undefined;
-Object.defineProperty(exports, "ovfToolDatastoreName", {
+export declare const ovfToolLocation: string | undefined;
+Object.defineProperty(exports, "ovfToolLocation", {
     get() {
-        return __config.get("ovfToolDatastoreName");
+        return __config.get("ovfToolLocation");
     },
     enumerable: true,
 });

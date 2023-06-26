@@ -29,7 +29,7 @@ export class Provider extends pulumi.ProviderResource {
     /**
      * ESXi Datastore Name config were ovftool will be configured
      */
-    public readonly ovfToolDatastoreName!: pulumi.Output<string>;
+    public readonly ovfToolLocation!: pulumi.Output<string>;
     /**
      * ESXi Password config
      */
@@ -61,14 +61,14 @@ export class Provider extends pulumi.ProviderResource {
             if ((!args || args.host === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'host'");
             }
-            if ((!args || args.ovfToolDatastoreName === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'ovfToolDatastoreName'");
+            if ((!args || args.ovfToolLocation === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'ovfToolLocation'");
             }
             if ((!args || args.password === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'password'");
             }
             resourceInputs["host"] = args ? args.host : undefined;
-            resourceInputs["ovfToolDatastoreName"] = args ? args.ovfToolDatastoreName : undefined;
+            resourceInputs["ovfToolLocation"] = args ? args.ovfToolLocation : undefined;
             resourceInputs["password"] = args ? args.password : undefined;
             resourceInputs["sshPort"] = (args ? args.sshPort : undefined) ?? "22";
             resourceInputs["sslPort"] = (args ? args.sslPort : undefined) ?? "443";
@@ -90,7 +90,7 @@ export interface ProviderArgs {
     /**
      * ESXi Datastore Name config were ovftool will be configured
      */
-    ovfToolDatastoreName: pulumi.Input<string>;
+    ovfToolLocation: pulumi.Input<string>;
     /**
      * ESXi Password config
      */

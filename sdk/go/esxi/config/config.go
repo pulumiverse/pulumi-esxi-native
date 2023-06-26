@@ -14,8 +14,8 @@ func GetHost(ctx *pulumi.Context) string {
 }
 
 // ESXi Datastore Name config were ovftool will be configured
-func GetOvfToolDatastoreName(ctx *pulumi.Context) string {
-	return config.Get(ctx, "esxi-native:ovfToolDatastoreName")
+func GetOvfToolLocation(ctx *pulumi.Context) string {
+	return config.Get(ctx, "esxi-native:ovfToolLocation")
 }
 
 // ESXi Password config

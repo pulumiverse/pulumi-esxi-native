@@ -14,7 +14,7 @@ host: Optional[str]
 ESXi Host Name config
 """
 
-ovfToolDatastoreName: Optional[str]
+ovfToolLocation: Optional[str]
 """
 ESXi Datastore Name config were ovftool will be configured
 """
