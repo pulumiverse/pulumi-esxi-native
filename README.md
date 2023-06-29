@@ -5,6 +5,17 @@ This repository crates a VMWare ESXi provider to provision VMs directly on an ES
 The repository is created based on the Terraform Provider [terraform-provider-esxi](https://github.com/josenk/terraform-provider-esxi/tree/master).
 Thanks to the wonderful work done there by [@josenk](https://github.com/josenk), I was able to build this provider for Pulumi users.
 
+## IMPORTANT NOTES!
+
+**Note for Pull Requests (PRs)**: When creating a pull request, please do it onto the **MAIN branch** which is
+the consolidated work-in-progress branch. Do not request it onto another branch.
+
+> **PLEASE** Read our [branch guide](branch-guide.md) to know about our branching policy
+>
+> ### CONTRIBUTING
+>
+> **IMPORTANT:** The contribution details are stated [here](CONTRIBUTING.md)
+
 ## Requirements
 -   You MUST enable ssh access on your ESXi hypervisor.
 * Google 'How to enable ssh access on esxi'
