@@ -2,145 +2,50 @@
 
 This repository crates a VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.
 
-### Background
+The repository is created based on the Terraform Provider [terraform-provider-esxi](https://github.com/josenk/terraform-provider-esxi/tree/master).
+Thanks to the wonderful work done there by [@josenk](https://github.com/josenk), I was able to build this provider for Pulumi users.
 
-Learn about the concepts behind [Pulumi Packages](https://www.pulumi.com/docs/guides/pulumi-packages/#pulumi-packages).
+## Requirements
+-   You MUST enable ssh access on your ESXi hypervisor.
+* Google 'How to enable ssh access on esxi'
+-   In general, you should know how to use terraform, esxi and some networking...
+* You will most likely need a DHCP server on your primary network if you are deploying VMs with public OVF/OVA/VMX images.  (Sources that have unconfigured primary interfaces.)
+- The source OVF/OVA/VMX images must have open-vm-tools or vmware-tools installed to properly import an IPAddress.  (you need this to run provisioners)
 
-Follow this link to see [an architecture diagram for Pulumi](https://www.pulumi.com/docs/intro/concepts/how-pulumi-works/#how-pulumi-works).
+## Features and Compatibility
 
-A Pulumi Resource Provider:
-- is a gRPC server which allows for the Pulumi engine to create resources in a specific cloud
-- holds the lifecycle logic for these cloud resources
-- holds a pulumi JSON schema that describes the provider
-- provides language-specific SDKs so resources can be created in whichever language you prefer
+* Source image can be a clone of a VM or local vmx, ovf, ova file. This provider uses ovftool, so there should be a wide compatibility.
+* Supports adding your VM to Resource Pools to partition CPU and memory usage from other VMs on your ESXi host.
+* Pulumi will Create, Destroy, Update & Import Resource Pools.
+* Pulumi will Create, Destroy, Update & Import Guest VMs.
+* Pulumi will Create, Destroy, Update & Import Extra Storage for Guests.
+* Pulumi will Create, Destroy, Update & Import vSwitches.
+* Pulumi will Create, Destroy, Update & Import Port Groups.
 
-When we speak of a "native" provider, we mean that all implementation is native to Pulumi.
+## Why this provider?
 
-### Prerequisites
+If you do not have a vCenter or vSphere, especially if you are running a home lab, these services are expensive, and maybe you cannot have them, but the ESXi is free, so that is the reason behind it!
 
-Ensure the following tools are installed and present in your `$PATH`:
+## How to install
 
-* [`pulumictl`](https://github.com/pulumi/pulumictl#installation)
-* [Go 1.17](https://golang.org/dl/) or 1.latest
-* [NodeJS](https://nodejs.org/en/) 14.x.  We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage NodeJS installations.
-* [Yarn](https://yarnpkg.com/)
-* [TypeScript](https://www.typescriptlang.org/)
-* [Python](https://www.python.org/downloads/) (called as `python3`).  For recent versions of MacOS, the system-installed version is fine.
-* [.NET](https://dotnet.microsoft.com/download)
+TODO: Details will be added here
 
+## How to use and configure
 
-### Repository
+TODO: Details will be added here
 
+## Available resources
 
-#### Build the provider and install the plugin
+TODO: Details will be added here
 
-   ```bash
-   $ make build install
-   ```
+## Known issues with vmware_esxi
 
-This will:
+* Using a local source vmx files should not have any networks configured. There is very limited network interface mapping abilities in ovf_tools for vmx files.  
+  It's best to simply clean out all network information from your vmx file. The plugin will add network configuration to the destination vm guest as required.
+* terraform import cannot import the guest disk type (thick, thin, etc.) if the VM is powered on and cannot import the guest ip_address if it's powered off.
+* Only `numVCpus` are supported, `numCores` is not.
+* Doesn't support CD-ROM or floppy.
+* Doesn't support Shared bus Interfaces, or Shared disks.
+* Using an incorrect password could lockout your account using default esxi pam settings.
+* Don't set `startupTimeout` or `shutdownTimeout` to 0 (zero). It's valid, however it will be changed to default values.
 
-1. Create the SDK codegen binary and place it in a `./bin` folder (gitignored)
-2. Create the provider binary and place it in the `./bin` folder (gitignored)
-3. Generate the dotnet, Go, Node, and Python SDKs and place them in the `./sdk` folder
-4. Install the provider on your machine.
-
-#### Test against the example
-
-```bash
-$ cd examples/simple
-$ yarn link @pulumi/esxi-native
-$ yarn install
-$ pulumi stack init test
-$ pulumi up
-```
-
-#### A brief repository overview
-
-You now have:
-
-1. A `provider/` folder containing the building and implementation logic
-   1. `cmd/`
-      1. `pulumi-gen-esxi-native/` - generates language SDKs from the schema
-      2. `pulumi-resource-esxi-native/` - holds the package schema, injects the package version, and starts the gRPC server
-   2. `pkg`
-      1. `provider` - holds the gRPC methods (and for now, the sample implementation logic) required by the Pulumi engine
-      2. `version` - semver package to be consumed by build processes
-2. `sdk` - holds the generated code libraries created by `pulumi-gen-esxi-native/main.go`
-3. `examples` a folder of Pulumi programs to try locally and/or use in CI.
-4. A `Makefile` and this `README`.
-
-### Writing the schema
-
-The [JSON schema file](https://www.pulumi.com/docs/guides/pulumi-packages/schema) is used by `pulumi-gen-esxi-native` to create language-specific SDKs. 
-It is, therefore, a central requirement for any resource provider.
-Provider schemas can be handwritten, or alternatively machine-generated by combining API specification with pulumi-specific logic.
-
-This repository provides the [esxi-native schema](./provider/cmd/pulumi-resource-esxi-native/schema.json) to get you started. 
-Refer to the [package schema documentation](https://www.pulumi.com/docs/guides/pulumi-packages/schema/#pulumi-package-schema) for additional details when writing the schema.
-
-### Implementing the gRPC methods
-
-Once you have a schema that describes all the resources and metadata for your provider, you will need to implement the desired gRPC methods.
-You will find a mostly blank implementation of these in `pkg/provider/provider.go`.
-Note that these methods do not link 1:1 to the Pulumi CLI commands.
-
-#### Basic Functionality
-
-The struct and creation of the provider are implemented already:
-
-```go
-// provider/pkg/provider.go
-type esxiNativeProvider struct {
-	host    *provider.HostClient
-	name    string
-	version string
-	schema  []byte
-}
-
-func makeProvider(host *provider.HostClient, name, version string, pulumiSchema []byte) (pulumirpc.ResourceProviderServer, error) {
-   // Return the new provider
-   return &esxiNativeProvider{
-   host:    host,
-   name:    name,
-   version: version,
-   schema:  pulumiSchema,
-   }, nil
-}
-```
-
-You need to provide the following methods:
-
-1. Check - validates resource Inputs
-2. Diff - calculates the differences between the actual and the desired state of a resource
-3. Create - creates a new instance of a resource from an Input
-4. Update - updates a resource in-place (i.e. without deleting/recreating)
-5. Read - reads current inputs and state for a resource
-6. Delete - deletes a resource and its corresponding state
-
-[Resource lifecycle methods are documented here](https://pulumi-developer-docs.readthedocs.io/en/stable/providers/implementers-guide.html#custom-resource-lifecycle).
-
-The following methods are necessary for every provider and are already implemented:
-
-1. GetPluginInfo - returns generic information about this plugin, like its version
-2. GetSchema - returns the Pulumi schema to the provider
-
-
-#### Additional Methods
-
-The [resource provider service](https://github.com/pulumi/pulumi/blob/master/sdk/proto/provider.proto) includes a few more gRPC methods that you may need to implement and can read more about.
-
-### Build Examples
-
-Create an example program using the resources defined in your provider, and place it in the `examples/` folder.
-
-You can now repeat the steps for [build, install, and test](#test-against-the-example).
-
-
-## Documentation
-
-Please [follow this guide to add documentation to your provider](https://www.pulumi.com/docs/guides/pulumi-packages/how-to-author/#write-documentation).
-
-## Configuring CI and releases
-
-1. Follow the instructions laid out [here](.github/workflows/README-DEPLOYMENT.md).
