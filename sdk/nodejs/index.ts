@@ -6,6 +6,7 @@ import * as utilities from "./utilities";
 
 // Export members:
 export * from "./getVirtualMachine";
+export * from "./portGroup";
 export * from "./provider";
 export * from "./resourcePool";
 export * from "./virtualDisk";
@@ -25,6 +26,7 @@ export {
 };
 
 // Import resources to register:
+import { PortGroup } from "./portGroup";
 import { ResourcePool } from "./resourcePool";
 import { VirtualDisk } from "./virtualDisk";
 import { VirtualMachine } from "./virtualMachine";
@@ -34,6 +36,8 @@ const _module = {
     version: utilities.getVersion(),
     construct: (name: string, type: string, urn: string): pulumi.Resource => {
         switch (type) {
+            case "esxi-native:index:PortGroup":
+                return new PortGroup(name, <any>undefined, { urn })
             case "esxi-native:index:ResourcePool":
                 return new ResourcePool(name, <any>undefined, { urn })
             case "esxi-native:index:VirtualDisk":

@@ -7,6 +7,7 @@ import typing
 # Export this package's modules as members:
 from ._enums import *
 from .get_virtual_machine import *
+from .port_group import *
 from .provider import *
 from .resource_pool import *
 from .virtual_disk import *
@@ -30,6 +31,7 @@ _utilities.register(
   "mod": "index",
   "fqn": "pulumi_esxi_native",
   "classes": {
+   "esxi-native:index:PortGroup": "PortGroup",
    "esxi-native:index:ResourcePool": "ResourcePool",
    "esxi-native:index:VirtualDisk": "VirtualDisk",
    "esxi-native:index:VirtualMachine": "VirtualMachine",

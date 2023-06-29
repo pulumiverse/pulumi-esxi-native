@@ -17,6 +17,7 @@
         "config/vars.ts",
         "getVirtualMachine.ts",
         "index.ts",
+        "portGroup.ts",
         "provider.ts",
         "resourcePool.ts",
         "types/enums/index.ts",

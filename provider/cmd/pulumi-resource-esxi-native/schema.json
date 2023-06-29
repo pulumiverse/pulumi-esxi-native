@@ -200,6 +200,63 @@
         }
     },
     "resources": {
+        "esxi-native:index:PortGroup": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Port Group name."
+                },
+                "vSwitch": {
+                    "type": "string",
+                    "description": "Virtual Switch Name."
+                },
+                "vlan": {
+                    "type": "integer",
+                    "description": "Port Group vlan id"
+                },
+                "promiscuousMode": {
+                    "type": "boolean",
+                    "description": "Promiscuous mode (true=Accept/false=Reject)."
+                },
+                "macChanges": {
+                    "type": "boolean",
+                    "description": "MAC address changes (true=Accept/false=Reject)."
+                },
+                "forgedTransmits": {
+                    "type": "boolean",
+                    "description": "Forged transmits (true=Accept/false=Reject)."
+                }
+            },
+            "required": ["name"],
+            "requiredInputs": [],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Switch name.",
+                    "willReplaceOnChanges": true
+                },
+                "vSwitch": {
+                    "type": "string",
+                    "description": "Virtual Switch Name."
+                },
+                "vlan": {
+                    "type": "integer",
+                    "description": "Port Group vlan id"
+                },
+                "promiscuousMode": {
+                    "type": "boolean",
+                    "description": "Promiscuous mode (true=Accept/false=Reject)."
+                },
+                "macChanges": {
+                    "type": "boolean",
+                    "description": "MAC address changes (true=Accept/false=Reject)."
+                },
+                "forgedTransmits": {
+                    "type": "boolean",
+                    "description": "Forged transmits (true=Accept/false=Reject)."
+                }
+            }
+        },
         "esxi-native:index:VirtualMachine": {
             "required": [
                 "name",

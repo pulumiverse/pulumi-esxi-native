@@ -60,8 +60,8 @@ type esxiProvider struct {
 
 	pulumiSchema []byte
 
-	esxi   *esxi.Host
-	mapper *esxi.Mapper
+	esxi            *esxi.Host
+	resourceService *esxi.ResourceService
 }
 
 var _ pulumirpc.ResourceProviderServer = (*esxiProvider)(nil)
@@ -177,7 +177,7 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 		return nil, err
 	}
 
-	p.mapper = esxi.NewMapper()
+	p.resourceService = esxi.NewResourceService()
 
 	p.configured = true
 
@@ -202,7 +202,7 @@ func (p *esxiProvider) Invoke(_ context.Context, req *pulumirpc.InvokeRequest) (
 
 	// Process Invoke call.
 	var result resource.PropertyMap
-	invoked, err := p.mapper.Invoke(token, inputs, p.esxi)
+	invoked, err := p.resourceService.Invoke(token, inputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 
 	// Process Create call.
 	var result resource.PropertyMap
-	created, err := p.mapper.Create(token, inputs, p.esxi)
+	created, err := p.resourceService.Create(token, inputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}

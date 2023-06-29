@@ -4,7 +4,11 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
-func CreateVirtualSwitch(inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
+func VirtualSwitchCreateParser() {
+
+}
+
+func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
 	//var uplinks []string
 	//var remoteCmd string
 	//var somthingWentWrong string
@@ -121,20 +125,4 @@ func CreateVirtualSwitch(inputs resource.PropertyMap, esxi *Host) (resource.Prop
 	}
 
 	return outputs, nil
-}
-
-func UpdateVirtualSwitch() {
-
-}
-
-func DeleteVirtualSwitch() {
-
-}
-
-func ReadVirtualSwitch() {
-
-}
-
-func GetVirtualSwitch() {
-
 }

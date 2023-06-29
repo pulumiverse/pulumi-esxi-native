@@ -3,8 +3,6 @@ package esxi
 import (
 	"fmt"
 	"github.com/golang/glog"
-	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -59,7 +57,12 @@ func (h *Host) ValidateCreds() error {
 		return fmt.Errorf("Failed to connect to esxi host: %s\n", err)
 	}
 
-	h.Execute("mkdir -p ~", "Create home directory if missing")
+	mkdir, err := h.Execute("mkdir -p ~", "Create home directory if missing")
+	glog.V(9).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
+
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}
@@ -73,7 +76,7 @@ func (h *Host) Connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	for attempt > 0 {
 		client, err := ssh.Dial("tcp", h.Connection.getSshConnection(), h.ClientConfig)
 		if err != nil {
-			log.Printf("[ESXi][Connect] Retry: %d\n", attempt)
+			glog.V(9).Infof("Connect: Retry attempt %d", attempt)
 			attempt -= 1
 			time.Sleep(1 * time.Second)
 		} else {
@@ -136,7 +139,7 @@ func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
 func (h *Host) CopyFile(content string, path string, shortCmdDesc string) (string, error) {
 	glog.V(9).Infof("CopyFile: %s", shortCmdDesc)
 
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 	_, err := fmt.Fprintln(f, content)
 	if err != nil {
 		return "", err
