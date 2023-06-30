@@ -22,6 +22,7 @@ class VirtualMachineArgs:
                  num_v_cpus: pulumi.Input[str],
                  os: pulumi.Input[str],
                  resource_pool_name: pulumi.Input[str],
+                 boot_disk_size: Optional[pulumi.Input[str]] = None,
                  boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
@@ -45,6 +46,7 @@ class VirtualMachineArgs:
         :param pulumi.Input[str] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
+        :param pulumi.Input[str] boot_disk_size: VM boot disk size. Will expand boot disk to this size.
         :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
         :param pulumi.Input['BootFirmwareType'] boot_firmware: Boot type('efi' is boot uefi mode)
         :param pulumi.Input[str] clone_from_virtual_machine: Source vm path on esxi host to clone.
@@ -69,6 +71,8 @@ class VirtualMachineArgs:
         if resource_pool_name is None:
             resource_pool_name = '/'
         pulumi.set(__self__, "resource_pool_name", resource_pool_name)
+        if boot_disk_size is not None:
+            pulumi.set(__self__, "boot_disk_size", boot_disk_size)
         if boot_disk_type is None:
             boot_disk_type = 'thin'
         if boot_disk_type is not None:
@@ -171,6 +175,18 @@ class VirtualMachineArgs:
     @resource_pool_name.setter
     def resource_pool_name(self, value: pulumi.Input[str]):
         pulumi.set(self, "resource_pool_name", value)
+
+    @property
+    @pulumi.getter(name="bootDiskSize")
+    def boot_disk_size(self) -> Optional[pulumi.Input[str]]:
+        """
+        VM boot disk size. Will expand boot disk to this size.
+        """
+        return pulumi.get(self, "boot_disk_size")
+
+    @boot_disk_size.setter
+    def boot_disk_size(self, value: Optional[pulumi.Input[str]]):
+        pulumi.set(self, "boot_disk_size", value)
 
     @property
     @pulumi.getter(name="bootDiskType")
@@ -370,6 +386,7 @@ class VirtualMachine(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 boot_disk_size: Optional[pulumi.Input[str]] = None,
                  boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
@@ -396,6 +413,7 @@ class VirtualMachine(pulumi.CustomResource):
         Create a VirtualMachine resource with the given unique name, props, and options.
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
+        :param pulumi.Input[str] boot_disk_size: VM boot disk size. Will expand boot disk to this size.
         :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
         :param pulumi.Input['BootFirmwareType'] boot_firmware: Boot type('efi' is boot uefi mode)
         :param pulumi.Input[str] clone_from_virtual_machine: Source vm path on esxi host to clone.
@@ -441,6 +459,7 @@ class VirtualMachine(pulumi.CustomResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 boot_disk_size: Optional[pulumi.Input[str]] = None,
                  boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
@@ -476,6 +495,7 @@ class VirtualMachine(pulumi.CustomResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = VirtualMachineArgs.__new__(VirtualMachineArgs)
 
+            __props__.__dict__["boot_disk_size"] = boot_disk_size
             if boot_disk_type is None:
                 boot_disk_type = 'thin'
             __props__.__dict__["boot_disk_type"] = boot_disk_type
@@ -519,7 +539,6 @@ class VirtualMachine(pulumi.CustomResource):
             __props__.__dict__["startup_timeout"] = startup_timeout
             __props__.__dict__["virtual_disks"] = virtual_disks
             __props__.__dict__["virtual_hw_ver"] = virtual_hw_ver
-            __props__.__dict__["boot_disk_size"] = None
             __props__.__dict__["ip_address"] = None
         super(VirtualMachine, __self__).__init__(
             'esxi-native:index:VirtualMachine',

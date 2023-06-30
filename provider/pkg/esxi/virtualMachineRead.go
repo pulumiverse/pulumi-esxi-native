@@ -64,10 +64,10 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) (VirtualMachine, error) 
 		case strings.Contains(scanner.Text(), "name = "):
 			r, _ = regexp.Compile("\".*\"")
 			vm.Name = r.FindString(scanner.Text())
-			nr := strings.NewReplacer(`"`, "", `"`, "")
+			nr := strings.NewReplacer("\"", "", "\"", "")
 			vm.Name = nr.Replace(vm.Name)
 		case strings.Contains(scanner.Text(), "vmPathName = "):
-			r, _ = regexp.Compile("\".*\"")
+			r, _ = regexp.Compile("\\[.*\\]")
 			vm.DiskStore = r.FindString(scanner.Text())
 			nr := strings.NewReplacer("[", "", "]", "")
 			vm.DiskStore = nr.Replace(vm.DiskStore)

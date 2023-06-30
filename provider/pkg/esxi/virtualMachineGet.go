@@ -13,7 +13,7 @@ func VirtualMachineGet(name string, esxi *Host) (resource.PropertyMap, error) {
 
 	vm, err := esxi.readVirtualMachine(VirtualMachine{
 		Id:             id,
-		StartupTimeout: 600,
+		StartupTimeout: 1,
 	})
 
 	if err != nil || vm.Name == "" {

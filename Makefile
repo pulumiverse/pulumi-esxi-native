@@ -116,4 +116,4 @@ install_nodejs_sdk::
 
 
 up_simple_test:: provider install_provider install_nodejs_sdk
-	TF_LOG=TRACE pulumi up --cwd examples/simple/ --yes --skip-preview -v=9
+	pulumi up --cwd examples/simple/ --yes --skip-preview --verbose 9

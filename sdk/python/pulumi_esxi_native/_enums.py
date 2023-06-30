@@ -19,3 +19,4 @@ class DiskType(str, Enum):
     THIN = "thin"
     ZEROED_THICK = "zeroedthick"
     EAGER_ZEROED_THICK = "eagerzeroedthick"
+    UNKNOWN = "Unknown"

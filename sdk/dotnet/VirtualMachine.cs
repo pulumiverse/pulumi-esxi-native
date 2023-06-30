@@ -166,6 +166,12 @@ namespace Pulumi.EsxiNative
     public sealed class VirtualMachineArgs : Pulumi.ResourceArgs
     {
         /// <summary>
+        /// VM boot disk size. Will expand boot disk to this size.
+        /// </summary>
+        [Input("bootDiskSize")]
+        public Input<string>? BootDiskSize { get; set; }
+
+        /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
         [Input("bootDiskType")]

@@ -35,7 +35,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    public /*out*/ readonly bootDiskSize!: pulumi.Output<string | undefined>;
+    public readonly bootDiskSize!: pulumi.Output<string | undefined>;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
@@ -131,6 +131,7 @@ export class VirtualMachine extends pulumi.CustomResource {
             if ((!args || args.resourcePoolName === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'resourcePoolName'");
             }
+            resourceInputs["bootDiskSize"] = args ? args.bootDiskSize : undefined;
             resourceInputs["bootDiskType"] = (args ? args.bootDiskType : undefined) ?? "thin";
             resourceInputs["bootFirmware"] = (args ? args.bootFirmware : undefined) ?? "bios";
             resourceInputs["cloneFromVirtualMachine"] = args ? args.cloneFromVirtualMachine : undefined;
@@ -152,7 +153,6 @@ export class VirtualMachine extends pulumi.CustomResource {
             resourceInputs["startupTimeout"] = (args ? args.startupTimeout : undefined) ?? 600;
             resourceInputs["virtualDisks"] = args ? args.virtualDisks : undefined;
             resourceInputs["virtualHWVer"] = args ? args.virtualHWVer : undefined;
-            resourceInputs["bootDiskSize"] = undefined /*out*/;
             resourceInputs["ipAddress"] = undefined /*out*/;
         } else {
             resourceInputs["bootDiskSize"] = undefined /*out*/;
@@ -183,6 +183,10 @@ export class VirtualMachine extends pulumi.CustomResource {
  * The set of arguments for constructing a VirtualMachine resource.
  */
 export interface VirtualMachineArgs {
+    /**
+     * VM boot disk size. Will expand boot disk to this size.
+     */
+    bootDiskSize?: pulumi.Input<string>;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */

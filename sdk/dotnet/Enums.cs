@@ -48,6 +48,7 @@ namespace Pulumi.EsxiNative
         public static DiskType Thin { get; } = new DiskType("thin");
         public static DiskType ZeroedThick { get; } = new DiskType("zeroedthick");
         public static DiskType EagerZeroedThick { get; } = new DiskType("eagerzeroedthick");
+        public static DiskType Unknown { get; } = new DiskType("Unknown");
 
         public static bool operator ==(DiskType left, DiskType right) => left.Equals(right);
         public static bool operator !=(DiskType left, DiskType right) => !left.Equals(right);

@@ -13,6 +13,7 @@ export const DiskType = {
     Thin: "thin",
     ZeroedThick: "zeroedthick",
     EagerZeroedThick: "eagerzeroedthick",
+    Unknown: "Unknown",
 } as const;
 
 export type DiskType = (typeof DiskType)[keyof typeof DiskType];

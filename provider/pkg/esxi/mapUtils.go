@@ -36,23 +36,43 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	return outputs
 }
 
-func structToMap(data interface{}) map[string]interface{} {
-	value := reflect.ValueOf(data)
-	typ := reflect.TypeOf(data)
-
-	if typ.Kind() == reflect.Ptr {
-		value = value.Elem()
-		typ = typ.Elem()
-	}
-
+func structToMap(dataStruct interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		fieldValue := value.Field(i).Interface()
+	value := reflect.ValueOf(dataStruct)
+	typeOfStruct := value.Type()
+
+	if typeOfStruct.Kind() == reflect.Ptr {
+		value = value.Elem()
+		typeOfStruct = typeOfStruct.Elem()
+	}
+
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		fieldType := typeOfStruct.Field(i)
+
 		// Convert the first letter of the field name to lowercase
-		key := string(field.Name[0]+32) + field.Name[1:]
-		result[key] = fieldValue
+		key := string(fieldType.Name[0]+32) + fieldType.Name[1:]
+
+		switch field.Kind() {
+		case reflect.Struct:
+			result[key] = structToMap(field.Interface())
+		case reflect.Array, reflect.Slice:
+			if field.Len() > 0 {
+				slice := make([]interface{}, field.Len())
+				for j := 0; j < field.Len(); j++ {
+					switch field.Index(j).Kind() {
+					case reflect.Struct:
+						slice[j] = structToMap(field.Index(j).Interface())
+					default:
+						slice[j] = field.Index(j).Interface()
+					}
+				}
+				result[key] = slice
+			}
+		default:
+			result[key] = field.Interface()
+		}
 	}
 
 	return result

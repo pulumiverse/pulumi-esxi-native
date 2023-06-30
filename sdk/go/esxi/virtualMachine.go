@@ -121,6 +121,8 @@ func (VirtualMachineState) ElementType() reflect.Type {
 }
 
 type virtualMachineArgs struct {
+	// VM boot disk size. Will expand boot disk to this size.
+	BootDiskSize *string `pulumi:"bootDiskSize"`
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType *DiskType `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
@@ -167,6 +169,8 @@ type virtualMachineArgs struct {
 
 // The set of arguments for constructing a VirtualMachine resource.
 type VirtualMachineArgs struct {
+	// VM boot disk size. Will expand boot disk to this size.
+	BootDiskSize pulumi.StringPtrInput
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType DiskTypePtrInput
 	// Boot type('efi' is boot uefi mode)
