@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
+	pbempty "github.com/golang/protobuf/ptypes/empty"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/pkg/v3/resource/provider"
@@ -30,8 +31,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"os"
-
-	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
 
 type cancellationContext struct {
@@ -60,6 +59,7 @@ type esxiProvider struct {
 	pulumiSchema []byte
 
 	esxi            *esxi.Host
+	namingService   *esxi.AutoNamingService
 	resourceService *esxi.ResourceService
 }
 
@@ -176,6 +176,7 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 		return nil, err
 	}
 
+	p.namingService = esxi.NewAutoNamingService()
 	p.resourceService = esxi.NewResourceService()
 
 	p.configured = true
@@ -231,8 +232,40 @@ func (p *esxiProvider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.Re
 // the provider inputs are using for detecting and rendering diffs.
 func (p *esxiProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
-	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
+	label := fmt.Sprintf("%s.Check(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
+
+	resourceToken := string(urn.Type())
+	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.olds", label), SkipNulls: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse inputs.
+	newInputs, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.properties", label),
+		KeepUnknowns: true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	autoNamingSpec := p.namingService.CreateAutoNamingSpec(resourceToken, newInputs)
+
+	// Filter null properties from the inputs.
+	newInputs = filterNullProperties(newInputs)
+	if autoNamingSpec != nil {
+		// Auto-name fields if not already specified
+		val, err := getDefaultName(req.RandomSeed, urn, autoNamingSpec, olds, newInputs)
+		if err != nil {
+			return nil, err
+		}
+		newInputs[resource.PropertyKey(autoNamingSpec.AutoName)] = val
+	}
 
 	return &pulumirpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
 }
@@ -385,6 +418,52 @@ func parseCheckpointObject(obj resource.PropertyMap) resource.PropertyMap {
 	}
 
 	return nil
+}
+
+// filterNullValues removes nested null values from the given property value. If all nested values in the property
+// value are null, the property value itself is considered null. This allows for easier integration with CloudFormation
+// templates, which use `AWS::NoValue` to remove values from lists, maps, etc. We use `null` to the same effect.
+func filterNullValues(v resource.PropertyValue) resource.PropertyValue {
+	switch {
+	case v.IsArray():
+		if len(v.ArrayValue()) == 0 {
+			return v
+		}
+
+		var result []resource.PropertyValue
+		for _, e := range v.ArrayValue() {
+			e = filterNullValues(e)
+			if !e.IsNull() {
+				result = append(result, e)
+			}
+		}
+		return resource.NewArrayProperty(result)
+	case v.IsObject():
+		return resource.NewObjectProperty(filterNullProperties(v.ObjectValue()))
+	default:
+		return v
+	}
+}
+
+// filterNullValues removes nested null values from the given property map. If all nested values in the property
+// map are null, the property map itself is considered null. This allows for easier integration with CloudFormation
+// templates, which use `AWS::NoValue` to remove values from lists, maps, etc. We use `null` to the same effect.
+func filterNullProperties(m resource.PropertyMap) resource.PropertyMap {
+	if len(m) == 0 {
+		return m
+	}
+
+	result := resource.PropertyMap{}
+	for k, v := range m {
+		e := filterNullValues(v)
+		if !e.IsNull() {
+			result[k] = e
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func varsOrEnv(vars map[string]string, key string, env ...string) (string, bool) {
