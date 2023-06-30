@@ -36,6 +36,7 @@ func NewResourceService() *ResourceService {
 			"esxi-native:index:VirtualMachine:Delete": functionMapper{VirtualMachineDeleteParser, VirtualMachineDelete},
 			"esxi-native:index:VirtualMachine:Read":   functionMapper{VirtualMachineReadParser, VirtualMachineRead},
 			"esxi-native:index:getVirtualMachine":     functionMapper{VirtualMachineGetParser, VirtualMachineGet},
+			"esxi-native:index:getVirtualMachineById": functionMapper{VirtualMachineGetByIdParser, VirtualMachineGetById},
 			"esxi-native:index:VirtualSwitch:Create":  functionMapper{VirtualSwitchCreateParser, VirtualSwitchCreate},
 			"esxi-native:index:VirtualSwitch:Update":  functionMapper{VirtualSwitchUpdateParser, VirtualSwitchUpdate},
 			"esxi-native:index:VirtualSwitch:Delete":  functionMapper{VirtualSwitchDeleteParser, VirtualSwitchDelete},
@@ -44,45 +45,53 @@ func NewResourceService() *ResourceService {
 	}
 }
 
-func (receiver *ResourceService) Create(token string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
+func (receiver *ResourceService) Create(token string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Create", token)
 	return receiver.call(token, "", inputs, esxi)
 }
 
-func (receiver *ResourceService) Update(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
+func (receiver *ResourceService) Update(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Update", token)
 	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Delete(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
+func (receiver *ResourceService) Delete(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Delete", token)
 	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Read(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
+func (receiver *ResourceService) Read(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Read", token)
 	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMap, esxi *Host) (result resource.PropertyMap, err error) {
-	mapper := receiver.functions[token]
+func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
+	mapper, ok := receiver.functions[token]
+	if !ok {
+		return nil, fmt.Errorf("unknown function '%s'", token)
+	}
 	params := mapper.getParams("", inputs, esxi)
 	functionHandler := reflect.ValueOf(mapper.handler)
-	var res []reflect.Value
-	res = functionHandler.Call(params)
-	result = res[0].Interface().(resource.PropertyMap)
-	return
+	var functionResult []reflect.Value
+	functionResult = functionHandler.Call(params)
+	result := functionResult[0].Interface().(resource.PropertyMap)
+	err := functionResult[1].Interface().(error)
+	return result, err
 }
 
-func (receiver *ResourceService) call(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
-	mapper := receiver.functions[token]
+func (receiver *ResourceService) call(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	mapper, ok := receiver.functions[token]
+	if !ok {
+		return "", nil, fmt.Errorf("unknown operation '%s'", token)
+	}
 	params := mapper.getParams(id, inputs, esxi)
 	functionHandler := reflect.ValueOf(mapper.handler)
-	var res []reflect.Value
-	res = functionHandler.Call(params)
-	rId = res[0].Interface().(string)
-	result = res[1].Interface().(resource.PropertyMap)
-	return
+	var functionResult []reflect.Value
+	functionResult = functionHandler.Call(params)
+	resourceId := functionResult[0].Interface().(string)
+	resourceData := functionResult[1].Interface().(resource.PropertyMap)
+	err := functionResult[2].Interface().(error)
+	return resourceId, resourceData, err
 }
 
 func (m *functionMapper) getParams(id string, inputs resource.PropertyMap, esxi *Host) []reflect.Value {

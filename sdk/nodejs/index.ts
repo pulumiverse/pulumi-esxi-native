@@ -6,6 +6,7 @@ import * as utilities from "./utilities";
 
 // Export members:
 export * from "./getVirtualMachine";
+export * from "./getVirtualMachineById";
 export * from "./portGroup";
 export * from "./provider";
 export * from "./resourcePool";

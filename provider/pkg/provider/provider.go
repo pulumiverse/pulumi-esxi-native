@@ -279,7 +279,7 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 	// Process Create call.
 	var result resource.PropertyMap
 	id, result, err := p.resourceService.Create(token, inputs, p.esxi)
-	if err != nil || len(id) == 0 || result == nil {
+	if err != nil {
 		return nil, err
 	}
 

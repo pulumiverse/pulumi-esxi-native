@@ -235,7 +235,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	for i, ni := range vm.NetworkInterfaces {
 		logging.V(9).Infof("updateVmxContents: ethernet%d", i)
 
-		if ni.VirtualNetwork == "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
+		if len(ni.VirtualNetwork) == 0 && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
 			//  This is Modify (Delete existing network configuration)
 			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Delete existing.", i)
 			regexReplacement = fmt.Sprintf("")
@@ -293,7 +293,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 			}
 
 			//  Set network type
-			if ni.NicType == "" {
+			if len(ni.NicType) == 0 {
 				networkType = defaultNetworkType
 			} else {
 				networkType = ni.NicType

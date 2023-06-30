@@ -16,6 +16,7 @@
         "config/index.ts",
         "config/vars.ts",
         "getVirtualMachine.ts",
+        "getVirtualMachineById.ts",
         "index.ts",
         "portGroup.ts",
         "provider.ts",

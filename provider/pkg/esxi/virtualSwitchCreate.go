@@ -37,7 +37,7 @@ func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (resource.Prop
 	//	mtu = 1500
 	//}
 	//
-	//if linkDiscoveryMode == "" {
+	//if len(linkDiscoveryMode) == 0 {
 	//	linkDiscoveryMode = "listen"
 	//}
 	//

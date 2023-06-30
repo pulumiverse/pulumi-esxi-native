@@ -15,7 +15,7 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	delete(outputs, "ovfProperties")
 	delete(outputs, "ovfPropertiesTimer")
 
-	if vm.BootDiskType == "Unknown" || vm.BootDiskType == "" {
+	if vm.BootDiskType == "Unknown" || len(vm.BootDiskType) == 0 {
 		delete(outputs, "bootDiskType")
 	}
 
@@ -24,12 +24,12 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	}
 
 	// Do network interfaces
-	if len(vm.NetworkInterfaces) == 0 || vm.NetworkInterfaces[0].VirtualNetwork == "" {
+	if len(vm.NetworkInterfaces) == 0 || len(vm.NetworkInterfaces[0].VirtualNetwork) == 0 {
 		delete(outputs, "networkInterfaces")
 	}
 
 	// Do virtual disks
-	if len(vm.VirtualDisks) == 0 || vm.VirtualDisks[0].VirtualDiskId == "" {
+	if len(vm.VirtualDisks) == 0 || len(vm.VirtualDisks[0].VirtualDiskId) == 0 {
 		delete(outputs, "virtualDisks")
 	}
 

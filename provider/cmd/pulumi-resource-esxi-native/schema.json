@@ -814,6 +814,112 @@
                     }
                 }
             }
+        },
+        "esxi-native:index:getVirtualMachineById": {
+            "inputs": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Virtual Machine Id to get details of"
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "esxi vm id."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "esxi vm name."
+                    },
+                    "bootFirmware": {
+                        "type": "string",
+                        "$ref": "#/types/esxi-native:index:BootFirmwareType",
+                        "description": "Boot type('efi' is boot uefi mode)"
+                    },
+                    "diskStore": {
+                        "type": "string",
+                        "description": "esxi diskstore for boot disk."
+                    },
+                    "resourcePoolName": {
+                        "type": "string",
+                        "description": "Resource pool name to place vm."
+                    },
+                    "bootDiskSize": {
+                        "type": "string",
+                        "description": "VM boot disk size. Will expand boot disk to this size."
+                    },
+                    "bootDiskType": {
+                        "type": "string",
+                        "$ref": "#/types/esxi-native:index:DiskType",
+                        "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
+                    },
+                    "memSize": {
+                        "type": "string",
+                        "description": "VM memory size."
+                    },
+                    "numVCpus": {
+                        "type": "string",
+                        "description": "VM number of virtual cpus."
+                    },
+                    "virtualHWVer": {
+                        "type": "string",
+                        "description": "VM Virtual HW version."
+                    },
+                    "os": {
+                        "type": "string",
+                        "description": "VM OS type."
+                    },
+                    "networkInterfaces": {
+                        "type": "array",
+                        "description": "VM network interfaces.",
+                        "items": {
+                            "$ref": "#/types/esxi-native:index:NetworkInterface"
+                        }
+                    },
+                    "power": {
+                        "type": "string",
+                        "description": "VM power state."
+                    },
+                    "ipAddress": {
+                        "type": "string",
+                        "description": "The IP address reported by VMWare tools."
+                    },
+                    "startupTimeout": {
+                        "type": "integer",
+                        "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.",
+                        "default": 600
+                    },
+                    "shutdownTimeout": {
+                        "type": "integer",
+                        "description": "The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.",
+                        "default": 600
+                    },
+                    "virtualDisks": {
+                        "type": "array",
+                        "description": "VM virtual disks.",
+                        "items": {
+                            "$ref": "#/types/esxi-native:index:VMVirtualDisk"
+                        }
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "VM memory size."
+                    },
+                    "info": {
+                        "type": "array",
+                        "description": "pass data to VM",
+                        "items": {
+                            "$ref": "#/types/esxi-native:index:KeyValuePair"
+                        }
+                    }
+                }
+            }
         }
     },
     "language": {

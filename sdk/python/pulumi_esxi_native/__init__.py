@@ -7,6 +7,7 @@ import typing
 # Export this package's modules as members:
 from ._enums import *
 from .get_virtual_machine import *
+from .get_virtual_machine_by_id import *
 from .port_group import *
 from .provider import *
 from .resource_pool import *

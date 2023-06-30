@@ -21,17 +21,17 @@ func VirtualMachineReadParser(id string, inputs resource.PropertyMap) VirtualMac
 
 func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
 	// read vm
-	vm, err := esxi.readVirtualMachine(vm)
+	vm = esxi.readVirtualMachine(vm)
 
-	if err != nil || vm.Name == "" {
-		return "", nil, err
+	if len(vm.Name) == 0 {
+		return "", nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", vm.Id)
 	}
 
 	result := vm.toMap()
-	return vm.Id, resource.NewPropertyMapFromMap(result), err
+	return vm.Id, resource.NewPropertyMapFromMap(result), nil
 }
 
-func (esxi *Host) readVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {
+func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	command := fmt.Sprintf("vim-cmd  vmsvc/get.summary %s", vm.Id)
 	stdout, err := esxi.Execute(command, "Get Guest summary")
 
@@ -54,7 +54,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) (VirtualMachine, error) 
 		vm.Notes = ""
 		vm.Info = nil
 
-		return vm, nil
+		return vm
 	}
 
 	r, _ := regexp.Compile("")
@@ -261,5 +261,5 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) (VirtualMachine, error) 
 		i++
 	}
 
-	return vm, nil
+	return vm
 }
