@@ -6,27 +6,27 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
-func PortGroupValidateProperties(inputs resource.PropertyMap) map[string]string {
+func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
 		failures["name"] = "The properly 'name' is required!"
 	}
 
-	return failures
+	return validateResource(resourceToken, failures)
 }
 
-func ResourcePoolValidateProperties(inputs resource.PropertyMap) map[string]string {
+func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
 		failures["name"] = "The properly 'name' is required!"
 	}
 
-	return failures
+	return validateResource(resourceToken, failures)
 }
 
-func VirtualDiskValidateProperties(inputs resource.PropertyMap) map[string]string {
+func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
@@ -45,10 +45,10 @@ func VirtualDiskValidateProperties(inputs resource.PropertyMap) map[string]strin
 		failures["directory"] = "The properly 'diskType' is required!"
 	}
 
-	return failures
+	return validateResource(resourceToken, failures)
 }
 
-func VirtualMachineValidateProperties(inputs resource.PropertyMap) map[string]string {
+func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := map[string]string{}
 	invalidFormat := "The properly '%s' is invalid! The value %s"
 
@@ -119,10 +119,10 @@ func VirtualMachineValidateProperties(inputs resource.PropertyMap) map[string]st
 		failures["os"] = "The properly 'os' is required!"
 	}
 
-	return failures
+	return validateResource(resourceToken, failures)
 }
 
-func VirtualSwitchValidateProperties(inputs resource.PropertyMap) map[string]string {
+func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
@@ -144,10 +144,10 @@ func VirtualSwitchValidateProperties(inputs resource.PropertyMap) map[string]str
 		}
 	}
 
-	return failures
+	return validateResource(resourceToken, failures)
 }
 
-func ValidateResource(resourceToken string, failures map[string]string) []*pulumirpc.CheckFailure {
+func validateResource(resourceToken string, failures map[string]string) []*pulumirpc.CheckFailure {
 	var checkFailures []*pulumirpc.CheckFailure
 	for property, reason := range failures {
 		path := fmt.Sprintf("%s.%s", resourceToken, property)

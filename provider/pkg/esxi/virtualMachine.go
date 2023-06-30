@@ -10,13 +10,29 @@ import (
 	"strings"
 )
 
-func VirtualMachineReadParser(id string, inputs resource.PropertyMap) VirtualMachine {
-	vm := VirtualMachine{
-		Id:             id,
-		StartupTimeout: int(inputs["startupTimeout"].NumberValue()),
+func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
+	var id string
+	if nameProp, has := inputs["name"]; has {
+		var err error
+		id, err = esxi.getVirtualMachineId(nameProp.StringValue())
+		if err != nil {
+			return nil, err
+		}
+	} else if idProp, has := inputs["id"]; has {
+		id = idProp.StringValue()
 	}
 
-	return vm
+	vm := esxi.readVirtualMachine(VirtualMachine{
+		Id:             id,
+		StartupTimeout: 1,
+	})
+
+	if len(vm.Name) == 0 {
+		return nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", vm.Id)
+	}
+
+	result := vm.toMap(true)
+	return resource.NewPropertyMapFromMap(result), nil
 }
 
 func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
@@ -29,6 +45,38 @@ func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.Propert
 
 	result := vm.toMap()
 	return vm.Id, resource.NewPropertyMapFromMap(result), nil
+}
+
+func VirtualMachineCreate(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
+
+	return "", nil, nil
+}
+
+func VirtualMachineUpdate(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
+
+	return "", nil, nil
+}
+
+func VirtualMachineDelete(id string, esxi *Host) error {
+
+	return nil
+}
+
+func parseVirtualMachine(id string, inputs resource.PropertyMap) VirtualMachine {
+	var startupTimeout int
+
+	if property, has := inputs["startupTimeout"]; has {
+		startupTimeout = int(property.NumberValue())
+	} else {
+		startupTimeout = 1
+	}
+
+	vm := VirtualMachine{
+		Id:             id,
+		StartupTimeout: startupTimeout,
+	}
+
+	return vm
 }
 
 func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {

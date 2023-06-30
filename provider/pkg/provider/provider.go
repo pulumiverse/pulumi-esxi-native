@@ -25,7 +25,6 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/rpcutil/rpcerror"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -308,8 +307,6 @@ func (p *esxiProvider) Diff(_ context.Context, req *pulumirpc.DiffRequest) (*pul
 // Create allocates a new instance of the provided resource and returns its unique ID afterward.
 func (p *esxiProvider) Create(_ context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	urn := resource.URN(req.GetUrn())
-	token := string(urn.Type())
-
 	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
 
@@ -324,22 +321,25 @@ func (p *esxiProvider) Create(_ context.Context, req *pulumirpc.CreateRequest) (
 		return nil, errors.Wrapf(err, "malformed resource inputs")
 	}
 
+	resourceToken := string(urn.Type())
 	// Process Create call.
-	var result resource.PropertyMap
-	id, result, err := p.resourceService.Create(token, inputs, p.esxi)
+	id, outputs, err := p.resourceService.Create(resourceToken, inputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
 
-	outputProperties, err := plugin.MarshalProperties(result,
-		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
+	// Store both outputs and inputs into the state.
+	checkpoint, err := plugin.MarshalProperties(
+		checkpointObject(inputs, outputs),
+		plugin.MarshalOptions{Label: fmt.Sprintf("%s.checkpoint", label), KeepSecrets: true, KeepUnknowns: true, SkipNulls: true},
 	)
 	if err != nil {
 		return nil, err
 	}
+
 	return &pulumirpc.CreateResponse{
 		Id:         id,
-		Properties: outputProperties,
+		Properties: checkpoint,
 	}, nil
 }
 
@@ -348,8 +348,61 @@ func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pul
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Read(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
-	msg := fmt.Sprintf("Read is not yet implemented for %s", urn.Type())
-	return nil, status.Error(codes.Unimplemented, msg)
+	id := req.GetId()
+
+	// Retrieve the old state.
+	oldState, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.olds", label), KeepUnknowns: true, SkipNulls: true, KeepSecrets: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the resource state from ESXi.
+	resourceToken := string(urn.Type())
+
+	var readInputs resource.PropertyMap
+
+	// Extract old inputs from the `__inputs` field of the old state.
+	inputs := parseCheckpointObject(oldState)
+	if inputs == nil {
+		readInputs = make(resource.PropertyMap)
+	} else {
+		readInputs = inputs
+	}
+
+	// Process Read call.
+	id, newState, err := p.resourceService.Read(id, resourceToken, readInputs, p.esxi)
+	if err != nil {
+		return nil, err
+	}
+
+	if inputs == nil {
+		inputs = newState
+	}
+
+	// Store both outputs and inputs into the state checkpoint.
+	checkpoint, err := plugin.MarshalProperties(
+		checkpointObject(inputs, newState),
+		plugin.MarshalOptions{Label: fmt.Sprintf("%s.checkpoint", label), KeepSecrets: true, KeepUnknowns: true, SkipNulls: true},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Serialize and return the calculated inputs.
+	inputsRecord, err := plugin.MarshalProperties(
+		inputs,
+		plugin.MarshalOptions{Label: fmt.Sprintf("%s.inputs", label), KeepSecrets: true, KeepUnknowns: true, SkipNulls: true})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pulumirpc.ReadResponse{
+		Id:         id,
+		Inputs:     inputsRecord,
+		Properties: checkpoint,
+	}, nil
 }
 
 // Update updates an existing resource with new values.
@@ -357,9 +410,37 @@ func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
-	// Our example Random resource will never be updated - if there is a diff, it will be a replacement.
-	msg := fmt.Sprintf("Update is not yet implemented for %s", urn.Type())
-	return nil, status.Error(codes.Unimplemented, msg)
+
+	id := req.GetId()
+	resourceToken := string(urn.Type())
+
+	// Read the inputs to persist them into state.
+	newInputs, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.newInputs", label),
+		KeepUnknowns: true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "diff failed because malformed resource inputs")
+	}
+
+	// Process Update call.
+	id, outputs, err := p.resourceService.Update(id, resourceToken, make(resource.PropertyMap), p.esxi)
+	if err != nil {
+		return nil, err
+	}
+
+	// Store both outputs and inputs into the state and return RPC checkpoint.
+	checkpoint, err := plugin.MarshalProperties(
+		checkpointObject(newInputs, outputs),
+		plugin.MarshalOptions{Label: fmt.Sprintf("%s.checkpoint", label), KeepSecrets: true, KeepUnknowns: true, SkipNulls: true},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pulumirpc.UpdateResponse{Properties: checkpoint}, nil
 }
 
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
@@ -368,8 +449,16 @@ func (p *esxiProvider) Delete(_ context.Context, req *pulumirpc.DeleteRequest) (
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
-	// Implement Delete logic specific to your provider.
-	// Note that for our Random resource, we don't have to do anything on Delete.
+
+	resourceToken := string(urn.Type())
+	id := req.GetId()
+
+	// Process Read call.
+	err := p.resourceService.Delete(resourceToken, id, p.esxi)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pbempty.Empty{}, nil
 }
 
@@ -424,6 +513,13 @@ func (p *esxiProvider) diffState(olds *structpb.Struct, news *structpb.Struct, l
 	}
 
 	return oldInputs.Diff(newInputs), nil
+}
+
+// checkpointObject puts inputs in the `__inputs` field of the state.
+func checkpointObject(inputs resource.PropertyMap, outputs resource.PropertyMap) resource.PropertyMap {
+	object := outputs
+	object["__inputs"] = resource.MakeSecret(resource.NewObjectProperty(inputs))
+	return object
 }
 
 // parseCheckpointObject returns inputs that are saved in the `__inputs` field of the state.
@@ -491,15 +587,4 @@ func varsOrEnv(vars map[string]string, key string, env ...string) (string, bool)
 		}
 	}
 	return "", false
-}
-
-// The last known state of the object is included in the error so that it can be check pointed.
-func partialError(id string, err error, state *structpb.Struct, inputs *structpb.Struct) error {
-	detail := pulumirpc.ErrorResourceInitFailed{
-		Id:         id,
-		Properties: state,
-		Reasons:    []string{err.Error()},
-		Inputs:     inputs,
-	}
-	return rpcerror.WithDetails(rpcerror.New(codes.Unknown, err.Error()), &detail)
 }

@@ -36,12 +36,12 @@ func getDefaultName(
 	autoName := autoNamingSpec.PropertyName
 
 	// Prefer explicitly specified name
-	if v, ok := news[resource.PropertyKey(autoName)]; ok {
+	if v, ok := news[resource.PropertyKey(autoName)]; ok && len(v.String()) > 0 {
 		return v, nil
 	}
 
 	// Fallback to previous name if specified/set.
-	if v, ok := olds[resource.PropertyKey(autoName)]; ok {
+	if v, ok := olds[resource.PropertyKey(autoName)]; ok && len(v.String()) > 0 {
 		return v, nil
 	}
 

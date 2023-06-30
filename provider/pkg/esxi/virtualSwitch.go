@@ -1,14 +1,6 @@
 package esxi
 
-import (
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-)
-
-func VirtualSwitchCreateParser(inputs resource.PropertyMap) VirtualSwitch {
-	return VirtualSwitch{
-		Name: inputs["name"].StringValue(),
-	}
-}
+import "github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 
 func VirtualSwitchCreate(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
 	//var uplinks []string
@@ -121,4 +113,26 @@ func VirtualSwitchCreate(vs VirtualSwitch, esxi *Host) (string, resource.Propert
 
 	result := vs.toMap()
 	return "1", resource.NewPropertyMapFromMap(result), nil
+}
+
+func VirtualSwitchUpdate(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
+
+	return "", nil, nil
+}
+
+func VirtualSwitchDelete(id string, esxi *Host) error {
+
+	return nil
+}
+
+func VirtualSwitchRead(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
+
+	return "", nil, nil
+}
+
+func parseVirtualSwitch(id string, inputs resource.PropertyMap) VirtualSwitch {
+
+	return VirtualSwitch{
+		Name: inputs["name"].StringValue(),
+	}
 }

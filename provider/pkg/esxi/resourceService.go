@@ -8,11 +8,7 @@ import (
 	"reflect"
 )
 
-type functionMapper struct {
-	parser  interface{}
-	handler interface{}
-}
-type functionsMapper map[string]functionMapper
+type functionsMapper map[string]interface{}
 
 type ResourceService struct {
 	functions functionsMapper
@@ -21,53 +17,45 @@ type ResourceService struct {
 func NewResourceService() *ResourceService {
 	return &ResourceService{
 		functionsMapper{
-			"esxi-native:index:PortGroup:Create":        functionMapper{PortGroupCreateParser, PortGroupCreate},
-			"esxi-native:index:PortGroup:Update":        functionMapper{PortGroupUpdateParser, PortGroupUpdate},
-			"esxi-native:index:PortGroup:Delete":        functionMapper{PortGroupDeleteParser, PortGroupDelete},
-			"esxi-native:index:PortGroup:Read":          functionMapper{PortGroupReadParser, PortGroupRead},
-			"esxi-native:index:ResourcePool:Create":     functionMapper{ResourcePoolCreateParser, ResourcePoolCreate},
-			"esxi-native:index:ResourcePool:Update":     functionMapper{ResourcePoolUpdateParser, ResourcePoolUpdate},
-			"esxi-native:index:ResourcePool:Delete":     functionMapper{ResourcePoolDeleteParser, ResourcePoolDelete},
-			"esxi-native:index:ResourcePool:Read":       functionMapper{ResourcePoolReadParser, ResourcePoolRead},
-			"esxi-native:index:VirtualDisk:Create":      functionMapper{VirtualDiskCreateParser, VirtualDiskCreate},
-			"esxi-native:index:VirtualDisk:Update":      functionMapper{VirtualDiskUpdateParser, VirtualDiskUpdate},
-			"esxi-native:index:VirtualDisk:Delete":      functionMapper{VirtualDiskDeleteParser, VirtualDiskDelete},
-			"esxi-native:index:VirtualDisk:Read":        functionMapper{VirtualDiskReadParser, VirtualDiskRead},
-			"esxi-native:index:VirtualMachine:Create":   functionMapper{VirtualMachineCreateParser, VirtualMachineCreate},
-			"esxi-native:index:VirtualMachine:Update":   functionMapper{VirtualMachineUpdateParser, VirtualMachineUpdate},
-			"esxi-native:index:VirtualMachine:Delete":   functionMapper{VirtualMachineDeleteParser, VirtualMachineDelete},
-			"esxi-native:index:VirtualMachine:Read":     functionMapper{VirtualMachineReadParser, VirtualMachineRead},
-			"esxi-native:index:getVirtualMachine":       functionMapper{VirtualMachineGetParser, VirtualMachineGet},
-			"esxi-native:index:getVirtualMachineById":   functionMapper{VirtualMachineGetByIdParser, VirtualMachineGetById},
-			"esxi-native:index:VirtualSwitch:Create":    functionMapper{VirtualSwitchCreateParser, VirtualSwitchCreate},
-			"esxi-native:index:VirtualSwitch:Update":    functionMapper{VirtualSwitchUpdateParser, VirtualSwitchUpdate},
-			"esxi-native:index:VirtualSwitch:Delete":    functionMapper{VirtualSwitchDeleteParser, VirtualSwitchDelete},
-			"esxi-native:index:VirtualSwitch:Read":      functionMapper{VirtualSwitchReadParser, VirtualSwitchRead},
-			"esxi-native:index:PortGroup:Validate":      functionMapper{schema.PortGroupValidateProperties, schema.ValidateResource},
-			"esxi-native:index:ResourcePool:Validate":   functionMapper{schema.ResourcePoolValidateProperties, schema.ValidateResource},
-			"esxi-native:index:VirtualDisk:Validate":    functionMapper{schema.VirtualDiskValidateProperties, schema.ValidateResource},
-			"esxi-native:index:VirtualMachine:Validate": functionMapper{schema.VirtualMachineValidateProperties, schema.ValidateResource},
-			"esxi-native:index:VirtualSwitch:Validate":  functionMapper{schema.VirtualSwitchValidateProperties, schema.ValidateResource},
+			"esxi-native:index:PortGroup:Create":        PortGroupCreate,
+			"esxi-native:index:PortGroup:Update":        PortGroupUpdate,
+			"esxi-native:index:PortGroup:Delete":        PortGroupDelete,
+			"esxi-native:index:PortGroup:Read":          PortGroupRead,
+			"esxi-native:index:ResourcePool:Create":     ResourcePoolCreate,
+			"esxi-native:index:ResourcePool:Update":     ResourcePoolUpdate,
+			"esxi-native:index:ResourcePool:Delete":     ResourcePoolDelete,
+			"esxi-native:index:ResourcePool:Read":       ResourcePoolRead,
+			"esxi-native:index:VirtualDisk:Create":      VirtualDiskCreate,
+			"esxi-native:index:VirtualDisk:Update":      VirtualDiskUpdate,
+			"esxi-native:index:VirtualDisk:Delete":      VirtualDiskDelete,
+			"esxi-native:index:VirtualDisk:Read":        VirtualDiskRead,
+			"esxi-native:index:VirtualMachine:Create":   VirtualMachineCreate,
+			"esxi-native:index:VirtualMachine:Update":   VirtualMachineUpdate,
+			"esxi-native:index:VirtualMachine:Delete":   VirtualMachineDelete,
+			"esxi-native:index:VirtualMachine:Read":     VirtualMachineRead,
+			"esxi-native:index:getVirtualMachine":       VirtualMachineGet,
+			"esxi-native:index:getVirtualMachineById":   VirtualMachineGet,
+			"esxi-native:index:VirtualSwitch:Create":    VirtualSwitchCreate,
+			"esxi-native:index:VirtualSwitch:Update":    VirtualSwitchUpdate,
+			"esxi-native:index:VirtualSwitch:Delete":    VirtualSwitchDelete,
+			"esxi-native:index:VirtualSwitch:Read":      VirtualSwitchRead,
+			"esxi-native:index:PortGroup:Validate":      schema.ValidatePortGroup,
+			"esxi-native:index:ResourcePool:Validate":   schema.ValidateResourcePool,
+			"esxi-native:index:VirtualDisk:Validate":    schema.ValidateVirtualDisk,
+			"esxi-native:index:VirtualMachine:Validate": schema.ValidateVirtualMachine,
+			"esxi-native:index:VirtualSwitch:Validate":  schema.ValidateVirtualSwitch,
 		},
 	}
 }
 
 func (receiver *ResourceService) Validate(token string, inputs resource.PropertyMap) ([]*pulumirpc.CheckFailure, error) {
-	mapper, ok := receiver.functions[fmt.Sprintf("%s:Validate", token)]
+	handler, ok := receiver.functions[fmt.Sprintf("%s:Validate", token)]
 	if !ok {
 		return nil, fmt.Errorf("unknown operation '%s'", token)
 	}
-	var parsedParams []reflect.Value
-	parser := reflect.ValueOf(mapper.parser)
-	parsedParams = parser.Call([]reflect.Value{reflect.ValueOf(inputs)})
+	params := []reflect.Value{reflect.ValueOf(token), reflect.ValueOf(inputs)}
 
-	params := make([]reflect.Value, len(parsedParams)+1)
-	params[0] = reflect.ValueOf(token)
-	for i, parsedParam := range parsedParams {
-		params[i+1] = parsedParam
-	}
-
-	functionHandler := reflect.ValueOf(mapper.handler)
+	functionHandler := reflect.ValueOf(handler)
 	var functionResult []reflect.Value
 	functionResult = functionHandler.Call(params)
 	result := functionResult[0].Interface().([]*pulumirpc.CheckFailure)
@@ -75,12 +63,16 @@ func (receiver *ResourceService) Validate(token string, inputs resource.Property
 }
 
 func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
-	mapper, ok := receiver.functions[token]
+	handler, ok := receiver.functions[token]
 	if !ok {
 		return nil, fmt.Errorf("unknown function '%s'", token)
 	}
-	params := mapper.getParams("", inputs, esxi)
-	functionHandler := reflect.ValueOf(mapper.handler)
+	params := []reflect.Value{
+		reflect.ValueOf(inputs),
+		reflect.ValueOf(esxi),
+	}
+
+	functionHandler := reflect.ValueOf(handler)
 	var functionResult []reflect.Value
 	functionResult = functionHandler.Call(params)
 	result := functionResult[0].Interface().(resource.PropertyMap)
@@ -101,23 +93,46 @@ func (receiver *ResourceService) Update(token string, id string, inputs resource
 	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Delete(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	token = fmt.Sprintf("%s:Delete", token)
-	return receiver.call(token, id, inputs, esxi)
-}
-
 func (receiver *ResourceService) Read(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Read", token)
 	return receiver.call(token, id, inputs, esxi)
 }
 
+func (receiver *ResourceService) Delete(token string, id string, esxi *Host) error {
+	token = fmt.Sprintf("%s:Delete", token)
+	handler, ok := receiver.functions[token]
+	if !ok {
+		return fmt.Errorf("unknown operation '%s'", token)
+	}
+
+	params := []reflect.Value{
+		reflect.ValueOf(id), reflect.ValueOf(esxi),
+	}
+
+	functionHandler := reflect.ValueOf(handler)
+	var functionResult []reflect.Value
+	functionResult = functionHandler.Call(params)
+	err := functionResult[0].Interface()
+	if err != nil {
+		return err.(error)
+	}
+
+	return nil
+}
+
 func (receiver *ResourceService) call(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	mapper, ok := receiver.functions[token]
+	handler, ok := receiver.functions[token]
 	if !ok {
 		return "", nil, fmt.Errorf("unknown operation '%s'", token)
 	}
-	params := mapper.getParams(id, inputs, esxi)
-	functionHandler := reflect.ValueOf(mapper.handler)
+	var params []reflect.Value
+	if len(id) > 0 {
+		params = []reflect.Value{reflect.ValueOf(id), reflect.ValueOf(inputs), reflect.ValueOf(esxi)}
+	} else {
+		params = []reflect.Value{reflect.ValueOf(inputs), reflect.ValueOf(esxi)}
+	}
+
+	functionHandler := reflect.ValueOf(handler)
 	var functionResult []reflect.Value
 	functionResult = functionHandler.Call(params)
 	resourceId := functionResult[0].Interface().(string)
@@ -128,24 +143,4 @@ func (receiver *ResourceService) call(token string, id string, inputs resource.P
 	}
 
 	return resourceId, resourceData, nil
-}
-
-func (m *functionMapper) getParams(id string, inputs resource.PropertyMap, esxi *Host) []reflect.Value {
-	var parsedParams []reflect.Value
-	parser := reflect.ValueOf(m.parser)
-	if len(id) > 0 {
-		parsedParams = parser.Call([]reflect.Value{reflect.ValueOf(id), reflect.ValueOf(inputs)})
-	} else {
-		parsedParams = parser.Call([]reflect.Value{reflect.ValueOf(inputs)})
-	}
-
-	params := make([]reflect.Value, len(parsedParams)+1)
-	esxiIndex := 0
-	for i, parsedParam := range parsedParams {
-		esxiIndex = i + 1
-		params[i] = parsedParam
-	}
-	params[esxiIndex] = reflect.ValueOf(esxi)
-
-	return params
 }
