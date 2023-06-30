@@ -167,8 +167,8 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 
 	if len(host) > 0 || len(user) > 0 || len(pass) > 0 || len(sslPort) > 0 || len(sshPort) > 0 || len(ovfLoc) > 0 {
 		// If all required values are not present/valid, the client will return an appropriate error.
-		esxi := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
-		p.esxi = &esxi
+		esxiHost := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
+		p.esxi = &esxiHost
 	}
 
 	err := p.esxi.ValidateCreds()
@@ -230,7 +230,7 @@ func (p *esxiProvider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.Re
 // representation of the properties as present in the program inputs. Though this rule is not
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are using for detecting and rendering diffs.
-func (p *esxiProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *esxiProvider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Check(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -254,7 +254,8 @@ func (p *esxiProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (
 		return nil, err
 	}
 
-	autoNamingSpec := p.namingService.CreateAutoNamingSpec(resourceToken, newInputs)
+	// Parse inputs.
+	autoNamingSpec := p.namingService.GetAutoNamingSpec(resourceToken)
 
 	// Filter null properties from the inputs.
 	newInputs = filterNullProperties(newInputs)
@@ -264,14 +265,28 @@ func (p *esxiProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (
 		if err != nil {
 			return nil, err
 		}
-		newInputs[resource.PropertyKey(autoNamingSpec.AutoName)] = val
+		newInputs[resource.PropertyKey(autoNamingSpec.PropertyName)] = val
 	}
-
-	return &pulumirpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
+	checkFailures, err := p.resourceService.Validate(resourceToken, newInputs)
+	if err != nil {
+		return nil, err
+	}
+	if len(checkFailures) == 0 {
+		inputs, err := plugin.MarshalProperties(newInputs, plugin.MarshalOptions{
+			Label:        fmt.Sprintf("%s.inputs", label),
+			KeepUnknowns: true,
+			KeepSecrets:  true,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &pulumirpc.CheckResponse{Inputs: inputs}, nil
+	}
+	return &pulumirpc.CheckResponse{Failures: checkFailures}, nil
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
-func (p *esxiProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *esxiProvider) Diff(_ context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Diff(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -291,7 +306,7 @@ func (p *esxiProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 }
 
 // Create allocates a new instance of the provided resource and returns its unique ID afterward.
-func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
+func (p *esxiProvider) Create(_ context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	token := string(urn.Type())
 
@@ -329,7 +344,7 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 }
 
 // Read the current live state associated with a resource.
-func (p *esxiProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
+func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Read(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -338,7 +353,7 @@ func (p *esxiProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 }
 
 // Update updates an existing resource with new values.
-func (p *esxiProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
+func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -349,7 +364,7 @@ func (p *esxiProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
-func (p *esxiProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
+func (p *esxiProvider) Delete(_ context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
@@ -366,7 +381,7 @@ func (p *esxiProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirp
 }
 
 // GetSchema returns the JSON-serialized schema for the provider.
-func (p *esxiProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
+func (p *esxiProvider) GetSchema(_ context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
 	if v := req.GetVersion(); v != 0 {
 		return nil, fmt.Errorf("unsupported schema version %d", v)
 	}

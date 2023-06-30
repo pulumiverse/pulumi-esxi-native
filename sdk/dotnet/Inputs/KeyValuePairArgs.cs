@@ -12,11 +12,11 @@ namespace Pulumi.EsxiNative.Inputs
 
     public sealed class KeyValuePairArgs : global::Pulumi.ResourceArgs
     {
-        [Input("key")]
-        public Input<string>? Key { get; set; }
+        [Input("key", required: true)]
+        public Input<string> Key { get; set; } = null!;
 
-        [Input("value")]
-        public Input<string>? Value { get; set; }
+        [Input("value", required: true)]
+        public Input<string> Value { get; set; } = null!;
 
         public KeyValuePairArgs()
         {

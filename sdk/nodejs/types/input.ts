@@ -7,8 +7,8 @@ import * as outputs from "../types/output";
 import * as enums from "../types/enums";
 
 export interface KeyValuePairArgs {
-    key?: pulumi.Input<string>;
-    value?: pulumi.Input<string>;
+    key: pulumi.Input<string>;
+    value: pulumi.Input<string>;
 }
 
 export interface NetworkInterfaceArgs {
@@ -29,5 +29,5 @@ export interface VMVirtualDiskArgs {
      * SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
      */
     slot?: pulumi.Input<string>;
-    virtualDiskId?: pulumi.Input<string>;
+    virtualDiskId: pulumi.Input<string>;
 }

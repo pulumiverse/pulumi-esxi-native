@@ -119,6 +119,7 @@ namespace Pulumi.EsxiNative
 
         public VirtualDiskArgs()
         {
+            DiskType = Pulumi.EsxiNative.DiskType.Thin;
             Size = 1;
         }
         public static new VirtualDiskArgs Empty => new VirtualDiskArgs();

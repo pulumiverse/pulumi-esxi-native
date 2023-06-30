@@ -17,13 +17,13 @@ namespace Pulumi.EsxiNative.Outputs
         /// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
         /// </summary>
         public readonly string? Slot;
-        public readonly string? VirtualDiskId;
+        public readonly string VirtualDiskId;
 
         [OutputConstructor]
         private VMVirtualDisk(
             string? slot,
 
-            string? virtualDiskId)
+            string virtualDiskId)
         {
             Slot = slot;
             VirtualDiskId = virtualDiskId;

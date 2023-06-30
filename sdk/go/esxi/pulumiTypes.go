@@ -11,14 +11,14 @@ import (
 )
 
 type KeyValuePair struct {
-	Key   *string `pulumi:"key"`
-	Value *string `pulumi:"value"`
+	Key   string `pulumi:"key"`
+	Value string `pulumi:"value"`
 }
 
 // KeyValuePairInput is an input type that accepts KeyValuePairArgs and KeyValuePairOutput values.
 // You can construct a concrete instance of `KeyValuePairInput` via:
 //
-//          KeyValuePairArgs{...}
+//	KeyValuePairArgs{...}
 type KeyValuePairInput interface {
 	pulumi.Input
 
@@ -27,8 +27,8 @@ type KeyValuePairInput interface {
 }
 
 type KeyValuePairArgs struct {
-	Key   pulumi.StringPtrInput `pulumi:"key"`
-	Value pulumi.StringPtrInput `pulumi:"value"`
+	Key   pulumi.StringInput `pulumi:"key"`
+	Value pulumi.StringInput `pulumi:"value"`
 }
 
 func (KeyValuePairArgs) ElementType() reflect.Type {
@@ -46,7 +46,7 @@ func (i KeyValuePairArgs) ToKeyValuePairOutputWithContext(ctx context.Context) K
 // KeyValuePairArrayInput is an input type that accepts KeyValuePairArray and KeyValuePairArrayOutput values.
 // You can construct a concrete instance of `KeyValuePairArrayInput` via:
 //
-//          KeyValuePairArray{ KeyValuePairArgs{...} }
+//	KeyValuePairArray{ KeyValuePairArgs{...} }
 type KeyValuePairArrayInput interface {
 	pulumi.Input
 
@@ -82,12 +82,12 @@ func (o KeyValuePairOutput) ToKeyValuePairOutputWithContext(ctx context.Context)
 	return o
 }
 
-func (o KeyValuePairOutput) Key() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v KeyValuePair) *string { return v.Key }).(pulumi.StringPtrOutput)
+func (o KeyValuePairOutput) Key() pulumi.StringOutput {
+	return o.ApplyT(func(v KeyValuePair) string { return v.Key }).(pulumi.StringOutput)
 }
 
-func (o KeyValuePairOutput) Value() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v KeyValuePair) *string { return v.Value }).(pulumi.StringPtrOutput)
+func (o KeyValuePairOutput) Value() pulumi.StringOutput {
+	return o.ApplyT(func(v KeyValuePair) string { return v.Value }).(pulumi.StringOutput)
 }
 
 type KeyValuePairArrayOutput struct{ *pulumi.OutputState }
@@ -119,7 +119,7 @@ type NetworkInterface struct {
 // NetworkInterfaceInput is an input type that accepts NetworkInterfaceArgs and NetworkInterfaceOutput values.
 // You can construct a concrete instance of `NetworkInterfaceInput` via:
 //
-//          NetworkInterfaceArgs{...}
+//	NetworkInterfaceArgs{...}
 type NetworkInterfaceInput interface {
 	pulumi.Input
 
@@ -148,7 +148,7 @@ func (i NetworkInterfaceArgs) ToNetworkInterfaceOutputWithContext(ctx context.Co
 // NetworkInterfaceArrayInput is an input type that accepts NetworkInterfaceArray and NetworkInterfaceArrayOutput values.
 // You can construct a concrete instance of `NetworkInterfaceArrayInput` via:
 //
-//          NetworkInterfaceArray{ NetworkInterfaceArgs{...} }
+//	NetworkInterfaceArray{ NetworkInterfaceArgs{...} }
 type NetworkInterfaceArrayInput interface {
 	pulumi.Input
 
@@ -224,7 +224,7 @@ type Uplink struct {
 // UplinkInput is an input type that accepts UplinkArgs and UplinkOutput values.
 // You can construct a concrete instance of `UplinkInput` via:
 //
-//          UplinkArgs{...}
+//	UplinkArgs{...}
 type UplinkInput interface {
 	pulumi.Input
 
@@ -252,7 +252,7 @@ func (i UplinkArgs) ToUplinkOutputWithContext(ctx context.Context) UplinkOutput 
 // UplinkArrayInput is an input type that accepts UplinkArray and UplinkArrayOutput values.
 // You can construct a concrete instance of `UplinkArrayInput` via:
 //
-//          UplinkArray{ UplinkArgs{...} }
+//	UplinkArray{ UplinkArgs{...} }
 type UplinkArrayInput interface {
 	pulumi.Input
 
@@ -316,13 +316,13 @@ func (o UplinkArrayOutput) Index(i pulumi.IntInput) UplinkOutput {
 type VMVirtualDisk struct {
 	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
 	Slot          *string `pulumi:"slot"`
-	VirtualDiskId *string `pulumi:"virtualDiskId"`
+	VirtualDiskId string  `pulumi:"virtualDiskId"`
 }
 
 // VMVirtualDiskInput is an input type that accepts VMVirtualDiskArgs and VMVirtualDiskOutput values.
 // You can construct a concrete instance of `VMVirtualDiskInput` via:
 //
-//          VMVirtualDiskArgs{...}
+//	VMVirtualDiskArgs{...}
 type VMVirtualDiskInput interface {
 	pulumi.Input
 
@@ -333,7 +333,7 @@ type VMVirtualDiskInput interface {
 type VMVirtualDiskArgs struct {
 	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
 	Slot          pulumi.StringPtrInput `pulumi:"slot"`
-	VirtualDiskId pulumi.StringPtrInput `pulumi:"virtualDiskId"`
+	VirtualDiskId pulumi.StringInput    `pulumi:"virtualDiskId"`
 }
 
 func (VMVirtualDiskArgs) ElementType() reflect.Type {
@@ -351,7 +351,7 @@ func (i VMVirtualDiskArgs) ToVMVirtualDiskOutputWithContext(ctx context.Context)
 // VMVirtualDiskArrayInput is an input type that accepts VMVirtualDiskArray and VMVirtualDiskArrayOutput values.
 // You can construct a concrete instance of `VMVirtualDiskArrayInput` via:
 //
-//          VMVirtualDiskArray{ VMVirtualDiskArgs{...} }
+//	VMVirtualDiskArray{ VMVirtualDiskArgs{...} }
 type VMVirtualDiskArrayInput interface {
 	pulumi.Input
 
@@ -392,8 +392,8 @@ func (o VMVirtualDiskOutput) Slot() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v VMVirtualDisk) *string { return v.Slot }).(pulumi.StringPtrOutput)
 }
 
-func (o VMVirtualDiskOutput) VirtualDiskId() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v VMVirtualDisk) *string { return v.VirtualDiskId }).(pulumi.StringPtrOutput)
+func (o VMVirtualDiskOutput) VirtualDiskId() pulumi.StringOutput {
+	return o.ApplyT(func(v VMVirtualDisk) string { return v.VirtualDiskId }).(pulumi.StringOutput)
 }
 
 type VMVirtualDiskArrayOutput struct{ *pulumi.OutputState }

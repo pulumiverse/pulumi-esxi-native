@@ -13,14 +13,14 @@ namespace Pulumi.EsxiNative.Outputs
     [OutputType]
     public sealed class KeyValuePair
     {
-        public readonly string? Key;
-        public readonly string? Value;
+        public readonly string Key;
+        public readonly string Value;
 
         [OutputConstructor]
         private KeyValuePair(
-            string? key,
+            string key,
 
-            string? value)
+            string value)
         {
             Key = key;
             Value = value;

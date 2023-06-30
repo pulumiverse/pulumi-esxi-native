@@ -33,7 +33,7 @@ func getDefaultName(
 	olds,
 	news resource.PropertyMap,
 ) (resource.PropertyValue, error) {
-	autoName := autoNamingSpec.AutoName
+	autoName := autoNamingSpec.PropertyName
 
 	// Prefer explicitly specified name
 	if v, ok := news[resource.PropertyKey(autoName)]; ok {

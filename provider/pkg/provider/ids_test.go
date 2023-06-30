@@ -69,9 +69,9 @@ func Test_getDefaultName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			autoNamingSpec := &esxi.AutoNamingSpec{
-				AutoName:  "autoName",
-				MinLength: tt.minLength,
-				MaxLength: tt.maxLength,
+				PropertyName: "autoName",
+				MinLength:    tt.minLength,
+				MaxLength:    tt.maxLength,
 			}
 			got, err := getDefaultName(nil, urn, autoNamingSpec, tt.olds, tt.news)
 			if tt.err != nil {

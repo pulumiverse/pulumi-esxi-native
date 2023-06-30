@@ -18,8 +18,8 @@ namespace Pulumi.EsxiNative.Inputs
         [Input("slot")]
         public Input<string>? Slot { get; set; }
 
-        [Input("virtualDiskId")]
-        public Input<string>? VirtualDiskId { get; set; }
+        [Input("virtualDiskId", required: true)]
+        public Input<string> VirtualDiskId { get; set; } = null!;
 
         public VMVirtualDiskArgs()
         {

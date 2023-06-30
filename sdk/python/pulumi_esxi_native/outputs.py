@@ -20,21 +20,19 @@ __all__ = [
 @pulumi.output_type
 class KeyValuePair(dict):
     def __init__(__self__, *,
-                 key: Optional[str] = None,
-                 value: Optional[str] = None):
-        if key is not None:
-            pulumi.set(__self__, "key", key)
-        if value is not None:
-            pulumi.set(__self__, "value", value)
+                 key: str,
+                 value: str):
+        pulumi.set(__self__, "key", key)
+        pulumi.set(__self__, "value", value)
 
     @property
     @pulumi.getter
-    def key(self) -> Optional[str]:
+    def key(self) -> str:
         return pulumi.get(self, "key")
 
     @property
     @pulumi.getter
-    def value(self) -> Optional[str]:
+    def value(self) -> str:
         return pulumi.get(self, "value")
 
 
@@ -126,15 +124,19 @@ class VMVirtualDisk(dict):
         return super().get(key, default)
 
     def __init__(__self__, *,
-                 slot: Optional[str] = None,
-                 virtual_disk_id: Optional[str] = None):
+                 virtual_disk_id: str,
+                 slot: Optional[str] = None):
         """
         :param str slot: SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
         """
+        pulumi.set(__self__, "virtual_disk_id", virtual_disk_id)
         if slot is not None:
             pulumi.set(__self__, "slot", slot)
-        if virtual_disk_id is not None:
-            pulumi.set(__self__, "virtual_disk_id", virtual_disk_id)
+
+    @property
+    @pulumi.getter(name="virtualDiskId")
+    def virtual_disk_id(self) -> str:
+        return pulumi.get(self, "virtual_disk_id")
 
     @property
     @pulumi.getter
@@ -143,10 +145,5 @@ class VMVirtualDisk(dict):
         SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
         """
         return pulumi.get(self, "slot")
-
-    @property
-    @pulumi.getter(name="virtualDiskId")
-    def virtual_disk_id(self) -> Optional[str]:
-        return pulumi.get(self, "virtual_disk_id")
 
 

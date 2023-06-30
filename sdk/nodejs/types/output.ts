@@ -7,8 +7,8 @@ import * as outputs from "../types/output";
 import * as enums from "../types/enums";
 
 export interface KeyValuePair {
-    key?: string;
-    value?: string;
+    key: string;
+    value: string;
 }
 
 export interface NetworkInterface {
@@ -29,6 +29,6 @@ export interface VMVirtualDisk {
      * SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
      */
     slot?: string;
-    virtualDiskId?: string;
+    virtualDiskId: string;
 }
 

@@ -30,6 +30,8 @@ class VirtualDiskArgs:
         """
         pulumi.set(__self__, "directory", directory)
         pulumi.set(__self__, "disk_store", disk_store)
+        if disk_type is None:
+            disk_type = 'thin'
         pulumi.set(__self__, "disk_type", disk_type)
         if name is not None:
             pulumi.set(__self__, "name", name)
@@ -163,6 +165,8 @@ class VirtualDisk(pulumi.CustomResource):
             if disk_store is None and not opts.urn:
                 raise TypeError("Missing required property 'disk_store'")
             __props__.__dict__["disk_store"] = disk_store
+            if disk_type is None:
+                disk_type = 'thin'
             if disk_type is None and not opts.urn:
                 raise TypeError("Missing required property 'disk_type'")
             __props__.__dict__["disk_type"] = disk_type

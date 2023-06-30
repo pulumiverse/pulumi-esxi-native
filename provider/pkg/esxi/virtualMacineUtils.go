@@ -20,7 +20,7 @@ func (esxi *Host) getVirtualMachineId(name string) (string, error) {
 	logging.V(9).Infof("getVirtualMachineId: result => %s", id)
 	if err != nil {
 		logging.V(9).Infof("getVirtualMachineId: Failed get vm id => %s", err)
-		return "", fmt.Errorf("Failed get vm id: %s\n", err)
+		return "", fmt.Errorf("unable to find a virtual machine corresponding to the name '%s'", name)
 	}
 
 	return id, nil

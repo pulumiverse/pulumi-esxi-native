@@ -179,7 +179,8 @@
                     "type": "string",
                     "description": "SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed."
                 }
-            }
+            },
+            "required": ["virtualDiskId"]
         },
         "esxi-native:index:Uplink": {
             "type": "object",
@@ -200,7 +201,8 @@
                 "value": {
                     "type": "string"
                 }
-            }
+            },
+            "required": ["key", "value"]
         }
     },
     "resources": {
@@ -258,6 +260,153 @@
                 "forgedTransmits": {
                     "type": "boolean",
                     "description": "Forged transmits (true=Accept/false=Reject)."
+                }
+            }
+        },
+        "esxi-native:index:ResourcePool": {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Resource Pool Name"
+                },
+                "cpuMin": {
+                    "type": "integer",
+                    "description": "CPU minimum (in MHz)."
+                },
+                "cpuMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow CPU resources from parent?"
+                },
+                "cpuMax": {
+                    "type": "integer",
+                    "description": "CPU maximum (in MHz)."
+                },
+                "cpuShares": {
+                    "type": "string",
+                    "description": "CPU shares (low/normal/high/<custom>)."
+                },
+                "memMin": {
+                    "type": "integer",
+                    "description": "Memory minimum (in MB)."
+                },
+                "memMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow memory resources from parent?"
+                },
+                "memMax": {
+                    "type": "integer",
+                    "description": "Memory maximum (in MB)."
+                },
+                "memShares": {
+                    "type": "string",
+                    "description": "Memory shares (low/normal/high/<custom>)."
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "requiredInputs": [],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "Resource Pool Name"
+                },
+                "cpuMin": {
+                    "type": "integer",
+                    "description": "CPU minimum (in MHz)."
+                },
+                "cpuMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow CPU resources from parent?"
+                },
+                "cpuMax": {
+                    "type": "integer",
+                    "description": "CPU maximum (in MHz)."
+                },
+                "cpuShares": {
+                    "type": "string",
+                    "description": "CPU shares (low/normal/high/<custom>)."
+                },
+                "memMin": {
+                    "type": "integer",
+                    "description": "Memory minimum (in MB)."
+                },
+                "memMinExpandable": {
+                    "type": "string",
+                    "description": "Can pool borrow memory resources from parent?"
+                },
+                "memMax": {
+                    "type": "integer",
+                    "description": "Memory maximum (in MB)."
+                },
+                "memShares": {
+                    "type": "string",
+                    "description": "Memory shares (low/normal/high/<custom>)."
+                }
+            }
+        },
+        "esxi-native:index:VirtualDisk": {
+            "properties": {
+                "diskStore": {
+                    "type": "string",
+                    "description": "Disk Store."
+                },
+                "directory": {
+                    "type": "string",
+                    "description": "Disk directory."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Disk Name."
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Virtual Disk size in GB."
+                },
+                "diskType": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:DiskType",
+                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)"
+                }
+            },
+            "required": [
+                "name",
+                "diskStore",
+                "directory",
+                "diskType"
+            ],
+            "requiredInputs": [
+                "diskStore",
+                "directory",
+                "diskType"
+            ],
+            "inputProperties": {
+                "diskStore": {
+                    "type": "string",
+                    "description": "Disk Store.",
+                    "willReplaceOnChanges": true
+                },
+                "directory": {
+                    "type": "string",
+                    "description": "Disk directory.",
+                    "willReplaceOnChanges": true
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Virtual Disk Name.",
+                    "willReplaceOnChanges": true
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Virtual Disk size in GB.",
+                    "default": 1
+                },
+                "diskType": {
+                    "type": "string",
+                    "$ref": "#/types/esxi-native:index:DiskType",
+                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)",
+                    "willReplaceOnChanges": true,
+                    "default": "thin"
                 }
             }
         },
@@ -478,152 +627,6 @@
                     "items": {
                         "$ref": "#/types/esxi-native:index:KeyValuePair"
                     },
-                    "willReplaceOnChanges": true
-                }
-            }
-        },
-        "esxi-native:index:ResourcePool": {
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Resource Pool Name"
-                },
-                "cpuMin": {
-                    "type": "integer",
-                    "description": "CPU minimum (in MHz)."
-                },
-                "cpuMinExpandable": {
-                    "type": "string",
-                    "description": "Can pool borrow CPU resources from parent?"
-                },
-                "cpuMax": {
-                    "type": "integer",
-                    "description": "CPU maximum (in MHz)."
-                },
-                "cpuShares": {
-                    "type": "string",
-                    "description": "CPU shares (low/normal/high/<custom>)."
-                },
-                "memMin": {
-                    "type": "integer",
-                    "description": "Memory minimum (in MB)."
-                },
-                "memMinExpandable": {
-                    "type": "string",
-                    "description": "Can pool borrow memory resources from parent?"
-                },
-                "memMax": {
-                    "type": "integer",
-                    "description": "Memory maximum (in MB)."
-                },
-                "memShares": {
-                    "type": "string",
-                    "description": "Memory shares (low/normal/high/<custom>)."
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "requiredInputs": [],
-            "inputProperties": {
-                "name": {
-                    "type": "string",
-                    "description": "Resource Pool Name"
-                },
-                "cpuMin": {
-                    "type": "integer",
-                    "description": "CPU minimum (in MHz)."
-                },
-                "cpuMinExpandable": {
-                    "type": "string",
-                    "description": "Can pool borrow CPU resources from parent?"
-                },
-                "cpuMax": {
-                    "type": "integer",
-                    "description": "CPU maximum (in MHz)."
-                },
-                "cpuShares": {
-                    "type": "string",
-                    "description": "CPU shares (low/normal/high/<custom>)."
-                },
-                "memMin": {
-                    "type": "integer",
-                    "description": "Memory minimum (in MB)."
-                },
-                "memMinExpandable": {
-                    "type": "string",
-                    "description": "Can pool borrow memory resources from parent?"
-                },
-                "memMax": {
-                    "type": "integer",
-                    "description": "Memory maximum (in MB)."
-                },
-                "memShares": {
-                    "type": "string",
-                    "description": "Memory shares (low/normal/high/<custom>)."
-                }
-            }
-        },
-        "esxi-native:index:VirtualDisk": {
-            "properties": {
-                "diskStore": {
-                    "type": "string",
-                    "description": "Disk Store."
-                },
-                "directory": {
-                    "type": "string",
-                    "description": "Disk directory."
-                },
-                "name": {
-                    "type": "string",
-                    "description": "Virtual Disk Name."
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Virtual Disk size in GB."
-                },
-                "diskType": {
-                    "type": "string",
-                    "$ref": "#/types/esxi-native:index:DiskType",
-                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)"
-                }
-            },
-            "required": [
-                "name",
-                "diskStore",
-                "directory",
-                "diskType"
-            ],
-            "requiredInputs": [
-                "diskStore",
-                "directory",
-                "diskType"
-            ],
-            "inputProperties": {
-                "diskStore": {
-                    "type": "string",
-                    "description": "Disk Store.",
-                    "willReplaceOnChanges": true
-                },
-                "directory": {
-                    "type": "string",
-                    "description": "Disk directory.",
-                    "willReplaceOnChanges": true
-                },
-                "name": {
-                    "type": "string",
-                    "description": "Virtual Disk Name.",
-                    "willReplaceOnChanges": true
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Virtual Disk size in GB.",
-                    "default": 1
-                },
-                "diskType": {
-                    "type": "string",
-                    "$ref": "#/types/esxi-native:index:DiskType",
-                    "description": "Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)",
                     "willReplaceOnChanges": true
                 }
             }

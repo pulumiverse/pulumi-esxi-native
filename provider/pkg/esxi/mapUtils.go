@@ -36,6 +36,20 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	return outputs
 }
 
+func (vs *VirtualSwitch) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(vs)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
+	}
+
+	// Do up links
+	if len(vs.Uplinks) == 0 || len(vs.Uplinks[0].Name) == 0 {
+		delete(outputs, "uplinks")
+	}
+
+	return outputs
+}
+
 func structToMap(dataStruct interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 

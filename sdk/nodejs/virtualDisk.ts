@@ -77,7 +77,7 @@ export class VirtualDisk extends pulumi.CustomResource {
             }
             resourceInputs["directory"] = args ? args.directory : undefined;
             resourceInputs["diskStore"] = args ? args.diskStore : undefined;
-            resourceInputs["diskType"] = args ? args.diskType : undefined;
+            resourceInputs["diskType"] = (args ? args.diskType : undefined) ?? "thin";
             resourceInputs["name"] = args ? args.name : undefined;
             resourceInputs["size"] = (args ? args.size : undefined) ?? 1;
         } else {

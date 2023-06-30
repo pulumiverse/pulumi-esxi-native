@@ -12,7 +12,7 @@ func VirtualMachineGetParser(inputs resource.PropertyMap) string {
 func VirtualMachineGet(name string, esxi *Host) (resource.PropertyMap, error) {
 	id, err := esxi.getVirtualMachineId(name)
 	if err != nil {
-		return nil, fmt.Errorf("unable to find a virtual machine corresponding to the name '%s'", name)
+		return nil, err
 	}
 
 	return VirtualMachineGetById(id, esxi)
