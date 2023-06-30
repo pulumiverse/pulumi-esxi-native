@@ -398,6 +398,10 @@
                     "description": "Resource pool name to place vm.",
                     "willReplaceOnChanges": true
                 },
+                "bootDiskSize": {
+                    "type": "string",
+                    "description": "VM boot disk size. Will expand boot disk to this size."
+                },
                 "bootDiskType": {
                     "type": "string",
                     "default": "thin",

@@ -27,7 +27,8 @@ func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.Propert
 		return "", nil, err
 	}
 
-	return vm.Id, vm.ToPropertyMap(), err
+	result := vm.toMap()
+	return vm.Id, resource.NewPropertyMapFromMap(result), err
 }
 
 func (esxi *Host) readVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {

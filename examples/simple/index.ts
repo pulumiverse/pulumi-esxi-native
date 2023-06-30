@@ -4,4 +4,4 @@ const vm = esxi.getVirtualMachineOutput({name: "vcsa"});
 
 const vswitch = new esxi.VirtualSwitch("test", {name: "test"})
 
-export const output = vm.name;
+export const output = vm;

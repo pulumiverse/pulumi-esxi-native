@@ -20,9 +20,6 @@ func VirtualMachineGet(name string, esxi *Host) (resource.PropertyMap, error) {
 		return nil, err
 	}
 
-	result := vm.ToPropertyMap()
-	result["id"] = resource.PropertyValue{
-		V: id,
-	}
-	return result, err
+	result := vm.toMap(true)
+	return resource.NewPropertyMapFromMap(result), err
 }

@@ -2,17 +2,17 @@ package esxi
 
 import "github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 
-func VirtualDiskCreateParser(inputs resource.PropertyMap) VirtualMachine {
-	vm := VirtualMachine{}
+func VirtualDiskCreateParser(inputs resource.PropertyMap) VirtualDisk {
+	vd := VirtualDisk{}
 
-	return vm
+	return vd
 }
 
-func VirtualDiskCreate(vm VirtualMachine, esxi *Host) (resource.PropertyMap, error) {
+func VirtualDiskCreate(vd VirtualDisk, esxi *Host) (resource.PropertyMap, error) {
 
-	// create vm
+	// create vd
 
-	// read vm
+	// read vd
 
-	return vm.ToPropertyMap(), nil
+	return nil, nil
 }
