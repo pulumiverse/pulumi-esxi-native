@@ -235,7 +235,7 @@ namespace Pulumi.EsxiNative
         /// VM number of virtual cpus.
         /// </summary>
         [Input("numVCpus", required: true)]
-        public Input<int> NumVCpus { get; set; } = null!;
+        public Input<string> NumVCpus { get; set; } = null!;
 
         /// <summary>
         /// VM OS type.

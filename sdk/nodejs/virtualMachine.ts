@@ -222,7 +222,7 @@ export interface VirtualMachineArgs {
     /**
      * VM number of virtual cpus.
      */
-    numVCpus: pulumi.Input<number>;
+    numVCpus: pulumi.Input<string>;
     /**
      * VM OS type.
      */

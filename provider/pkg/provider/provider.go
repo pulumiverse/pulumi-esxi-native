@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
-	"github.com/golang/glog"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/pkg/v3/resource/provider"
@@ -106,7 +105,7 @@ func (p *esxiProvider) CheckConfig(_ context.Context, req *pulumirpc.CheckReques
 func (p *esxiProvider) DiffConfig(_ context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.DiffConfig(%s)", p.name, urn)
-	glog.V(9).Infof("%s executing", label)
+	logging.V(9).Infof("%s executing", label)
 
 	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
 		Label:        fmt.Sprintf("%s.olds", label),
@@ -201,12 +200,10 @@ func (p *esxiProvider) Invoke(_ context.Context, req *pulumirpc.InvokeRequest) (
 	}
 
 	// Process Invoke call.
-	var result resource.PropertyMap
-	invoked, err := p.resourceService.Invoke(token, inputs, p.esxi)
+	result, err := p.resourceService.Invoke(token, inputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
-	result = invoked.(resource.PropertyMap)
 
 	res, err := plugin.MarshalProperties(result, plugin.MarshalOptions{
 		Label:        fmt.Sprintf("%s.Invoke(%s).outputs", p.name, token),
@@ -246,27 +243,17 @@ func (p *esxiProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 	label := fmt.Sprintf("%s.Diff(%s)", p.name, urn)
 	logging.V(9).Infof("%s executing", label)
 
-	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
+	diff, err := p.diffState(req.GetOlds(), req.GetNews(), label)
 	if err != nil {
 		return nil, err
 	}
-
-	news, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
-	if err != nil {
-		return nil, err
-	}
-
-	d := olds.Diff(news)
-	changes := pulumirpc.DiffResponse_DIFF_NONE
-
-	// Replace the below condition with logic specific to your provider
-	if d.Changed("length") {
-		changes = pulumirpc.DiffResponse_DIFF_SOME
+	if diff == nil {
+		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
 
 	return &pulumirpc.DiffResponse{
-		Changes:  changes,
-		Replaces: []string{"length"},
+		Changes:             pulumirpc.DiffResponse_DIFF_UNKNOWN,
+		DeleteBeforeReplace: true,
 	}, nil
 }
 
@@ -276,7 +263,7 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 	token := string(urn.Type())
 
 	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
-	glog.V(9).Infof("%s executing", label)
+	logging.V(9).Infof("%s executing", label)
 
 	// Deserialize RPC inputs.
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{
@@ -291,11 +278,10 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 
 	// Process Create call.
 	var result resource.PropertyMap
-	created, err := p.resourceService.Create(token, inputs, p.esxi)
-	if err != nil {
+	id, result, err := p.resourceService.Create(token, inputs, p.esxi)
+	if err != nil || len(id) == 0 || result == nil {
 		return nil, err
 	}
-	result = created.(resource.PropertyMap)
 
 	outputProperties, err := plugin.MarshalProperties(result,
 		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
@@ -304,7 +290,7 @@ func (p *esxiProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 		return nil, err
 	}
 	return &pulumirpc.CreateResponse{
-		Id:         "result",
+		Id:         id,
 		Properties: outputProperties,
 	}, nil
 }
@@ -362,6 +348,43 @@ func (p *esxiProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRe
 func (p *esxiProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
 	p.canceler.cancel()
 	return &pbempty.Empty{}, nil
+}
+
+// diffState extracts old and new inputs and calculates a diff between them.
+func (p *esxiProvider) diffState(olds *structpb.Struct, news *structpb.Struct, label string) (*resource.ObjectDiff, error) {
+	oldState, err := plugin.UnmarshalProperties(olds, plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.oldState", label),
+		KeepUnknowns: true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "diff failed because malformed resource inputs")
+	}
+
+	// Extract old inputs from the `__inputs` field of the old state.
+	oldInputs := parseCheckpointObject(oldState)
+
+	newInputs, err := plugin.UnmarshalProperties(news, plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.newInputs", label),
+		KeepUnknowns: true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "diff failed because malformed resource inputs")
+	}
+
+	return oldInputs.Diff(newInputs), nil
+}
+
+// parseCheckpointObject returns inputs that are saved in the `__inputs` field of the state.
+func parseCheckpointObject(obj resource.PropertyMap) resource.PropertyMap {
+	if inputs, ok := obj["__inputs"]; ok {
+		return inputs.SecretValue().Element.ObjectValue()
+	}
+
+	return nil
 }
 
 func varsOrEnv(vars map[string]string, key string, env ...string) (string, bool) {

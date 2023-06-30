@@ -19,7 +19,7 @@ class VirtualMachineArgs:
     def __init__(__self__, *,
                  disk_store: pulumi.Input[str],
                  mem_size: pulumi.Input[str],
-                 num_v_cpus: pulumi.Input[int],
+                 num_v_cpus: pulumi.Input[str],
                  os: pulumi.Input[str],
                  resource_pool_name: pulumi.Input[str],
                  boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
@@ -42,7 +42,7 @@ class VirtualMachineArgs:
         The set of arguments for constructing a VirtualMachine resource.
         :param pulumi.Input[str] disk_store: esxi diskstore for boot disk.
         :param pulumi.Input[str] mem_size: VM memory size.
-        :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
+        :param pulumi.Input[str] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
@@ -138,14 +138,14 @@ class VirtualMachineArgs:
 
     @property
     @pulumi.getter(name="numVCpus")
-    def num_v_cpus(self) -> pulumi.Input[int]:
+    def num_v_cpus(self) -> pulumi.Input[str]:
         """
         VM number of virtual cpus.
         """
         return pulumi.get(self, "num_v_cpus")
 
     @num_v_cpus.setter
-    def num_v_cpus(self, value: pulumi.Input[int]):
+    def num_v_cpus(self, value: pulumi.Input[str]):
         pulumi.set(self, "num_v_cpus", value)
 
     @property
@@ -379,7 +379,7 @@ class VirtualMachine(pulumi.CustomResource):
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]]] = None,
                  notes: Optional[pulumi.Input[str]] = None,
-                 num_v_cpus: Optional[pulumi.Input[int]] = None,
+                 num_v_cpus: Optional[pulumi.Input[str]] = None,
                  os: Optional[pulumi.Input[str]] = None,
                  ovf_host_path_source: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
@@ -405,7 +405,7 @@ class VirtualMachine(pulumi.CustomResource):
         :param pulumi.Input[str] name: esxi vm name.
         :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]] network_interfaces: VM network interfaces.
         :param pulumi.Input[str] notes: VM memory size.
-        :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
+        :param pulumi.Input[str] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[str] ovf_host_path_source: Path on esxi host of ovf files.
         :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]] ovf_properties: VM OVF properties.
@@ -450,7 +450,7 @@ class VirtualMachine(pulumi.CustomResource):
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['NetworkInterfaceArgs']]]]] = None,
                  notes: Optional[pulumi.Input[str]] = None,
-                 num_v_cpus: Optional[pulumi.Input[int]] = None,
+                 num_v_cpus: Optional[pulumi.Input[str]] = None,
                  os: Optional[pulumi.Input[str]] = None,
                  ovf_host_path_source: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,

@@ -4,23 +4,25 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
-type VirtualMachineGetParams struct {
-	name string
+func VirtualMachineGetParser(inputs resource.PropertyMap) string {
+	return inputs["name"].StringValue()
 }
 
-func VirtualMachineGetParser(inputs resource.PropertyMap) (VirtualMachineGetParams, error) {
-	n := inputs["name"].StringValue()
-	return VirtualMachineGetParams{
-		name: n,
-	}, nil
-}
+func VirtualMachineGet(name string, esxi *Host) (resource.PropertyMap, error) {
+	id, _ := esxi.getVirtualMachineId(name)
 
-func VirtualMachineGet(params VirtualMachineGetParams, esxi *Host) (resource.PropertyMap, error) {
-	outputs := resource.PropertyMap{
-		"name": resource.PropertyValue{
-			V: params.name,
-		},
+	vm, err := esxi.readVirtualMachine(VirtualMachine{
+		Id:             id,
+		StartupTimeout: 600,
+	})
+
+	if err != nil || vm.Name == "" {
+		return nil, err
 	}
 
-	return outputs, nil
+	result := vm.ToPropertyMap()
+	result["id"] = resource.PropertyValue{
+		V: id,
+	}
+	return result, err
 }

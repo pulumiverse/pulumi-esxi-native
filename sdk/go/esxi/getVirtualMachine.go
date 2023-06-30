@@ -33,6 +33,8 @@ type LookupVirtualMachineResult struct {
 	BootFirmware *BootFirmwareType `pulumi:"bootFirmware"`
 	// esxi diskstore for boot disk.
 	DiskStore *string `pulumi:"diskStore"`
+	// esxi vm id.
+	Id *string `pulumi:"id"`
 	// pass data to VM
 	Info []KeyValuePair `pulumi:"info"`
 	// The IP address reported by VMWare tools.
@@ -134,6 +136,11 @@ func (o LookupVirtualMachineResultOutput) BootFirmware() BootFirmwareTypePtrOutp
 // esxi diskstore for boot disk.
 func (o LookupVirtualMachineResultOutput) DiskStore() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v LookupVirtualMachineResult) *string { return v.DiskStore }).(pulumi.StringPtrOutput)
+}
+
+// esxi vm id.
+func (o LookupVirtualMachineResultOutput) Id() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v LookupVirtualMachineResult) *string { return v.Id }).(pulumi.StringPtrOutput)
 }
 
 // pass data to VM

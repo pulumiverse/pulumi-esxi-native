@@ -44,39 +44,63 @@ func NewResourceService() *ResourceService {
 	}
 }
 
-func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
-	return receiver.call(token, inputs, esxi)
-}
-
-func (receiver *ResourceService) Create(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
+func (receiver *ResourceService) Create(token string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
 	token = fmt.Sprintf("%s:Create", token)
-	return receiver.call(token, inputs, esxi)
+	return receiver.call(token, "", inputs, esxi)
 }
 
-func (receiver *ResourceService) Update(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
+func (receiver *ResourceService) Update(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
 	token = fmt.Sprintf("%s:Update", token)
-	return receiver.call(token, inputs, esxi)
+	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Delete(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
+func (receiver *ResourceService) Delete(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
 	token = fmt.Sprintf("%s:Delete", token)
-	return receiver.call(token, inputs, esxi)
+	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) Read(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
+func (receiver *ResourceService) Read(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
 	token = fmt.Sprintf("%s:Read", token)
-	return receiver.call(token, inputs, esxi)
+	return receiver.call(token, id, inputs, esxi)
 }
 
-func (receiver *ResourceService) call(token string, inputs resource.PropertyMap, esxi *Host) (result interface{}, err error) {
-	paramsParser := reflect.ValueOf(receiver.functions[token].parser)
-	paramsParserResult := paramsParser.Call([]reflect.Value{reflect.ValueOf(inputs)})
-
-	functionHandler := reflect.ValueOf(receiver.functions[token].handler)
-	params := []reflect.Value{reflect.ValueOf(paramsParserResult), reflect.ValueOf(esxi)}
-
+func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMap, esxi *Host) (result resource.PropertyMap, err error) {
+	mapper := receiver.functions[token]
+	params := mapper.getParams("", inputs, esxi)
+	functionHandler := reflect.ValueOf(mapper.handler)
 	var res []reflect.Value
 	res = functionHandler.Call(params)
-	result = res[0].Interface()
+	result = res[0].Interface().(resource.PropertyMap)
 	return
+}
+
+func (receiver *ResourceService) call(token string, id string, inputs resource.PropertyMap, esxi *Host) (rId string, result resource.PropertyMap, err error) {
+	mapper := receiver.functions[token]
+	params := mapper.getParams(id, inputs, esxi)
+	functionHandler := reflect.ValueOf(mapper.handler)
+	var res []reflect.Value
+	res = functionHandler.Call(params)
+	rId = res[0].Interface().(string)
+	result = res[1].Interface().(resource.PropertyMap)
+	return
+}
+
+func (m *functionMapper) getParams(id string, inputs resource.PropertyMap, esxi *Host) []reflect.Value {
+	var parsedParams []reflect.Value
+	parser := reflect.ValueOf(m.parser)
+	if len(id) > 0 {
+		parsedParams = parser.Call([]reflect.Value{reflect.ValueOf(id), reflect.ValueOf(inputs)})
+	} else {
+		parsedParams = parser.Call([]reflect.Value{reflect.ValueOf(inputs)})
+	}
+
+	params := make([]reflect.Value, len(parsedParams)+1)
+	esxiIndex := 0
+	for i, parsedParam := range parsedParams {
+		esxiIndex = i + 1
+		params[i] = parsedParam
+	}
+	params[esxiIndex] = reflect.ValueOf(esxi)
+
+	return params
 }

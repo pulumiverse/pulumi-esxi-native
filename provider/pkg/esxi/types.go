@@ -1,20 +1,5 @@
 package esxi
 
-type BootFirmwareType string
-
-const (
-	BootFirmwareTypeBIOS = BootFirmwareType("bios")
-	BootFirmwareTypeEFI  = BootFirmwareType("efi")
-)
-
-type DiskType string
-
-const (
-	DiskTypeThin             = DiskType("thin")
-	DiskTypeZeroedThick      = DiskType("zeroedthick")
-	DiskTypeEagerZeroedThick = DiskType("eagerzeroedthick")
-)
-
 type KeyValuePair struct {
 	Key   string
 	Value string
@@ -81,7 +66,7 @@ type VirtualDisk struct {
 	// Disk Store.
 	DiskStore string
 	// Virtual Disk type.
-	DiskType DiskType
+	DiskType string
 	// Virtual Disk Name.
 	Name string
 	// Virtual Disk size in GB.
@@ -92,13 +77,15 @@ type VirtualMachine struct {
 	// VM boot disk size. Will expand boot disk to this size.
 	BootDiskSize string
 	// VM boot disk type.
-	BootDiskType DiskType
+	BootDiskType string
 	// Boot type('efi' is boot uefi mode)
-	BootFirmware BootFirmwareType
+	BootFirmware string
 	// Source vm path on esxi host to clone.
 	CloneFromVirtualMachine string
-	// esxi diskstore for boot disk.
+	// esxi DiskStore for boot disk.
 	DiskStore string
+	// pass data to VM
+	Id string
 	// pass data to VM
 	Info []KeyValuePair
 	// The IP address reported by VMWare tools.

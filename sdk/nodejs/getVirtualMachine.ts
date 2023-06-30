@@ -41,6 +41,10 @@ export interface GetVirtualMachineResult {
      */
     readonly diskStore?: string;
     /**
+     * esxi vm id.
+     */
+    readonly id?: string;
+    /**
      * pass data to VM
      */
     readonly info?: outputs.KeyValuePair[];

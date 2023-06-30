@@ -409,7 +409,7 @@
                     "description": "VM memory size."
                 },
                 "numVCpus": {
-                    "type": "integer",
+                    "type": "string",
                     "description": "VM number of virtual cpus."
                 },
                 "virtualHWVer": {
@@ -715,6 +715,10 @@
             },
             "outputs": {
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "esxi vm id."
+                    },
                     "name": {
                         "type": "string",
                         "description": "esxi vm name."

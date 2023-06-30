@@ -2,7 +2,7 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/golang/glog"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"os"
 	"strings"
 	"time"
@@ -47,18 +47,18 @@ func NewHost(host, sshPort, sslPort, user, pass, ovfLoc string) Host {
 	}
 }
 
-func (h *Host) ValidateCreds() error {
+func (esxi *Host) ValidateCreds() error {
 	var remoteCmd string
 	var err error
 
 	remoteCmd = fmt.Sprintf("vmware --version")
-	_, err = h.Execute(remoteCmd, "Connectivity test, get vmware version")
+	_, err = esxi.Execute(remoteCmd, "Connectivity test, get vmware version")
 	if err != nil {
 		return fmt.Errorf("Failed to connect to esxi host: %s\n", err)
 	}
 
-	mkdir, err := h.Execute("mkdir -p ~", "Create home directory if missing")
-	glog.V(9).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
+	mkdir, err := esxi.Execute("mkdir -p ~", "Create home directory if missing")
+	logging.V(9).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
 
 	if err != nil {
 		return err
@@ -71,12 +71,12 @@ func (h *Host) ValidateCreds() error {
 }
 
 // Connect to esxi host using ssh
-func (h *Host) Connect(attempt int) (*ssh.Client, *ssh.Session, error) {
+func (esxi *Host) Connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	//attempt := 10
 	for attempt > 0 {
-		client, err := ssh.Dial("tcp", h.Connection.getSshConnection(), h.ClientConfig)
+		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
 		if err != nil {
-			glog.V(9).Infof("Connect: Retry attempt %d", attempt)
+			logging.V(9).Infof("Connect: Retry attempt %d", attempt)
 			attempt -= 1
 			time.Sleep(1 * time.Second)
 		} else {
@@ -97,8 +97,8 @@ func (h *Host) Connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	return nil, nil, fmt.Errorf("client connection error")
 }
 
-func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
-	glog.V(9).Infof("Execute: %s", shortCmdDesc)
+func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
+	logging.V(9).Infof("Execute: %s", shortCmdDesc)
 
 	var attempt int
 
@@ -107,9 +107,9 @@ func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	} else {
 		attempt = 10
 	}
-	client, session, err := h.Connect(attempt)
+	client, session, err := esxi.Connect(attempt)
 	if err != nil {
-		glog.V(9).Infof("Execute: Failed connecting to host! %s", err.Error())
+		logging.V(9).Infof("Execute: Failed connecting to host! %s", err.Error())
 		return "Failed to connect to esxi host", err
 	}
 
@@ -127,7 +127,7 @@ func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	if err != nil {
 		logMessage = fmt.Sprintf("%s\tstderr => %s\n", logMessage, err)
 	}
-	glog.V(9).Infof(logMessage)
+	logging.V(9).Infof(logMessage)
 
 	closeErr := client.Close()
 	if closeErr != nil {
@@ -136,8 +136,8 @@ func (h *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	return stdout, closeErr
 }
 
-func (h *Host) CopyFile(content string, path string, shortCmdDesc string) (string, error) {
-	glog.V(9).Infof("CopyFile: %s", shortCmdDesc)
+func (esxi *Host) CopyFile(content string, path string, shortCmdDesc string) (string, error) {
+	logging.V(9).Infof("CopyFile: %s", shortCmdDesc)
 
 	f, _ := os.CreateTemp("", "")
 	_, err := fmt.Fprintln(f, content)
@@ -150,15 +150,15 @@ func (h *Host) CopyFile(content string, path string, shortCmdDesc string) (strin
 	}
 	defer os.Remove(f.Name())
 
-	client, session, err := h.Connect(10)
+	client, session, err := esxi.Connect(10)
 	if err != nil {
-		glog.V(9).Infof("CopyFile: Failed connecting to host! %s", err.Error())
+		logging.V(9).Infof("CopyFile: Failed connecting to host! %s", err.Error())
 		return "Failed connection to host!", err
 	}
 
 	err = scp.CopyPath(f.Name(), path, session)
 	if err != nil {
-		glog.V(9).Infof("CopyFile: Failed copying the file! %s", err.Error())
+		logging.V(9).Infof("CopyFile: Failed copying the file! %s", err.Error())
 		return "Failed to copy file to esxi host!", err
 	}
 

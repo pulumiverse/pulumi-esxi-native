@@ -66,6 +66,10 @@ namespace Pulumi.EsxiNative
         /// </summary>
         public readonly string? DiskStore;
         /// <summary>
+        /// esxi vm id.
+        /// </summary>
+        public readonly string? Id;
+        /// <summary>
         /// pass data to VM
         /// </summary>
         public readonly ImmutableArray<Outputs.KeyValuePair> Info;
@@ -132,6 +136,8 @@ namespace Pulumi.EsxiNative
 
             string? diskStore,
 
+            string? id,
+
             ImmutableArray<Outputs.KeyValuePair> info,
 
             string? ipAddress,
@@ -164,6 +170,7 @@ namespace Pulumi.EsxiNative
             BootDiskType = bootDiskType;
             BootFirmware = bootFirmware;
             DiskStore = diskStore;
+            Id = id;
             Info = info;
             IpAddress = ipAddress;
             MemSize = memSize;

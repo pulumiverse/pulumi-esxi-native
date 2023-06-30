@@ -20,7 +20,7 @@ __all__ = [
 
 @pulumi.output_type
 class GetVirtualMachineResult:
-    def __init__(__self__, boot_disk_size=None, boot_disk_type=None, boot_firmware=None, disk_store=None, info=None, ip_address=None, mem_size=None, name=None, network_interfaces=None, notes=None, num_v_cpus=None, os=None, power=None, resource_pool_name=None, shutdown_timeout=None, startup_timeout=None, virtual_disks=None, virtual_hw_ver=None):
+    def __init__(__self__, boot_disk_size=None, boot_disk_type=None, boot_firmware=None, disk_store=None, id=None, info=None, ip_address=None, mem_size=None, name=None, network_interfaces=None, notes=None, num_v_cpus=None, os=None, power=None, resource_pool_name=None, shutdown_timeout=None, startup_timeout=None, virtual_disks=None, virtual_hw_ver=None):
         if boot_disk_size and not isinstance(boot_disk_size, str):
             raise TypeError("Expected argument 'boot_disk_size' to be a str")
         pulumi.set(__self__, "boot_disk_size", boot_disk_size)
@@ -33,6 +33,9 @@ class GetVirtualMachineResult:
         if disk_store and not isinstance(disk_store, str):
             raise TypeError("Expected argument 'disk_store' to be a str")
         pulumi.set(__self__, "disk_store", disk_store)
+        if id and not isinstance(id, str):
+            raise TypeError("Expected argument 'id' to be a str")
+        pulumi.set(__self__, "id", id)
         if info and not isinstance(info, list):
             raise TypeError("Expected argument 'info' to be a list")
         pulumi.set(__self__, "info", info)
@@ -107,6 +110,14 @@ class GetVirtualMachineResult:
         esxi diskstore for boot disk.
         """
         return pulumi.get(self, "disk_store")
+
+    @property
+    @pulumi.getter
+    def id(self) -> Optional[str]:
+        """
+        esxi vm id.
+        """
+        return pulumi.get(self, "id")
 
     @property
     @pulumi.getter
@@ -231,6 +242,7 @@ class AwaitableGetVirtualMachineResult(GetVirtualMachineResult):
             boot_disk_type=self.boot_disk_type,
             boot_firmware=self.boot_firmware,
             disk_store=self.disk_store,
+            id=self.id,
             info=self.info,
             ip_address=self.ip_address,
             mem_size=self.mem_size,
@@ -267,6 +279,7 @@ def get_virtual_machine(name: Optional[str] = None,
         boot_disk_type=__ret__.boot_disk_type,
         boot_firmware=__ret__.boot_firmware,
         disk_store=__ret__.disk_store,
+        id=__ret__.id,
         info=__ret__.info,
         ip_address=__ret__.ip_address,
         mem_size=__ret__.mem_size,
