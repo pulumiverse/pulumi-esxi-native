@@ -12,14 +12,14 @@ namespace Pulumi.EsxiNative
     public static class GetVirtualMachineById
     {
         public static Task<GetVirtualMachineByIdResult> InvokeAsync(GetVirtualMachineByIdArgs args, InvokeOptions? options = null)
-            => Pulumi.Deployment.Instance.InvokeAsync<GetVirtualMachineByIdResult>("esxi-native:index:getVirtualMachineById", args ?? new GetVirtualMachineByIdArgs(), options.WithDefaults());
+            => global::Pulumi.Deployment.Instance.InvokeAsync<GetVirtualMachineByIdResult>("esxi-native:index:getVirtualMachineById", args ?? new GetVirtualMachineByIdArgs(), options.WithDefaults());
 
         public static Output<GetVirtualMachineByIdResult> Invoke(GetVirtualMachineByIdInvokeArgs args, InvokeOptions? options = null)
-            => Pulumi.Deployment.Instance.Invoke<GetVirtualMachineByIdResult>("esxi-native:index:getVirtualMachineById", args ?? new GetVirtualMachineByIdInvokeArgs(), options.WithDefaults());
+            => global::Pulumi.Deployment.Instance.Invoke<GetVirtualMachineByIdResult>("esxi-native:index:getVirtualMachineById", args ?? new GetVirtualMachineByIdInvokeArgs(), options.WithDefaults());
     }
 
 
-    public sealed class GetVirtualMachineByIdArgs : Pulumi.InvokeArgs
+    public sealed class GetVirtualMachineByIdArgs : global::Pulumi.InvokeArgs
     {
         /// <summary>
         /// Virtual Machine Id to get details of
@@ -30,9 +30,10 @@ namespace Pulumi.EsxiNative
         public GetVirtualMachineByIdArgs()
         {
         }
+        public static new GetVirtualMachineByIdArgs Empty => new GetVirtualMachineByIdArgs();
     }
 
-    public sealed class GetVirtualMachineByIdInvokeArgs : Pulumi.InvokeArgs
+    public sealed class GetVirtualMachineByIdInvokeArgs : global::Pulumi.InvokeArgs
     {
         /// <summary>
         /// Virtual Machine Id to get details of
@@ -43,6 +44,7 @@ namespace Pulumi.EsxiNative
         public GetVirtualMachineByIdInvokeArgs()
         {
         }
+        public static new GetVirtualMachineByIdInvokeArgs Empty => new GetVirtualMachineByIdInvokeArgs();
     }
 
 

@@ -13,7 +13,7 @@ namespace Pulumi.EsxiNative
     /// The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.
     /// </summary>
     [EsxiNativeResourceType("pulumi:providers:esxi-native")]
-    public partial class Provider : Pulumi.ProviderResource
+    public partial class Provider : global::Pulumi.ProviderResource
     {
         /// <summary>
         /// ESXi Host Name config
@@ -77,7 +77,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class ProviderArgs : Pulumi.ResourceArgs
+    public sealed class ProviderArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// ESXi Host Name config
@@ -121,5 +121,6 @@ namespace Pulumi.EsxiNative
             SslPort = "443";
             Username = "root";
         }
+        public static new ProviderArgs Empty => new ProviderArgs();
     }
 }

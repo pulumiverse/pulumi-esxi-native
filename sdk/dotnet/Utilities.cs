@@ -74,7 +74,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    internal sealed class EsxiNativeResourceTypeAttribute : Pulumi.ResourceTypeAttribute
+    internal sealed class EsxiNativeResourceTypeAttribute : global::Pulumi.ResourceTypeAttribute
     {
         public EsxiNativeResourceTypeAttribute(string type) : base(type, Utilities.Version)
         {

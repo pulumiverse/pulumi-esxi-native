@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative.Inputs
 {
 
-    public sealed class KeyValuePairArgs : Pulumi.ResourceArgs
+    public sealed class KeyValuePairArgs : global::Pulumi.ResourceArgs
     {
         [Input("key")]
         public Input<string>? Key { get; set; }
@@ -21,5 +21,6 @@ namespace Pulumi.EsxiNative.Inputs
         public KeyValuePairArgs()
         {
         }
+        public static new KeyValuePairArgs Empty => new KeyValuePairArgs();
     }
 }

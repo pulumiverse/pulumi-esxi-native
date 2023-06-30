@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:PortGroup")]
-    public partial class PortGroup : Pulumi.CustomResource
+    public partial class PortGroup : global::Pulumi.CustomResource
     {
         /// <summary>
         /// Forged transmits (true=Accept/false=Reject).
@@ -91,7 +91,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class PortGroupArgs : Pulumi.ResourceArgs
+    public sealed class PortGroupArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// Forged transmits (true=Accept/false=Reject).
@@ -132,5 +132,6 @@ namespace Pulumi.EsxiNative
         public PortGroupArgs()
         {
         }
+        public static new PortGroupArgs Empty => new PortGroupArgs();
     }
 }

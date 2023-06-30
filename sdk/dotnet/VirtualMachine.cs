@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:VirtualMachine")]
-    public partial class VirtualMachine : Pulumi.CustomResource
+    public partial class VirtualMachine : global::Pulumi.CustomResource
     {
         /// <summary>
         /// VM boot disk size. Will expand boot disk to this size.
@@ -163,7 +163,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class VirtualMachineArgs : Pulumi.ResourceArgs
+    public sealed class VirtualMachineArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// VM boot disk size. Will expand boot disk to this size.
@@ -330,5 +330,6 @@ namespace Pulumi.EsxiNative
             ShutdownTimeout = 600;
             StartupTimeout = 600;
         }
+        public static new VirtualMachineArgs Empty => new VirtualMachineArgs();
     }
 }

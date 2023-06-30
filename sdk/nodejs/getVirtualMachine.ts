@@ -2,15 +2,14 @@
 // *** Do not edit by hand unless you're certain you know what you are doing! ***
 
 import * as pulumi from "@pulumi/pulumi";
-import { input as inputs, output as outputs, enums } from "./types";
+import * as inputs from "./types/input";
+import * as outputs from "./types/output";
+import * as enums from "./types/enums";
 import * as utilities from "./utilities";
 
 export function getVirtualMachine(args: GetVirtualMachineArgs, opts?: pulumi.InvokeOptions): Promise<GetVirtualMachineResult> {
-    if (!opts) {
-        opts = {}
-    }
 
-    opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
+    opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts || {});
     return pulumi.runtime.invoke("esxi-native:index:getVirtualMachine", {
         "name": args.name,
     }, opts);
@@ -101,9 +100,8 @@ export interface GetVirtualMachineResult {
      */
     readonly virtualHWVer?: string;
 }
-
 export function getVirtualMachineOutput(args: GetVirtualMachineOutputArgs, opts?: pulumi.InvokeOptions): pulumi.Output<GetVirtualMachineResult> {
-    return pulumi.output(args).apply(a => getVirtualMachine(a, opts))
+    return pulumi.output(args).apply((a: any) => getVirtualMachine(a, opts))
 }
 
 export interface GetVirtualMachineOutputArgs {

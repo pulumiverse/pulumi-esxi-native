@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:VirtualSwitch")]
-    public partial class VirtualSwitch : Pulumi.CustomResource
+    public partial class VirtualSwitch : global::Pulumi.CustomResource
     {
         /// <summary>
         /// Forged transmits (true=Accept/false=Reject).
@@ -103,7 +103,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class VirtualSwitchArgs : Pulumi.ResourceArgs
+    public sealed class VirtualSwitchArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// Forged transmits (true=Accept/false=Reject).
@@ -162,5 +162,6 @@ namespace Pulumi.EsxiNative
         public VirtualSwitchArgs()
         {
         }
+        public static new VirtualSwitchArgs Empty => new VirtualSwitchArgs();
     }
 }

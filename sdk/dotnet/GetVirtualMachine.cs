@@ -12,14 +12,14 @@ namespace Pulumi.EsxiNative
     public static class GetVirtualMachine
     {
         public static Task<GetVirtualMachineResult> InvokeAsync(GetVirtualMachineArgs args, InvokeOptions? options = null)
-            => Pulumi.Deployment.Instance.InvokeAsync<GetVirtualMachineResult>("esxi-native:index:getVirtualMachine", args ?? new GetVirtualMachineArgs(), options.WithDefaults());
+            => global::Pulumi.Deployment.Instance.InvokeAsync<GetVirtualMachineResult>("esxi-native:index:getVirtualMachine", args ?? new GetVirtualMachineArgs(), options.WithDefaults());
 
         public static Output<GetVirtualMachineResult> Invoke(GetVirtualMachineInvokeArgs args, InvokeOptions? options = null)
-            => Pulumi.Deployment.Instance.Invoke<GetVirtualMachineResult>("esxi-native:index:getVirtualMachine", args ?? new GetVirtualMachineInvokeArgs(), options.WithDefaults());
+            => global::Pulumi.Deployment.Instance.Invoke<GetVirtualMachineResult>("esxi-native:index:getVirtualMachine", args ?? new GetVirtualMachineInvokeArgs(), options.WithDefaults());
     }
 
 
-    public sealed class GetVirtualMachineArgs : Pulumi.InvokeArgs
+    public sealed class GetVirtualMachineArgs : global::Pulumi.InvokeArgs
     {
         /// <summary>
         /// Virtual Machine Name to get details of
@@ -30,9 +30,10 @@ namespace Pulumi.EsxiNative
         public GetVirtualMachineArgs()
         {
         }
+        public static new GetVirtualMachineArgs Empty => new GetVirtualMachineArgs();
     }
 
-    public sealed class GetVirtualMachineInvokeArgs : Pulumi.InvokeArgs
+    public sealed class GetVirtualMachineInvokeArgs : global::Pulumi.InvokeArgs
     {
         /// <summary>
         /// Virtual Machine Name to get details of
@@ -43,6 +44,7 @@ namespace Pulumi.EsxiNative
         public GetVirtualMachineInvokeArgs()
         {
         }
+        public static new GetVirtualMachineInvokeArgs Empty => new GetVirtualMachineInvokeArgs();
     }
 
 

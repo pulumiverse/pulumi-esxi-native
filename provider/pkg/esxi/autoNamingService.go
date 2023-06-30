@@ -41,12 +41,11 @@ func (service *AutoNamingService) CreateAutoNamingSpec(token string, inputProper
 
 	if propSpec, has := inputProperties["name"]; has && propSpec.IsString() {
 		autoNameSpec = &AutoNamingSpec{
-			AutoName: "name",
+			AutoName:  "name",
+			MinLength: defaultNameSpec.minLength,
+			MaxLength: defaultNameSpec.maxLength,
 		}
 	}
-
-	autoNameSpec.MinLength = defaultNameSpec.minLength
-	autoNameSpec.MaxLength = defaultNameSpec.maxLength
 
 	return autoNameSpec
 }

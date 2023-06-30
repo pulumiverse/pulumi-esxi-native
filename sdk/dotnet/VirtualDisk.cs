@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:VirtualDisk")]
-    public partial class VirtualDisk : Pulumi.CustomResource
+    public partial class VirtualDisk : global::Pulumi.CustomResource
     {
         /// <summary>
         /// Disk directory.
@@ -85,7 +85,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class VirtualDiskArgs : Pulumi.ResourceArgs
+    public sealed class VirtualDiskArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// Disk directory.
@@ -121,5 +121,6 @@ namespace Pulumi.EsxiNative
         {
             Size = 1;
         }
+        public static new VirtualDiskArgs Empty => new VirtualDiskArgs();
     }
 }

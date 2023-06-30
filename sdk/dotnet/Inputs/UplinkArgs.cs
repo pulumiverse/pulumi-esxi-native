@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative.Inputs
 {
 
-    public sealed class UplinkArgs : Pulumi.ResourceArgs
+    public sealed class UplinkArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// Uplink name.
@@ -21,5 +21,6 @@ namespace Pulumi.EsxiNative.Inputs
         public UplinkArgs()
         {
         }
+        public static new UplinkArgs Empty => new UplinkArgs();
     }
 }

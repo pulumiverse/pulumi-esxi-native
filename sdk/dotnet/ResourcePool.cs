@@ -10,7 +10,7 @@ using Pulumi.Serialization;
 namespace Pulumi.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:ResourcePool")]
-    public partial class ResourcePool : Pulumi.CustomResource
+    public partial class ResourcePool : global::Pulumi.CustomResource
     {
         /// <summary>
         /// CPU maximum (in MHz).
@@ -109,7 +109,7 @@ namespace Pulumi.EsxiNative
         }
     }
 
-    public sealed class ResourcePoolArgs : Pulumi.ResourceArgs
+    public sealed class ResourcePoolArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
         /// CPU maximum (in MHz).
@@ -168,5 +168,6 @@ namespace Pulumi.EsxiNative
         public ResourcePoolArgs()
         {
         }
+        public static new ResourcePoolArgs Empty => new ResourcePoolArgs();
     }
 }

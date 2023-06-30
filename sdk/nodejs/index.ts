@@ -5,14 +5,46 @@ import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
 // Export members:
-export * from "./getVirtualMachine";
-export * from "./getVirtualMachineById";
-export * from "./portGroup";
-export * from "./provider";
-export * from "./resourcePool";
-export * from "./virtualDisk";
-export * from "./virtualMachine";
-export * from "./virtualSwitch";
+export { GetVirtualMachineArgs, GetVirtualMachineResult, GetVirtualMachineOutputArgs } from "./getVirtualMachine";
+export const getVirtualMachine: typeof import("./getVirtualMachine").getVirtualMachine = null as any;
+export const getVirtualMachineOutput: typeof import("./getVirtualMachine").getVirtualMachineOutput = null as any;
+utilities.lazyLoad(exports, ["getVirtualMachine","getVirtualMachineOutput"], () => require("./getVirtualMachine"));
+
+export { GetVirtualMachineByIdArgs, GetVirtualMachineByIdResult, GetVirtualMachineByIdOutputArgs } from "./getVirtualMachineById";
+export const getVirtualMachineById: typeof import("./getVirtualMachineById").getVirtualMachineById = null as any;
+export const getVirtualMachineByIdOutput: typeof import("./getVirtualMachineById").getVirtualMachineByIdOutput = null as any;
+utilities.lazyLoad(exports, ["getVirtualMachineById","getVirtualMachineByIdOutput"], () => require("./getVirtualMachineById"));
+
+export { PortGroupArgs } from "./portGroup";
+export type PortGroup = import("./portGroup").PortGroup;
+export const PortGroup: typeof import("./portGroup").PortGroup = null as any;
+utilities.lazyLoad(exports, ["PortGroup"], () => require("./portGroup"));
+
+export { ProviderArgs } from "./provider";
+export type Provider = import("./provider").Provider;
+export const Provider: typeof import("./provider").Provider = null as any;
+utilities.lazyLoad(exports, ["Provider"], () => require("./provider"));
+
+export { ResourcePoolArgs } from "./resourcePool";
+export type ResourcePool = import("./resourcePool").ResourcePool;
+export const ResourcePool: typeof import("./resourcePool").ResourcePool = null as any;
+utilities.lazyLoad(exports, ["ResourcePool"], () => require("./resourcePool"));
+
+export { VirtualDiskArgs } from "./virtualDisk";
+export type VirtualDisk = import("./virtualDisk").VirtualDisk;
+export const VirtualDisk: typeof import("./virtualDisk").VirtualDisk = null as any;
+utilities.lazyLoad(exports, ["VirtualDisk"], () => require("./virtualDisk"));
+
+export { VirtualMachineArgs } from "./virtualMachine";
+export type VirtualMachine = import("./virtualMachine").VirtualMachine;
+export const VirtualMachine: typeof import("./virtualMachine").VirtualMachine = null as any;
+utilities.lazyLoad(exports, ["VirtualMachine"], () => require("./virtualMachine"));
+
+export { VirtualSwitchArgs } from "./virtualSwitch";
+export type VirtualSwitch = import("./virtualSwitch").VirtualSwitch;
+export const VirtualSwitch: typeof import("./virtualSwitch").VirtualSwitch = null as any;
+utilities.lazyLoad(exports, ["VirtualSwitch"], () => require("./virtualSwitch"));
+
 
 // Export enums:
 export * from "./types/enums";
@@ -25,13 +57,6 @@ export {
     config,
     types,
 };
-
-// Import resources to register:
-import { PortGroup } from "./portGroup";
-import { ResourcePool } from "./resourcePool";
-import { VirtualDisk } from "./virtualDisk";
-import { VirtualMachine } from "./virtualMachine";
-import { VirtualSwitch } from "./virtualSwitch";
 
 const _module = {
     version: utilities.getVersion(),
@@ -53,9 +78,6 @@ const _module = {
     },
 };
 pulumi.runtime.registerResourceModule("esxi-native", "index", _module)
-
-import { Provider } from "./provider";
-
 pulumi.runtime.registerResourcePackage("esxi-native", {
     version: utilities.getVersion(),
     constructProvider: (name: string, type: string, urn: string): pulumi.ProviderResource => {
