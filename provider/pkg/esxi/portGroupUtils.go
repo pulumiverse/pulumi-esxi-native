@@ -1,5 +1,0 @@
-package esxi
-
-func PortGroupReadParser() {
-
-}

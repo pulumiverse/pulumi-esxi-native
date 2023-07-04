@@ -13,14 +13,41 @@ func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pul
 		failures["name"] = "The properly 'name' is required!"
 	}
 
+	if _, has := inputs["vSwitch"]; !has {
+		failures["vSwitch"] = "The properly 'vSwitch' is required!"
+	}
+
+	if _, has := inputs["vlan"]; !has {
+		failures["vlan"] = "The properly 'vlan' is required!"
+	}
+
+	invalidFormat := "The properly '%s' is invalid! The value %s"
+
+	for propertyName, property := range inputs {
+		key := string(propertyName)
+		switch key {
+		case "forgedTransmits":
+		case "promiscuousMode":
+		case "macChanges":
+			value := property.StringValue()
+			if value != "true" && value != "false" && value != "" {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "must be true, false or empty to inherit")
+			}
+		}
+	}
+
 	return validateResource(resourceToken, failures)
 }
 
 func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
-	if _, has := inputs["name"]; !has {
+	if property, has := inputs["name"]; !has {
 		failures["name"] = "The properly 'name' is required!"
+	} else if value := property.StringValue(); has && value == "/" {
+		failures["name"] = "The properly 'name' is required!"
+	} else if has && value[0] == '/' {
+		failures["name"] = "The properly 'name' cannot start with '/'!"
 	}
 
 	return validateResource(resourceToken, failures)
@@ -50,7 +77,7 @@ func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*p
 
 func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := map[string]string{}
-	invalidFormat := "The properly '%s' is invalid! The value %s"
+	invalidFormat := "The properly '%s' is invalid! The value should be %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)

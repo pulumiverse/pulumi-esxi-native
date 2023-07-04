@@ -233,8 +233,8 @@
                     "description": "Forged transmits (true=Accept/false=Reject)."
                 }
             },
-            "required": ["name"],
-            "requiredInputs": [],
+            "required": ["name", "vSwitch", "vlan"],
+            "requiredInputs": ["vSwitch", "vlan"],
             "inputProperties": {
                 "name": {
                     "type": "string",

@@ -4,6 +4,15 @@ import (
 	"reflect"
 )
 
+func (pg *PortGroup) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(pg)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
+	}
+
+	return outputs
+}
+
 func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	outputs := structToMap(vm)
 	if len(keepId) != 0 && !keepId[0] {

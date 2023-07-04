@@ -11,21 +11,27 @@ type NetworkInterface struct {
 	VirtualNetwork string
 }
 
+type PortGroupSecurityPolicy struct {
+	AllowForgedTransmits  bool `csv:"AllowForgedTransmits"`
+	AllowMACAddressChange bool `csv:"AllowMACAddressChange"`
+	AllowPromiscuous      bool `csv:"AllowPromiscuous"`
+}
+
 type PortGroup struct {
 	// Forged transmits (true=Accept/false=Reject).
-	ForgedTransmits bool
+	ForgedTransmits string
+	// Id
+	Id string
 	// MAC address changes (true=Accept/false=Reject).
-	MacChanges bool
+	MacChanges string
 	// Port Group Virtual Switch.
 	VSwitch string
 	// Port Group Virtual LAN.
 	Vlan int
 	// Virtual Switch name.
 	Name string
-	// Virtual Switch number of ports. (1-4096)
-	Ports int
 	// Promiscuous mode (true=Accept/false=Reject).
-	PromiscuousMode bool
+	PromiscuousMode string
 }
 
 type ResourcePool struct {
@@ -37,6 +43,8 @@ type ResourcePool struct {
 	CpuMinExpandable string
 	// CPU shares (low/normal/high/<custom>).
 	CpuShares string
+	// Id
+	Id string
 	// Memory maximum (in MB).
 	MemMax int
 	// Memory minimum (in MB).
@@ -67,6 +75,8 @@ type VirtualDisk struct {
 	DiskStore string
 	// Virtual Disk type.
 	DiskType string
+	// Id
+	Id string
 	// Virtual Disk Name.
 	Name string
 	// Virtual Disk size in GB.
@@ -127,6 +137,8 @@ type VirtualMachine struct {
 type VirtualSwitch struct {
 	// Forged transmits (true=Accept/false=Reject).
 	ForgedTransmits bool
+	// Id
+	Id string
 	// Virtual Switch Link Discovery Mode.
 	LinkDiscoveryMode string
 	// MAC address changes (true=Accept/false=Reject).

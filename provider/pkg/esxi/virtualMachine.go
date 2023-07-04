@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
@@ -58,22 +59,54 @@ func VirtualMachineUpdate(vm VirtualMachine, esxi *Host) (string, resource.Prope
 }
 
 func VirtualMachineDelete(id string, esxi *Host) error {
+	var command, stdout string
+	var err error
+
+	_, err = esxi.powerOffVirtualMachine(id, 30)
+	if err != nil {
+		return fmt.Errorf("failed to power off: %s", err)
+	}
+
+	// remove storage from vmx so it doesn't get deleted by the vim-cmd destroy
+	err = esxi.cleanStorageFromVmx(id)
+	if err != nil {
+		logging.V(9).Infof("VirtualMachineDelete: failed clean storage from id: %s (to be deleted)", id)
+	}
+
+	time.Sleep(5 * time.Second)
+	command = fmt.Sprintf("vim-cmd vmsvc/destroy %s", id)
+	stdout, err = esxi.Execute(command, "vmsvc/destroy")
+	if err != nil {
+		logging.V(9).Infof("VirtualMachineDelete: failed to destroy vm: %s", stdout)
+		return fmt.Errorf("failed to destroy vm: %s", err)
+	}
 
 	return nil
 }
 
 func parseVirtualMachine(id string, inputs resource.PropertyMap) VirtualMachine {
-	var startupTimeout int
+	vm := VirtualMachine{}
 
-	if property, has := inputs["startupTimeout"]; has {
-		startupTimeout = int(property.NumberValue())
-	} else {
-		startupTimeout = 1
+	if len(id) > 0 {
+		vm.Id = id
 	}
 
-	vm := VirtualMachine{
-		Id:             id,
-		StartupTimeout: startupTimeout,
+	if property, has := inputs["startupTimeout"]; has {
+		vm.StartupTimeout = int(property.NumberValue())
+	} else {
+		vm.StartupTimeout = 1
+	}
+
+	if property, has := inputs["memSize"]; has {
+		vm.MemSize = property.StringValue()
+	} else {
+		vm.MemSize = "1"
+	}
+
+	if property, has := inputs["numVCpus"]; has {
+		vm.NumVCpus = property.StringValue()
+	} else {
+		vm.NumVCpus = "1"
 	}
 
 	return vm
