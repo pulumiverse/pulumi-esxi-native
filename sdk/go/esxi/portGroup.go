@@ -7,6 +7,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -22,18 +23,24 @@ type PortGroup struct {
 	// Promiscuous mode (true=Accept/false=Reject).
 	PromiscuousMode pulumi.BoolPtrOutput `pulumi:"promiscuousMode"`
 	// Virtual Switch Name.
-	VSwitch pulumi.StringPtrOutput `pulumi:"vSwitch"`
+	VSwitch pulumi.StringOutput `pulumi:"vSwitch"`
 	// Port Group vlan id
-	Vlan pulumi.IntPtrOutput `pulumi:"vlan"`
+	Vlan pulumi.IntOutput `pulumi:"vlan"`
 }
 
 // NewPortGroup registers a new resource with the given unique name, arguments, and options.
 func NewPortGroup(ctx *pulumi.Context,
 	name string, args *PortGroupArgs, opts ...pulumi.ResourceOption) (*PortGroup, error) {
 	if args == nil {
-		args = &PortGroupArgs{}
+		return nil, errors.New("missing one or more required arguments")
 	}
 
+	if args.VSwitch == nil {
+		return nil, errors.New("invalid value for required argument 'VSwitch'")
+	}
+	if args.Vlan == nil {
+		return nil, errors.New("invalid value for required argument 'Vlan'")
+	}
 	var resource PortGroup
 	err := ctx.RegisterResource("esxi-native:index:PortGroup", name, args, &resource, opts...)
 	if err != nil {
@@ -75,9 +82,9 @@ type portGroupArgs struct {
 	// Promiscuous mode (true=Accept/false=Reject).
 	PromiscuousMode *bool `pulumi:"promiscuousMode"`
 	// Virtual Switch Name.
-	VSwitch *string `pulumi:"vSwitch"`
+	VSwitch string `pulumi:"vSwitch"`
 	// Port Group vlan id
-	Vlan *int `pulumi:"vlan"`
+	Vlan int `pulumi:"vlan"`
 }
 
 // The set of arguments for constructing a PortGroup resource.
@@ -91,9 +98,9 @@ type PortGroupArgs struct {
 	// Promiscuous mode (true=Accept/false=Reject).
 	PromiscuousMode pulumi.BoolPtrInput
 	// Virtual Switch Name.
-	VSwitch pulumi.StringPtrInput
+	VSwitch pulumi.StringInput
 	// Port Group vlan id
-	Vlan pulumi.IntPtrInput
+	Vlan pulumi.IntInput
 }
 
 func (PortGroupArgs) ElementType() reflect.Type {
@@ -204,13 +211,13 @@ func (o PortGroupOutput) PromiscuousMode() pulumi.BoolPtrOutput {
 }
 
 // Virtual Switch Name.
-func (o PortGroupOutput) VSwitch() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *PortGroup) pulumi.StringPtrOutput { return v.VSwitch }).(pulumi.StringPtrOutput)
+func (o PortGroupOutput) VSwitch() pulumi.StringOutput {
+	return o.ApplyT(func(v *PortGroup) pulumi.StringOutput { return v.VSwitch }).(pulumi.StringOutput)
 }
 
 // Port Group vlan id
-func (o PortGroupOutput) Vlan() pulumi.IntPtrOutput {
-	return o.ApplyT(func(v *PortGroup) pulumi.IntPtrOutput { return v.Vlan }).(pulumi.IntPtrOutput)
+func (o PortGroupOutput) Vlan() pulumi.IntOutput {
+	return o.ApplyT(func(v *PortGroup) pulumi.IntOutput { return v.Vlan }).(pulumi.IntOutput)
 }
 
 type PortGroupArrayOutput struct{ *pulumi.OutputState }

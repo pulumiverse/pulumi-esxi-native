@@ -40,13 +40,13 @@ namespace Pulumi.EsxiNative
         /// Virtual Switch Name.
         /// </summary>
         [Output("vSwitch")]
-        public Output<string?> VSwitch { get; private set; } = null!;
+        public Output<string> VSwitch { get; private set; } = null!;
 
         /// <summary>
         /// Port Group vlan id
         /// </summary>
         [Output("vlan")]
-        public Output<int?> Vlan { get; private set; } = null!;
+        public Output<int> Vlan { get; private set; } = null!;
 
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Pulumi.EsxiNative
         /// <param name="name">The unique name of the resource</param>
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
-        public PortGroup(string name, PortGroupArgs? args = null, CustomResourceOptions? options = null)
+        public PortGroup(string name, PortGroupArgs args, CustomResourceOptions? options = null)
             : base("esxi-native:index:PortGroup", name, args ?? new PortGroupArgs(), MakeResourceOptions(options, ""))
         {
         }
@@ -120,14 +120,14 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// Virtual Switch Name.
         /// </summary>
-        [Input("vSwitch")]
-        public Input<string>? VSwitch { get; set; }
+        [Input("vSwitch", required: true)]
+        public Input<string> VSwitch { get; set; } = null!;
 
         /// <summary>
         /// Port Group vlan id
         /// </summary>
-        [Input("vlan")]
-        public Input<int>? Vlan { get; set; }
+        [Input("vlan", required: true)]
+        public Input<int> Vlan { get; set; } = null!;
 
         public PortGroupArgs()
         {

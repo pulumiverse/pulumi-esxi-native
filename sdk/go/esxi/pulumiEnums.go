@@ -180,7 +180,6 @@ const (
 	DiskTypeThin             = DiskType("thin")
 	DiskTypeZeroedThick      = DiskType("zeroedthick")
 	DiskTypeEagerZeroedThick = DiskType("eagerzeroedthick")
-	DiskTypeUnknown          = DiskType("Unknown")
 )
 
 func (DiskType) ElementType() reflect.Type {

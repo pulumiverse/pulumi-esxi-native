@@ -50,11 +50,11 @@ export class PortGroup extends pulumi.CustomResource {
     /**
      * Virtual Switch Name.
      */
-    public readonly vSwitch!: pulumi.Output<string | undefined>;
+    public readonly vSwitch!: pulumi.Output<string>;
     /**
      * Port Group vlan id
      */
-    public readonly vlan!: pulumi.Output<number | undefined>;
+    public readonly vlan!: pulumi.Output<number>;
 
     /**
      * Create a PortGroup resource with the given unique name, arguments, and options.
@@ -63,10 +63,16 @@ export class PortGroup extends pulumi.CustomResource {
      * @param args The arguments to use to populate this resource's properties.
      * @param opts A bag of options that control this resource's behavior.
      */
-    constructor(name: string, args?: PortGroupArgs, opts?: pulumi.CustomResourceOptions) {
+    constructor(name: string, args: PortGroupArgs, opts?: pulumi.CustomResourceOptions) {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         if (!opts.id) {
+            if ((!args || args.vSwitch === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'vSwitch'");
+            }
+            if ((!args || args.vlan === undefined) && !opts.urn) {
+                throw new Error("Missing required property 'vlan'");
+            }
             resourceInputs["forgedTransmits"] = args ? args.forgedTransmits : undefined;
             resourceInputs["macChanges"] = args ? args.macChanges : undefined;
             resourceInputs["name"] = args ? args.name : undefined;
@@ -109,9 +115,9 @@ export interface PortGroupArgs {
     /**
      * Virtual Switch Name.
      */
-    vSwitch?: pulumi.Input<string>;
+    vSwitch: pulumi.Input<string>;
     /**
      * Port Group vlan id
      */
-    vlan?: pulumi.Input<number>;
+    vlan: pulumi.Input<number>;
 }

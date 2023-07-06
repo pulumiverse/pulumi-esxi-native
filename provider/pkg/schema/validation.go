@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"strconv"
@@ -66,7 +65,7 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 		case "cpuShares":
 		case "memShares":
 			value := property.StringValue()
-			if _, err := strconv.Atoi(value); !esxi.Contains([]string{"low", "normal", "high"}, value) && err != nil {
+			if _, err := strconv.Atoi(value); !contains([]string{"low", "normal", "high"}, value) && err != nil {
 				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
 			}
 		}
@@ -101,7 +100,7 @@ func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*p
 		switch key {
 		case "diskType":
 			value := property.StringValue()
-			if _, err := strconv.Atoi(value); !esxi.Contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
+			if _, err := strconv.Atoi(value); !contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
 				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
 			}
 		}
@@ -198,7 +197,7 @@ func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []
 		switch key {
 		case "linkDiscoveryMode":
 			value := property.StringValue()
-			if !esxi.Contains([]string{"down", "listen", "advertise", "both"}, value) {
+			if !contains([]string{"down", "listen", "advertise", "both"}, value) {
 				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of down, listen, advertise or both"))
 			}
 		case "upLinks":
@@ -226,4 +225,14 @@ func validateResource(resourceToken string, failures map[string]string) []*pulum
 	}
 
 	return checkFailures
+}
+
+// Contains checks if an item is present in a collection
+func contains[T comparable](collection []T, value T) bool {
+	for _, item := range collection {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }
