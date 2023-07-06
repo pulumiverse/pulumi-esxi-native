@@ -1,34 +1,271 @@
 package esxi
 
-import "github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+import (
+	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"strconv"
+	"strings"
+)
 
-func VirtualDiskCreate(vd VirtualDisk, esxi *Host) (resource.PropertyMap, error) {
-
+func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vd VirtualDisk
+	if parsed, err := parseVirtualDisk("", inputs); err == nil {
+		vd = parsed
+	} else {
+		return "", nil, err
+	}
 	// create vd
+	var id, command string
+	var err error
+
+	err = esxi.validateDiskStore(vd.DiskStore)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to validate disk store: %s", err)
+	}
+
+	// Create dir if required
+	command = fmt.Sprintf("mkdir -p \"/vmfs/volumes/%s/%s\"", vd.DiskStore, vd.Directory)
+	_, _ = esxi.Execute(command, "create virtual disk dir")
+
+	command = fmt.Sprintf("ls -d \"/vmfs/volumes/%s/%s\"", vd.DiskStore, vd.Directory)
+	_, err = esxi.Execute(command, "validate dir exists")
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create virtual disk directory: %s", err)
+	}
+
+	// id is just the full path name
+	id = fmt.Sprintf("/vmfs/volumes/%s/%s/%s", vd.DiskStore, vd.Directory, vd.Name)
+
+	// validate if it exists already
+	command = fmt.Sprintf("ls -l \"%s\"", id)
+	_, err = esxi.Execute(command, "validate disk store exists")
+	if err == nil {
+		return "", nil, err
+	}
+
+	command = fmt.Sprintf("/bin/vmkfstools -c %dG -d %s \"%s\"", vd.Size, vd.DiskType, id)
+	_, err = esxi.Execute(command, "Create virtual disk")
+	if err != nil {
+		return "", nil, fmt.Errorf("unable to create virtual disk")
+	}
 
 	// read vd
-
-	return nil, nil
+	if err == nil {
+		return esxi.readVirtualDisk(id)
+	} else {
+		return "", nil, fmt.Errorf("failed to create virtual disk: %s err: %s", vd.Name, err)
+	}
 }
 
-func VirtualDiskUpdate(vd VirtualDisk, esxi *Host) (string, resource.PropertyMap, error) {
+func VirtualDiskUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vd VirtualDisk
+	if parsed, err := parseVirtualDisk(id, inputs); err == nil {
+		vd = parsed
+	} else {
+		return "", nil, err
+	}
 
-	return "", nil, nil
+	changed, err := esxi.growVirtualDisk(vd)
+	if err != nil && !changed {
+		return "", nil, fmt.Errorf("failed to grow virtual disk: %s", err)
+	}
+
+	return id, inputs, nil
 }
 
 func VirtualDiskDelete(id string, esxi *Host) error {
+	vd, err := esxi.getVirtualDisk(id)
+	if err != nil && strings.Contains(err.Error(), "invalid virtual disk id") {
+		return err
+	}
+
+	//  Destroy virtual disk.
+	command := fmt.Sprintf("/bin/vmkfstools -U \"%s\"", id)
+	stdout, err := esxi.Execute(command, "destroy virtual disk")
+	if err != nil {
+		if strings.Contains(err.Error(), "Process exited with status 255") == true {
+			logging.V(9).Infof("already deleted:%s", id)
+		} else {
+			logging.V(9).Infof("failed destroy virtual disk id: %s", stdout)
+			return fmt.Errorf("failed to destroy virtual disk: %s", err)
+		}
+	}
+
+	command = fmt.Sprintf("ls -al \"/vmfs/volumes/%s/%s/\" |wc -l", vd.DiskStore, vd.Directory)
+
+	stdout, err = esxi.Execute(command, "check if storage dir is empty")
+	if stdout == "3" {
+		{
+			//  Delete empty dir.  Ignore stdout and errors.
+			command = fmt.Sprintf("rmdir \"/vmfs/volumes/%s/%s\"", vd.DiskStore, vd.Directory)
+			_, _ = esxi.Execute(command, "rmdir empty storage dir")
+		}
+	}
 
 	return nil
 }
 
-func VirtualDiskRead(vd VirtualDisk, esxi *Host) (string, resource.PropertyMap, error) {
-
-	return "", nil, nil
+func VirtualDiskRead(id string, _ resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	return esxi.readVirtualDisk(id)
 }
 
-func parseVirtualDisk(id string, inputs resource.PropertyMap) VirtualDisk {
+func parseVirtualDisk(id string, inputs resource.PropertyMap) (VirtualDisk, error) {
+	vd := VirtualDisk{}
+	if len(id) > 0 {
+		vd.Id = id
+	}
+
+	vd.Name = inputs["name"].StringValue()
+	vd.DiskStore = inputs["diskStore"].StringValue()
+	vd.Directory = inputs["directory"].StringValue()
+	vd.DiskType = inputs["diskType"].StringValue()
+
+	if property, has := inputs["size"]; has && property.NumberValue() != 0 {
+		vd.Size = int(property.NumberValue())
+	} else {
+		vd.Size = 1
+	}
+
+	return vd, nil
+}
+
+func (esxi *Host) readVirtualDisk(id string) (string, resource.PropertyMap, error) {
+	vd, err := esxi.getVirtualDisk(id)
+	if err != nil && strings.Contains(err.Error(), "invalid virtual disk id") {
+		return "", nil, err
+	}
+
+	result := vd.toMap()
+	return vd.Id, resource.NewPropertyMapFromMap(result), nil
+}
+
+func (esxi *Host) validateDiskStore(diskStore string) error {
+	var command, stdout string
+	var err error
+
+	command = fmt.Sprintf("esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'")
+	stdout, err = esxi.Execute(command, "get list of disk stores")
+	if err != nil {
+		return fmt.Errorf("unable to get list of disk stores: %s", err)
+	}
+
+	if strings.Contains(stdout, diskStore) == false {
+		command = fmt.Sprintf("esxcli storage filesystem rescan")
+		_, _ = esxi.Execute(command, "refresh filesystems")
+
+		command = fmt.Sprintf("esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'")
+		stdout, err = esxi.Execute(command, "get list of disk stores")
+		if err != nil {
+			return fmt.Errorf("unable to get list of disk stores: %s", err)
+		}
+		if strings.Contains(stdout, diskStore) == false {
+			return fmt.Errorf("disk store %s does not exist; available disk stores: %s", diskStore, stdout)
+		}
+	}
+	return nil
+}
+
+func (esxi *Host) growVirtualDisk(vd VirtualDisk) (bool, error) {
+	var didGrowDisk bool
+	var newDiskSize int
+
+	current, err := esxi.getVirtualDisk(vd.Id)
+
+	if current.Size > vd.Size {
+		return false, fmt.Errorf("not able to shrink virtual disk: %s", vd.Id)
+	}
+
+	if current.Size < vd.Size {
+		command := fmt.Sprintf("/bin/vmkfstools -X %dG \"%s\"", newDiskSize, vd.Id)
+		_, err = esxi.Execute(command, "grow disk")
+		if err != nil {
+			return didGrowDisk, err
+		}
+		didGrowDisk = true
+	}
+
+	return didGrowDisk, err
+}
+
+func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
+	var diskStore, diskDir, diskName, diskType, flatSize string
+	var diskSize int
+	var flatSizeI64 int64
+	var s []string
+
+	path := strings.TrimLeft(id, "/vmfs/volumes/")
+	// Extract the values from the id string
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 {
+		return VirtualDisk{}, fmt.Errorf("invalid virtual disk id: '%s'", id)
+	}
+
+	// Access the individual parts
+	diskStore = parts[0]
+	diskName = parts[len(parts)-1]
+	if len(parts) == 3 {
+		diskDir = parts[2]
+	} else {
+		diskDir = strings.TrimLeft(path, fmt.Sprintf("%s/", diskStore))
+		diskDir = strings.TrimLeft(diskDir, fmt.Sprintf("/%s", diskName))
+	}
+
+	// Test if virtual disk exists
+	command := fmt.Sprintf("test -s \"%s\"", id)
+	_, err := esxi.Execute(command, "test if virtual disk exists")
+	if err != nil {
+		return VirtualDisk{}, err
+	}
+
+	//  Get virtual disk flat size
+	s = strings.Split(diskName, ".")
+	if len(s) < 2 {
+		return VirtualDisk{}, err
+	}
+	diskNameFlat := fmt.Sprintf("%s-flat.%s", s[0], s[1])
+
+	command = fmt.Sprintf("ls -l \"/vmfs/volumes/%s/%s/%s\" | awk '{print $5}'",
+		diskStore, diskDir, diskNameFlat)
+	flatSize, err = esxi.Execute(command, "Get size")
+	if err != nil {
+		return VirtualDisk{}, err
+	}
+	flatSizeI64, _ = strconv.ParseInt(flatSize, 10, 64)
+	diskSize = int(flatSizeI64 / 1024 / 1024 / 1024)
+
+	// Determine virtual disk type  (only works if Guest is powered off)
+	command = fmt.Sprintf("vmkfstools -t0 \"%s\" |grep -q 'VMFS Z- LVID:' && echo true", id)
+	isZeroedThick, _ := esxi.Execute(command, "Get disk type.  Is zeroedthick.")
+
+	command = fmt.Sprintf("vmkfstools -t0 \"%s\" |grep -q 'VMFS -- LVID:' && echo true", id)
+	isEagerZeroedThick, _ := esxi.Execute(command, "Get disk type.  Is eagerzeroedthick.")
+
+	command = fmt.Sprintf("vmkfstools -t0 \"%s\" |grep -q 'NOMP -- :' && echo true", id)
+	isThin, _ := esxi.Execute(command, "Get disk type.  Is thin.")
+
+	if isThin == "true" {
+		diskType = "thin"
+	} else if isZeroedThick == "true" {
+		diskType = "zeroedthick"
+	} else if isEagerZeroedThick == "true" {
+		diskType = "eagerzeroedthick"
+	} else {
+		diskType = "Unknown"
+	}
 
 	return VirtualDisk{
-		Name: id,
+		diskDir, diskStore, diskType, diskName, diskName, diskSize,
+	}, err
+}
+
+func (vd *VirtualDisk) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(vd)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
 	}
+	if vd.DiskType == "Unknown" {
+		delete(outputs, "diskType")
+	}
+	return outputs
 }

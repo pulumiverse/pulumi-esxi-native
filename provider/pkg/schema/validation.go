@@ -2,8 +2,10 @@ package schema
 
 import (
 	"fmt"
+	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
+	"strconv"
 )
 
 func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
@@ -50,6 +52,26 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 		failures["name"] = "The properly 'name' cannot start with '/'!"
 	}
 
+	invalidFormat := "The properly '%s' is invalid! The value %s"
+
+	for propertyName, property := range inputs {
+		key := string(propertyName)
+		switch key {
+		case "cpuMinExpandable":
+		case "memMinExpandable":
+			value := property.StringValue()
+			if value != "true" && value != "false" {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "must be true or false")
+			}
+		case "cpuShares":
+		case "memShares":
+			value := property.StringValue()
+			if _, err := strconv.Atoi(value); !esxi.Contains([]string{"low", "normal", "high"}, value) && err != nil {
+				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
+			}
+		}
+	}
+
 	return validateResource(resourceToken, failures)
 }
 
@@ -69,7 +91,20 @@ func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*p
 	}
 
 	if _, has := inputs["diskType"]; !has {
-		failures["directory"] = "The properly 'diskType' is required!"
+		failures["diskType"] = "The properly 'diskType' is required!"
+	}
+
+	invalidFormat := "The properly '%s' is invalid! The value %s"
+
+	for propertyName, property := range inputs {
+		key := string(propertyName)
+		switch key {
+		case "diskType":
+			value := property.StringValue()
+			if _, err := strconv.Atoi(value); !esxi.Contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
+				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
+			}
+		}
 	}
 
 	return validateResource(resourceToken, failures)
@@ -156,9 +191,16 @@ func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []
 		failures["name"] = "The properly 'name' is required!"
 	}
 
+	invalidFormat := "The properly '%s' is invalid! The value %s"
+
 	for propertyName, property := range inputs {
 		key := string(propertyName)
 		switch key {
+		case "linkDiscoveryMode":
+			value := property.StringValue()
+			if !esxi.Contains([]string{"down", "listen", "advertise", "both"}, value) {
+				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of down, listen, advertise or both"))
+			}
 		case "upLinks":
 			if upLinks := property.ArrayValue(); len(upLinks) > 0 {
 				for i, upLink := range upLinks {
@@ -167,6 +209,8 @@ func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []
 						failures[itemKey] = fmt.Sprintf("The properly '%s' is required!", itemKey)
 					}
 				}
+			} else if length := len(upLinks); length > 32 {
+				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must contain max 32 up links, currently '%d'", length))
 			}
 		}
 	}

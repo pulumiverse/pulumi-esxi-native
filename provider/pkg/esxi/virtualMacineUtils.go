@@ -475,3 +475,35 @@ func (esxi *Host) getVirtualMachineIpAddress(id string, startupTimeout int) stri
 
 	return ""
 }
+
+func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(vm)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
+	}
+	delete(outputs, "cloneFromVirtualMachine")
+	delete(outputs, "ovfHostPathSource")
+	delete(outputs, "ovfSourceLocalPath")
+	delete(outputs, "ovfProperties")
+	delete(outputs, "ovfPropertiesTimer")
+
+	if vm.BootDiskType == "Unknown" || len(vm.BootDiskType) == 0 {
+		delete(outputs, "bootDiskType")
+	}
+
+	if len(vm.Info) == 0 {
+		delete(outputs, "info")
+	}
+
+	// Do network interfaces
+	if len(vm.NetworkInterfaces) == 0 || len(vm.NetworkInterfaces[0].VirtualNetwork) == 0 {
+		delete(outputs, "networkInterfaces")
+	}
+
+	// Do virtual disks
+	if len(vm.VirtualDisks) == 0 || len(vm.VirtualDisks[0].VirtualDiskId) == 0 {
+		delete(outputs, "virtualDisks")
+	}
+
+	return outputs
+}

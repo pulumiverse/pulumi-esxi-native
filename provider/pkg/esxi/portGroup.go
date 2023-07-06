@@ -212,3 +212,11 @@ func (esxi *Host) readPortGroupSecurityPolicy(name string) (*PortGroupSecurityPo
 
 	return &policies[0], nil
 }
+
+func (pg *PortGroup) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(pg)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
+	}
+	return outputs
+}

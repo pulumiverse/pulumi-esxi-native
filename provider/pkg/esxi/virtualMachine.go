@@ -323,7 +323,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 
 	// Get boot disk size
 	bootDiskPath, _ := esxi.getBootDiskPath(vm.Id)
-	vd, err := esxi.readVirtualDisk(bootDiskPath)
+	vd, err := esxi.getVirtualDisk(bootDiskPath)
 	vm.BootDiskSize = strconv.Itoa(vd.Size)
 	vm.BootDiskType = vd.DiskType
 

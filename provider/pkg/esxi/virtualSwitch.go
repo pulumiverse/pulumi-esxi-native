@@ -1,138 +1,307 @@
 package esxi
 
-import "github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+import (
+	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"log"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
-func VirtualSwitchCreate(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
-	//var uplinks []string
-	//var remoteCmd string
-	//var somthingWentWrong string
-	//var err error
-	//var i int
+func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vs VirtualSwitch
+	if parsed, err := parseVirtualSwitch("", inputs); err == nil {
+		vs = parsed
+	} else {
+		return "", nil, err
+	}
 
-	//property := inputs["name"]
-	//if property.HasValue() {
-	//}
-	//property.StringValue()
-	//name := property.StringValue()
-	//ports := inputs["ports"].NumberValue()
-	//mtu := inputs["mtu"].NumberValue()
-	//linkDiscoveryMode := inputs["linkDiscoveryMode"].StringValue()
-	//promiscuousMode := inputs["promiscuousMode"].BoolValue()
-	//macChanges := inputs["macChanges"].BoolValue()
-	//forgedTransmits := inputs["forgedTransmits"].BoolValue()
-	//somthingWentWrong = ""
+	//  Create vswitch
+	command := fmt.Sprintf("esxcli network vswitch standard add -P %d -v \"%s\"", vs.Ports, vs.Name)
+	stdout, err := esxi.Execute(command, "create vswitch")
+	if strings.Contains(stdout, "this name already exists") {
+		return "", nil, fmt.Errorf("failed to create vswitch: %s, it already exists", vs.Name)
+	}
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create vswitch: %s err: %s", stdout, err)
+	}
 
-	// Validate variables
-	//if ports == 0 {
-	//	ports = 128
-	//}
-	//
-	//if mtu == 0 {
-	//	mtu = 1500
-	//}
-	//
-	//if len(linkDiscoveryMode) == 0 {
-	//	linkDiscoveryMode = "listen"
-	//}
-	//
-	//if linkDiscoveryMode != "down" && linkDiscoveryMode != "listen" &&
-	//	linkDiscoveryMode != "advertise" && linkDiscoveryMode != "both" {
-	//	return nil, fmt.Errorf("linkDiscoveryMode must be one of: down, listen, advertise or both")
-	//}
+	var somthingWentWrong string
+	err = esxi.updateVirtualSwitch(vs)
+	if err != nil {
+		somthingWentWrong = fmt.Sprintf("failed to update vswitch: %s", err)
+	}
 
-	//uplinkCount, ok := inputs["uplink"].Mappable()
-	//if !ok {
-	//	uplinkCount = 0
-	//	uplinks[0] = ""
-	//}
-	//if uplinkCount > 32 {
-	//	uplinkCount = 32
-	//}
-	//for i = 0; i < uplinkCount; i++ {
-	//	prefix := fmt.Sprintf("uplink.%d.", i)
-	//
-	//	if attr, ok := d.Get(prefix + "name").(string); ok && attr != "" {
-	//		uplinks = append(uplinks, d.Get(prefix+"name").(string))
-	//	}
-	//}
-	//
-	////  Create vswitch
-	//remoteCmd = fmt.Sprintf("esxcli network vswitch standard add -P %d -v \"%s\"",
-	//	ports, name)
+	// Refresh
+	id, result, err := esxi.readVirtualSwitch(vs.Name)
+	if err != nil {
+		return "", nil, err
+	}
 
-	//stdout, err := esxi.Execute(remoteCmd, "create virtual switch")
-	//if strings.Contains(stdout, "this name already exists") {
-	//	d.SetId("")
-	//	return fmt.Errorf("Failed to add vswitch: %s, it already exists\n", name)
-	//}
-	//if err != nil {
-	//	d.SetId("")
-	//	return fmt.Errorf("Failed to add vswitch: %s\n%s\n", stdout, err)
-	//}
-	//
-	////  Set id
-	//d.SetId(name)
-	//
-	//err = vswitchUpdate(c, name, ports, mtu, uplinks, linkDiscoveryMode, promiscuousMode, macChanges, forgedTransmits)
-	//if err != nil {
-	//	somthingWentWrong = fmt.Sprintf("Failed to update vswitch: %s\n", err)
-	//}
-	//
-	//// Refresh
-	//ports, mtu, uplinks, linkDiscoveryMode, promiscuousMode, macChanges, forgedTransmits, err = vswitchRead(c, name)
-	//if err != nil {
-	//	d.SetId("")
-	//	return nil
-	//}
-	//
-	//// Change uplinks (list) to map
-	//log.Printf("[resourceVSWITCHCreate] uplinks: %s\n", uplinks)
-	//uplink := make([]map[string]interface{}, 0, 1)
-	//
-	//if len(uplinks) == 0 {
-	//	uplink = nil
-	//} else {
-	//	for i, _ := range uplinks {
-	//		out := make(map[string]interface{})
-	//		out["name"] = uplinks[i]
-	//		uplink = append(uplink, out)
-	//	}
-	//}
-	//d.Set("uplink", uplink)
-	//
-	//d.Set("ports", ports)
-	//d.Set("mtu", mtu)
-	//d.Set("link_discovery_mode", linkDiscoveryMode)
-	//d.Set("promiscuous_mode", promiscuousMode)
-	//d.Set("mac_changes", macChanges)
-	//d.Set("forged_transmits", forgedTransmits)
-	//
-	//if somthingWentWrong != "" {
-	//	return fmt.Errorf(somthingWentWrong)
-	//}
+	if somthingWentWrong != "" {
+		return "", nil, fmt.Errorf(somthingWentWrong)
+	}
 
-	result := vs.toMap()
-	return "1", resource.NewPropertyMapFromMap(result), nil
+	return id, result, nil
 }
 
-func VirtualSwitchUpdate(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
+func VirtualSwitchUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vs VirtualSwitch
+	if parsed, err := parseVirtualSwitch(id, inputs); err == nil {
+		vs = parsed
+	} else {
+		return "", nil, err
+	}
 
-	return "", nil, nil
+	err := esxi.updateVirtualSwitch(vs)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to update vswitch: %s", err)
+	}
+
+	return esxi.readVirtualSwitch(vs.Name)
 }
 
 func VirtualSwitchDelete(id string, esxi *Host) error {
+	command := fmt.Sprintf("esxcli network vswitch standard remove -v \"%s\"", id)
+
+	stdout, err := esxi.Execute(command, "delete vswitch")
+	if err != nil {
+		return fmt.Errorf("failed to delete vswitch: %s err: %s", stdout, err)
+	}
 
 	return nil
 }
 
-func VirtualSwitchRead(vs VirtualSwitch, esxi *Host) (string, resource.PropertyMap, error) {
-
-	return "", nil, nil
+func VirtualSwitchRead(id string, _ resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	return esxi.readVirtualSwitch(id)
 }
 
-func parseVirtualSwitch(id string, inputs resource.PropertyMap) VirtualSwitch {
+func parseVirtualSwitch(id string, inputs resource.PropertyMap) (VirtualSwitch, error) {
+	vs := VirtualSwitch{}
 
-	return VirtualSwitch{
-		Name: inputs["name"].StringValue(),
+	if len(id) > 0 {
+		vs.Id = id
+		vs.Name = id
+	} else {
+		vs.Name = inputs["name"].StringValue()
+		vs.Id = vs.Name
 	}
+
+	if property, has := inputs["ports"]; has && property.NumberValue() != 0 {
+		vs.Ports = int(property.NumberValue())
+	} else {
+		vs.Ports = 128
+	}
+	if property, has := inputs["mtu"]; has && property.NumberValue() != 0 {
+		vs.Mtu = int(property.NumberValue())
+	} else {
+		vs.Mtu = 1500
+	}
+	if property, has := inputs["linkDiscoveryMode"]; has {
+		vs.LinkDiscoveryMode = property.StringValue()
+	} else {
+		vs.LinkDiscoveryMode = "listen"
+	}
+	if property, has := inputs["promiscuousMode"]; has {
+		vs.PromiscuousMode = property.BoolValue()
+	} else {
+		vs.PromiscuousMode = false
+	}
+	if property, has := inputs["macChanges"]; has {
+		vs.MacChanges = property.BoolValue()
+	} else {
+		vs.MacChanges = false
+	}
+	if property, has := inputs["forgedTransmits"]; has {
+		vs.ForgedTransmits = property.BoolValue()
+	} else {
+		vs.ForgedTransmits = false
+	}
+	if property, has := inputs["upLinks"]; has {
+		if upLinks := property.ArrayValue(); len(upLinks) > 0 {
+			vs.Uplinks = make([]Uplink, len(upLinks))
+			for i, upLink := range upLinks {
+				vs.Uplinks[i] = Uplink{
+					Name: upLink.ObjectValue()["name"].StringValue(),
+				}
+			}
+		}
+	} else {
+		vs.Uplinks = make([]Uplink, 1)
+		vs.Uplinks[0] = Uplink{Name: ""}
+	}
+
+	return vs, nil
+}
+
+func (esxi *Host) readVirtualSwitch(name string) (string, resource.PropertyMap, error) {
+	vs, err := esxi.getVirtualSwitch(name)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := vs.toMap()
+	return vs.Id, resource.NewPropertyMapFromMap(result), nil
+}
+
+func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
+	var foundUplinks []string
+	var command, stdout string
+	var err error
+
+	//  Set mtu and cdp
+	command = fmt.Sprintf("esxcli network vswitch standard set -m %d -c \"%s\" -v \"%s\"",
+		vs.Mtu, vs.LinkDiscoveryMode, vs.Name)
+
+	stdout, err = esxi.Execute(command, "set vswitch mtu, link_discovery_mode")
+	if err != nil {
+		return fmt.Errorf("failed to set vswitch mtu: %s err: %s", stdout, err)
+	}
+
+	//  Set security
+	command = fmt.Sprintf("esxcli network vswitch standard policy security set -f %t -m %t -p %t -v \"%s\"",
+		vs.PromiscuousMode, vs.MacChanges, vs.ForgedTransmits, vs.Name)
+
+	stdout, err = esxi.Execute(command, "set vswitch security")
+	if err != nil {
+		return fmt.Errorf("failed to set vswitch security: %s err: %s", stdout, err)
+	}
+
+	//  Update uplinks
+	command = fmt.Sprintf("esxcli network vswitch standard list -v \"%s\"", vs.Name)
+	stdout, err = esxi.Execute(command, "vswitch list")
+
+	if err != nil {
+		return fmt.Errorf("failed to list vswitch: %s err: %s", stdout, err)
+	}
+
+	re := regexp.MustCompile(`Uplinks: (.*)`)
+	foundUplinksRaw := strings.Fields(re.FindStringSubmatch(stdout)[1])
+	for _, s := range foundUplinksRaw {
+		foundUplinks = append(foundUplinks, strings.Replace(s, ",", "", -1))
+	}
+
+	//  Add uplink if needed
+	for i := range vs.Uplinks {
+		if Contains(foundUplinks, vs.Uplinks[i].Name) == false {
+			command = fmt.Sprintf("esxcli network vswitch standard uplink add -u \"%s\" -v \"%s\"",
+				vs.Uplinks[i].Name, vs.Name)
+
+			stdout, err = esxi.Execute(command, "vswitch add uplink")
+			if strings.Contains(stdout, "Not a valid pnic") {
+				return fmt.Errorf("uplink not found: %s", vs.Uplinks[i].Name)
+			}
+			if err != nil {
+				return fmt.Errorf("failed to add vswitch uplink: %s err: %s", stdout, err)
+			}
+		}
+	}
+
+	//  Remove uplink if needed
+	selector := func(upLink Uplink) string { return upLink.Name }
+	for _, item := range foundUplinks {
+		if ContainsValue(vs.Uplinks, selector, item) == false {
+			log.Printf("[vswitchUpdate] delete uplink (%s)\n", item)
+			command = fmt.Sprintf("esxcli network vswitch standard uplink remove -u \"%s\" -v \"%s\"",
+				item, vs.Name)
+
+			stdout, err = esxi.Execute(command, "vswitch remove uplink")
+			if err != nil {
+				return fmt.Errorf("failed to remove vswitch uplink: %s err: %s", stdout, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (esxi *Host) getVirtualSwitch(name string) (VirtualSwitch, error) {
+	vs := VirtualSwitch{}
+	var command, stdout string
+	var err error
+
+	command = fmt.Sprintf("esxcli network vswitch standard list -v \"%s\"", name)
+	stdout, _ = esxi.Execute(command, "vswitch list")
+
+	if stdout == "" {
+		return VirtualSwitch{}, fmt.Errorf(stdout)
+	}
+
+	re, _ := regexp.Compile(`Configured Ports: ([0-9]*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.Ports, _ = strconv.Atoi(re.FindStringSubmatch(stdout)[1])
+	} else {
+		vs.Ports = 128
+	}
+
+	re, _ = regexp.Compile(`MTU: ([0-9]*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.Mtu, _ = strconv.Atoi(re.FindStringSubmatch(stdout)[1])
+	} else {
+		vs.Mtu = 1500
+	}
+
+	re, _ = regexp.Compile(`CDP Status: ([a-z]*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.LinkDiscoveryMode = re.FindStringSubmatch(stdout)[1]
+	} else {
+		vs.LinkDiscoveryMode = "listen"
+	}
+
+	re, _ = regexp.Compile(`Uplinks: (.*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		foundUplinks := strings.Fields(re.FindStringSubmatch(stdout)[1])
+		log.Printf("[vswitchRead] found foundUplinks: /%s/\n", foundUplinks)
+		for _, s := range foundUplinks {
+			vs.Uplinks = append(vs.Uplinks, Uplink{Name: strings.Replace(s, ",", "", -1)})
+		}
+	} else {
+		vs.Uplinks = vs.Uplinks[:0]
+	}
+
+	command = fmt.Sprintf("esxcli network vswitch standard policy security get -v \"%s\"", name)
+	stdout, _ = esxi.Execute(command, "vswitch policy security get")
+
+	if stdout == "" {
+		log.Printf("[vswitchRead] Failed to run %s: %s\n", "vswitch policy security get", err)
+		return VirtualSwitch{}, fmt.Errorf(stdout)
+	}
+
+	re, _ = regexp.Compile(`Allow Promiscuous: (.*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.PromiscuousMode, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	} else {
+		vs.PromiscuousMode = false
+	}
+
+	re, _ = regexp.Compile(`Allow MAC Address Change: (.*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.MacChanges, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	} else {
+		vs.MacChanges = false
+	}
+
+	re, _ = regexp.Compile(`Allow Forged Transmits: (.*)`)
+	if len(re.FindStringSubmatch(stdout)) > 0 {
+		vs.ForgedTransmits, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	} else {
+		vs.ForgedTransmits = false
+	}
+
+	return vs, nil
+}
+
+func (vs *VirtualSwitch) toMap(keepId ...bool) map[string]interface{} {
+	outputs := structToMap(vs)
+	if len(keepId) != 0 && !keepId[0] {
+		delete(outputs, "id")
+	}
+
+	// Do up links
+	if len(vs.Uplinks) == 0 || len(vs.Uplinks[0].Name) == 0 {
+		delete(outputs, "uplinks")
+	}
+
+	return outputs
 }
