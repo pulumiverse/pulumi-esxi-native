@@ -54,7 +54,7 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM boot disk size. Will expand boot disk to this size.
         /// </summary>
-        public readonly string? BootDiskSize;
+        public readonly int? BootDiskSize;
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
@@ -82,7 +82,7 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM memory size.
         /// </summary>
-        public readonly string? MemSize;
+        public readonly int? MemSize;
         /// <summary>
         /// esxi vm name.
         /// </summary>
@@ -98,7 +98,7 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM number of virtual cpus.
         /// </summary>
-        public readonly string? NumVCpus;
+        public readonly int? NumVCpus;
         /// <summary>
         /// VM OS type.
         /// </summary>
@@ -126,11 +126,11 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM Virtual HW version.
         /// </summary>
-        public readonly string? VirtualHWVer;
+        public readonly int? VirtualHWVer;
 
         [OutputConstructor]
         private GetVirtualMachineByIdResult(
-            string? bootDiskSize,
+            int? bootDiskSize,
 
             Pulumi.EsxiNative.DiskType? bootDiskType,
 
@@ -144,7 +144,7 @@ namespace Pulumi.EsxiNative
 
             string? ipAddress,
 
-            string? memSize,
+            int? memSize,
 
             string? name,
 
@@ -152,7 +152,7 @@ namespace Pulumi.EsxiNative
 
             string? notes,
 
-            string? numVCpus,
+            int? numVCpus,
 
             string? os,
 
@@ -166,7 +166,7 @@ namespace Pulumi.EsxiNative
 
             ImmutableArray<Outputs.VMVirtualDisk> virtualDisks,
 
-            string? virtualHWVer)
+            int? virtualHWVer)
         {
             BootDiskSize = bootDiskSize;
             BootDiskType = bootDiskType;

@@ -16,7 +16,7 @@ namespace Pulumi.EsxiNative
         /// VM boot disk size. Will expand boot disk to this size.
         /// </summary>
         [Output("bootDiskSize")]
-        public Output<string?> BootDiskSize { get; private set; } = null!;
+        public Output<int?> BootDiskSize { get; private set; } = null!;
 
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
@@ -52,7 +52,7 @@ namespace Pulumi.EsxiNative
         /// VM memory size.
         /// </summary>
         [Output("memSize")]
-        public Output<string> MemSize { get; private set; } = null!;
+        public Output<int> MemSize { get; private set; } = null!;
 
         /// <summary>
         /// esxi vm name.
@@ -76,7 +76,7 @@ namespace Pulumi.EsxiNative
         /// VM number of virtual cpus.
         /// </summary>
         [Output("numVCpus")]
-        public Output<string> NumVCpus { get; private set; } = null!;
+        public Output<int> NumVCpus { get; private set; } = null!;
 
         /// <summary>
         /// VM OS type.
@@ -118,7 +118,7 @@ namespace Pulumi.EsxiNative
         /// VM Virtual HW version.
         /// </summary>
         [Output("virtualHWVer")]
-        public Output<string?> VirtualHWVer { get; private set; } = null!;
+        public Output<int?> VirtualHWVer { get; private set; } = null!;
 
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Pulumi.EsxiNative
         /// VM boot disk size. Will expand boot disk to this size.
         /// </summary>
         [Input("bootDiskSize")]
-        public Input<string>? BootDiskSize { get; set; }
+        public Input<int>? BootDiskSize { get; set; }
 
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
@@ -211,7 +211,7 @@ namespace Pulumi.EsxiNative
         /// VM memory size.
         /// </summary>
         [Input("memSize", required: true)]
-        public Input<string> MemSize { get; set; } = null!;
+        public Input<int> MemSize { get; set; } = null!;
 
         /// <summary>
         /// esxi vm name.
@@ -241,7 +241,7 @@ namespace Pulumi.EsxiNative
         /// VM number of virtual cpus.
         /// </summary>
         [Input("numVCpus", required: true)]
-        public Input<string> NumVCpus { get; set; } = null!;
+        public Input<int> NumVCpus { get; set; } = null!;
 
         /// <summary>
         /// VM OS type.
@@ -319,16 +319,21 @@ namespace Pulumi.EsxiNative
         /// VM Virtual HW version.
         /// </summary>
         [Input("virtualHWVer")]
-        public Input<string>? VirtualHWVer { get; set; }
+        public Input<int>? VirtualHWVer { get; set; }
 
         public VirtualMachineArgs()
         {
+            BootDiskSize = 16;
             BootDiskType = Pulumi.EsxiNative.DiskType.Thin;
             BootFirmware = Pulumi.EsxiNative.BootFirmwareType.BIOS;
+            MemSize = 512;
+            NumVCpus = 1;
+            Os = "centos-64";
             OvfPropertiesTimer = 6000;
             ResourcePoolName = "/";
             ShutdownTimeout = 600;
             StartupTimeout = 600;
+            VirtualHWVer = 13;
         }
         public static new VirtualMachineArgs Empty => new VirtualMachineArgs();
     }

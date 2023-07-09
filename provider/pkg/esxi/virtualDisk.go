@@ -66,7 +66,7 @@ func VirtualDiskUpdate(id string, inputs resource.PropertyMap, esxi *Host) (stri
 		return "", nil, err
 	}
 
-	changed, err := esxi.growVirtualDisk(vd)
+	changed, err := esxi.growVirtualDisk(vd.Id, vd.Size)
 	if err != nil && !changed {
 		return "", nil, fmt.Errorf("failed to grow virtual disk: %s", err)
 	}
@@ -166,18 +166,17 @@ func (esxi *Host) validateDiskStore(diskStore string) error {
 	return nil
 }
 
-func (esxi *Host) growVirtualDisk(vd VirtualDisk) (bool, error) {
+func (esxi *Host) growVirtualDisk(id string, size int) (bool, error) {
 	var didGrowDisk bool
-	var newDiskSize int
 
-	current, err := esxi.getVirtualDisk(vd.Id)
+	current, err := esxi.getVirtualDisk(id)
 
-	if current.Size > vd.Size {
-		return false, fmt.Errorf("not able to shrink virtual disk: %s", vd.Id)
+	if current.Size > size {
+		return false, fmt.Errorf("not able to shrink virtual disk: %s", id)
 	}
 
-	if current.Size < vd.Size {
-		command := fmt.Sprintf("/bin/vmkfstools -X %dG \"%s\"", newDiskSize, vd.Id)
+	if current.Size < size {
+		command := fmt.Sprintf("/bin/vmkfstools -X %dG \"%s\"", size, id)
 		_, err = esxi.Execute(command, "grow disk")
 		if err != nil {
 			return didGrowDisk, err

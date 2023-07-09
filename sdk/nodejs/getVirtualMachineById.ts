@@ -26,7 +26,7 @@ export interface GetVirtualMachineByIdResult {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    readonly bootDiskSize?: string;
+    readonly bootDiskSize?: number;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
@@ -54,7 +54,7 @@ export interface GetVirtualMachineByIdResult {
     /**
      * VM memory size.
      */
-    readonly memSize?: string;
+    readonly memSize?: number;
     /**
      * esxi vm name.
      */
@@ -70,7 +70,7 @@ export interface GetVirtualMachineByIdResult {
     /**
      * VM number of virtual cpus.
      */
-    readonly numVCpus?: string;
+    readonly numVCpus?: number;
     /**
      * VM OS type.
      */
@@ -98,7 +98,7 @@ export interface GetVirtualMachineByIdResult {
     /**
      * VM Virtual HW version.
      */
-    readonly virtualHWVer?: string;
+    readonly virtualHWVer?: number;
 }
 export function getVirtualMachineByIdOutput(args: GetVirtualMachineByIdOutputArgs, opts?: pulumi.InvokeOptions): pulumi.Output<GetVirtualMachineByIdResult> {
     return pulumi.output(args).apply((a: any) => getVirtualMachineById(a, opts))

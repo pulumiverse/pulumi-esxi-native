@@ -37,7 +37,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    public readonly bootDiskSize!: pulumi.Output<string | undefined>;
+    public readonly bootDiskSize!: pulumi.Output<number | undefined>;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
@@ -61,7 +61,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM memory size.
      */
-    public readonly memSize!: pulumi.Output<string>;
+    public readonly memSize!: pulumi.Output<number>;
     /**
      * esxi vm name.
      */
@@ -77,7 +77,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM number of virtual cpus.
      */
-    public readonly numVCpus!: pulumi.Output<string>;
+    public readonly numVCpus!: pulumi.Output<number>;
     /**
      * VM OS type.
      */
@@ -105,7 +105,7 @@ export class VirtualMachine extends pulumi.CustomResource {
     /**
      * VM Virtual HW version.
      */
-    public readonly virtualHWVer!: pulumi.Output<string | undefined>;
+    public readonly virtualHWVer!: pulumi.Output<number | undefined>;
 
     /**
      * Create a VirtualMachine resource with the given unique name, arguments, and options.
@@ -133,18 +133,18 @@ export class VirtualMachine extends pulumi.CustomResource {
             if ((!args || args.resourcePoolName === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'resourcePoolName'");
             }
-            resourceInputs["bootDiskSize"] = args ? args.bootDiskSize : undefined;
+            resourceInputs["bootDiskSize"] = (args ? args.bootDiskSize : undefined) ?? 16;
             resourceInputs["bootDiskType"] = (args ? args.bootDiskType : undefined) ?? "thin";
             resourceInputs["bootFirmware"] = (args ? args.bootFirmware : undefined) ?? "bios";
             resourceInputs["cloneFromVirtualMachine"] = args ? args.cloneFromVirtualMachine : undefined;
             resourceInputs["diskStore"] = args ? args.diskStore : undefined;
             resourceInputs["info"] = args ? args.info : undefined;
-            resourceInputs["memSize"] = args ? args.memSize : undefined;
+            resourceInputs["memSize"] = (args ? args.memSize : undefined) ?? 512;
             resourceInputs["name"] = args ? args.name : undefined;
             resourceInputs["networkInterfaces"] = args ? args.networkInterfaces : undefined;
             resourceInputs["notes"] = args ? args.notes : undefined;
-            resourceInputs["numVCpus"] = args ? args.numVCpus : undefined;
-            resourceInputs["os"] = args ? args.os : undefined;
+            resourceInputs["numVCpus"] = (args ? args.numVCpus : undefined) ?? 1;
+            resourceInputs["os"] = (args ? args.os : undefined) ?? "centos-64";
             resourceInputs["ovfHostPathSource"] = args ? args.ovfHostPathSource : undefined;
             resourceInputs["ovfProperties"] = args ? args.ovfProperties : undefined;
             resourceInputs["ovfPropertiesTimer"] = (args ? args.ovfPropertiesTimer : undefined) ?? 6000;
@@ -154,7 +154,7 @@ export class VirtualMachine extends pulumi.CustomResource {
             resourceInputs["shutdownTimeout"] = (args ? args.shutdownTimeout : undefined) ?? 600;
             resourceInputs["startupTimeout"] = (args ? args.startupTimeout : undefined) ?? 600;
             resourceInputs["virtualDisks"] = args ? args.virtualDisks : undefined;
-            resourceInputs["virtualHWVer"] = args ? args.virtualHWVer : undefined;
+            resourceInputs["virtualHWVer"] = (args ? args.virtualHWVer : undefined) ?? 13;
             resourceInputs["ipAddress"] = undefined /*out*/;
         } else {
             resourceInputs["bootDiskSize"] = undefined /*out*/;
@@ -188,7 +188,7 @@ export interface VirtualMachineArgs {
     /**
      * VM boot disk size. Will expand boot disk to this size.
      */
-    bootDiskSize?: pulumi.Input<string>;
+    bootDiskSize?: pulumi.Input<number>;
     /**
      * VM boot disk type. thin, zeroedthick, eagerzeroedthick
      */
@@ -212,7 +212,7 @@ export interface VirtualMachineArgs {
     /**
      * VM memory size.
      */
-    memSize: pulumi.Input<string>;
+    memSize: pulumi.Input<number>;
     /**
      * esxi vm name.
      */
@@ -228,7 +228,7 @@ export interface VirtualMachineArgs {
     /**
      * VM number of virtual cpus.
      */
-    numVCpus: pulumi.Input<string>;
+    numVCpus: pulumi.Input<number>;
     /**
      * VM OS type.
      */
@@ -272,5 +272,5 @@ export interface VirtualMachineArgs {
     /**
      * VM Virtual HW version.
      */
-    virtualHWVer?: pulumi.Input<string>;
+    virtualHWVer?: pulumi.Input<number>;
 }

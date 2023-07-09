@@ -3,11 +3,334 @@ package esxi
 import (
 	"fmt"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {
+	// check if path already exists.
+	fullPATH := fmt.Sprintf("/vmfs/volumes/%s/%s", vm.DiskStore, vm.Name)
+	bootDiskVmdkPath := fmt.Sprintf("\"/vmfs/volumes/%s/%s/%s.vmdk\"", vm.DiskStore, vm.Name, vm.Name)
+
+	command := fmt.Sprintf("ls -d %s", bootDiskVmdkPath)
+	stdout, _ := esxi.Execute(command, "check if guest path already exists.")
+	if strings.Contains(stdout, "No such file or directory") != true {
+		return VirtualMachine{}, fmt.Errorf("virtual machine may already exists. vmdkPATH:%s", bootDiskVmdkPath)
+	}
+
+	command = fmt.Sprintf("ls -d \"%s\"", fullPATH)
+	stdout, _ = esxi.Execute(command, "check if guest path already exists.")
+	if strings.Contains(stdout, "No such file or directory") == true {
+		command = fmt.Sprintf("mkdir \"%s\"", fullPATH)
+		_, err := esxi.Execute(command, "create guest path")
+		if err != nil {
+			return VirtualMachine{}, fmt.Errorf("Failed to create guest path. fullPATH:%s\n", fullPATH)
+		}
+	}
+
+	hasISO := false
+	isoFileName := ""
+	// Build VM by default/black config
+	vmxContents :=
+		fmt.Sprintf("config.version = \\\"8\\\"\n") +
+			fmt.Sprintf("virtualHW.version = \\\"%d\\\"\n", vm.VirtualHWVer) +
+			fmt.Sprintf("displayName = \\\"%s\\\"\n", vm.Name) +
+			fmt.Sprintf("numvcpus = \\\"%d\\\"\n", vm.NumVCpus) +
+			fmt.Sprintf("memSize = \\\"%d\\\"\n", vm.MemSize) +
+			fmt.Sprintf("guestOS = \\\"%s\\\"\n", vm.Os) +
+			fmt.Sprintf("annotation = \\\"%s\\\"\n", vm.Notes) +
+			fmt.Sprintf("floppy0.present = \\\"FALSE\\\"\n") +
+			fmt.Sprintf("scsi0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("scsi0.sharedBus = \\\"none\\\"\n") +
+			fmt.Sprintf("scsi0.virtualDev = \\\"lsilogic\\\"\n") +
+			fmt.Sprintf("disk.EnableUUID = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge4.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge4.virtualDev = \\\"pcieRootPort\\\"\n") +
+			fmt.Sprintf("pciBridge4.functions = \\\"8\\\"\n") +
+			fmt.Sprintf("pciBridge5.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge5.virtualDev = \\\"pcieRootPort\\\"\n") +
+			fmt.Sprintf("pciBridge5.functions = \\\"8\\\"\n") +
+			fmt.Sprintf("pciBridge6.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge6.virtualDev = \\\"pcieRootPort\\\"\n") +
+			fmt.Sprintf("pciBridge6.functions = \\\"8\\\"\n") +
+			fmt.Sprintf("pciBridge7.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("pciBridge7.virtualDev = \\\"pcieRootPort\\\"\n") +
+			fmt.Sprintf("pciBridge7.functions = \\\"8\\\"\n") +
+			fmt.Sprintf("scsi0:0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("scsi0:0.fileName = \\\"%s.vmdk\\\"\n", vm.Name) +
+			fmt.Sprintf("scsi0:0.deviceType = \\\"scsi-hardDisk\\\"\n") +
+			fmt.Sprintf("nvram = \\\"%s.nvram\\\"\n", vm.Name)
+	if vm.BootFirmware == "efi" {
+		vmxContents = vmxContents +
+			fmt.Sprintf("firmware = \\\"efi\\\"\n")
+	} else if vm.BootFirmware == "bios" {
+		vmxContents = vmxContents +
+			fmt.Sprintf("firmware = \\\"bios\\\"\n")
+	}
+	// TODO: to be checked how we can set the ISO file
+	if hasISO {
+		vmxContents = vmxContents +
+			fmt.Sprintf("ide1:0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("ide1:0.fileName = \\\"emptyBackingString\\\"\n") +
+			fmt.Sprintf("ide1:0.deviceType = \\\"atapi-cdrom\\\"\n") +
+			fmt.Sprintf("ide1:0.startConnected = \\\"FALSE\\\"\n") +
+			fmt.Sprintf("ide1:0.clientDevice = \\\"TRUE\\\"\n")
+	} else {
+		vmxContents = vmxContents +
+			fmt.Sprintf("ide1:0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("ide1:0.fileName = \\\"%s\\\"\n", isoFileName) +
+			fmt.Sprintf("ide1:0.deviceType = \\\"cdrom-raw\\\"\n")
+	}
+
+	// Write vmx file to esxi host
+	dstVmxFile := fmt.Sprintf("%s/%s.vmx", fullPATH, vm.Name)
+
+	command = fmt.Sprintf("echo \"%s\" >\"%s\"", vmxContents, dstVmxFile)
+	vmxContents, err := esxi.WriteFile(vmxContents, dstVmxFile, "write vmx file")
+
+	// Create boot disk (vmdk)
+	command = fmt.Sprintf("vmkfstools -c %dG -d %s \"%s/%s.vmdk\"", vm.BootDiskSize, vm.BootDiskType, fullPATH, vm.Name)
+	_, err = esxi.Execute(command, "vmkfstools (make boot disk)")
+	if err != nil {
+		command = fmt.Sprintf("rm -fr \"%s\"", fullPATH)
+		stdout, _ = esxi.Execute(command, "cleanup guest path because of failed events")
+		return VirtualMachine{}, fmt.Errorf("Failed to vmkfstools (make boot disk):%s\n", err)
+	}
+
+	poolID, err := esxi.getResourcePoolId(vm.ResourcePoolName)
+	if err != nil {
+		return VirtualMachine{}, fmt.Errorf("failed to use Resource Pool ID:%s", poolID)
+	}
+	command = fmt.Sprintf("vim-cmd solo/registervm \"%s\" %s %s", dstVmxFile, vm.Name, poolID)
+	_, err = esxi.Execute(command, "solo/registervm")
+	if err != nil {
+		command = fmt.Sprintf("rm -fr \"%s\"", fullPATH)
+		stdout, _ = esxi.Execute(command, "cleanup guest path because of failed events")
+		return VirtualMachine{}, fmt.Errorf("failed to register guest:%s", err)
+	}
+
+	return vm, nil
+}
+
+func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {
+	hasOvfProperties := false
+	// Check if Disk Store already exists
+	err := esxi.validateDiskStore(vm.DiskStore)
+	if err != nil {
+		return VirtualMachine{}, fmt.Errorf("failed to validate disk store: %s", err)
+	}
+
+	// Check if guest already exists
+	// get VM ID (by name)
+	id, err := esxi.getVirtualMachineId(vm.Name)
+
+	if id != "" {
+		// We don't need to create the VM. It already exists.
+		// Power off guest if it's powered on.
+		currentPowerState := esxi.getVirtualMachinePowerState(id)
+		if currentPowerState == "on" || currentPowerState == "suspended" {
+			_, err = esxi.powerOffVirtualMachine(id, vm.ShutdownTimeout)
+			if err != nil {
+				return VirtualMachine{}, fmt.Errorf("failed to power off: %s", err)
+			}
+		}
+	} else if vm.SourcePath == "none" {
+		vm, err = esxi.createPlainVirtualMachine(vm)
+		if err != nil {
+			return vm, err
+		}
+	} else {
+		// Build VM by ovftool
+		// Check if source file exist.
+		if strings.HasPrefix(vm.SourcePath, "http://") || strings.HasPrefix(vm.SourcePath, "https://") {
+			resp, err := http.Get(vm.SourcePath)
+			if (err != nil) || (resp.StatusCode != 200) {
+				logging.V(9).Infof("URL not accessible: %s", vm.SourcePath)
+				logging.V(9).Infof("URL StatusCode: %d", resp.StatusCode)
+				logging.V(9).Infof("URL Error: %s", err)
+				defer func(Body io.ReadCloser) {
+					_ = Body.Close()
+				}(resp.Body)
+				return VirtualMachine{}, fmt.Errorf("URL not accessible: %s. err:%s", vm.SourcePath, err)
+			}
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(resp.Body)
+			// TODO: check if file should be downloaded in the host instead
+		} else if strings.HasPrefix(vm.SourcePath, "vi://") {
+			logging.V(9).Infof("Source is Guest VM (vi).\n")
+		} else if strings.HasPrefix(vm.SourcePath, "local://") {
+			logging.V(9).Infof("Source is local.\n")
+			filePath := strings.TrimLeft(vm.SourcePath, "local://")
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				logging.V(9).Infof("File not found, Error: %s\n", err)
+				return VirtualMachine{}, fmt.Errorf("file not found locally: %s", filePath)
+			} else {
+				nameParts := strings.Split(vm.SourcePath, "/")
+				vm.SourcePath = fmt.Sprintf("/vmfs/volumes/%s/%s", vm.DiskStore, nameParts[len(nameParts)-1])
+				_, err = esxi.CopyFile(filePath, vm.SourcePath, "copy source file to host")
+				if err != nil {
+					return VirtualMachine{}, err
+				}
+			}
+		} else {
+			logging.V(9).Infof("Source is in host.\n")
+			command := fmt.Sprintf("ls -d %s", vm.SourcePath)
+			stdout, _ := esxi.Execute(command, "check if guest path already exists.")
+			if strings.Contains(stdout, "No such file or directory") == true {
+				logging.V(9).Infof("File not found, Error: %s\n", err)
+				return VirtualMachine{}, fmt.Errorf("file not found on host: %s", vm.SourcePath)
+			}
+		}
+
+		// Set params for ovftool
+		if vm.BootDiskType == "zeroedthick" {
+			vm.BootDiskType = "thick"
+		}
+
+		username := url.QueryEscape(esxi.Connection.UserName)
+		password := url.QueryEscape(esxi.Connection.Password)
+		dstPath := fmt.Sprintf("vi://%s:%s@%s:%s/%s", username, password, esxi.Connection.Host, esxi.Connection.SslPort, vm.ResourcePoolName)
+
+		netParam := ""
+		if (strings.HasSuffix(vm.SourcePath, ".ova") || strings.HasSuffix(vm.SourcePath, ".ovf")) && len(vm.NetworkInterfaces) > 0 && vm.NetworkInterfaces[0].VirtualNetwork != "" {
+			netParam = fmt.Sprintf(" --network='%s'", vm.NetworkInterfaces[0].VirtualNetwork)
+		}
+
+		extraParams := ""
+		if (len(vm.OvfProperties) > 0) && (strings.HasSuffix(vm.SourcePath, ".ova") || strings.HasSuffix(vm.SourcePath, ".ovf")) {
+			hasOvfProperties = true
+			// in order to process any OVF params, guest should be immediately powered on
+			// This is because the ESXi host doesn't have a cache to store the OVF parameters, like the vCenter Server does.
+			// Therefore, you MUST use the ‘--X:injectOvfEnv’ option with the ‘--poweron’ option
+			extraParams = "--X:injectOvfEnv --allowExtraConfig --powerOn "
+
+			for _, prop := range vm.OvfProperties {
+				extraParams = fmt.Sprintf("%s --prop:%s='%s' ", extraParams, prop.Key, prop.Value)
+			}
+			log.Println("ovf_properties extra_params: " + extraParams)
+		}
+
+		ovfToolPath, err := esxi.getOvfToolPath()
+		if err != nil {
+			return VirtualMachine{}, err
+		}
+
+		ovfCmd := fmt.Sprintf("%s --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s' %s '%s' '%s'",
+			ovfToolPath, extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
+		re := regexp.MustCompile(`vi://.*?@`)
+		logging.V(9).Infof("ovf_cmd: %s\n", re.ReplaceAllString(ovfCmd, "vi://XXXX:YYYY@"))
+		command := fmt.Sprintf("/bin/bash -c %s", ovfCmd)
+		stdout, err := esxi.Execute(command, "execute ovftool script")
+		logging.V(9).Infof("ovftool output: %q\n", stdout)
+		if err != nil {
+			logging.V(9).Infof("Failed, There was an ovftool Error: %s\n%s\n", stdout, err)
+			return VirtualMachine{}, fmt.Errorf("There was an ovftool Error: %s\n%s\n", stdout, err)
+		}
+	}
+
+	// get id (by name)
+	vm.Id, err = esxi.getVirtualMachineId(vm.Name)
+	if err != nil {
+		return VirtualMachine{}, fmt.Errorf("failed to get vm id: %s", err)
+	}
+
+	// ovf_properties require ovftool to power on the VM to inject the properties.
+	// Unfortunately, there is no way to know when cloud-init is finished?!?!?  Just need
+	// to wait for ovf_properties_timer seconds, then shutdown/power-off to continue...
+	if hasOvfProperties == true {
+		currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
+		if currentPowerState != "on" {
+			return vm, fmt.Errorf("failed to poweron after ovfProperties injection")
+		}
+		// allow cloud-init to process.
+		duration := time.Duration(vm.OvfPropertiesTimer) * time.Second
+
+		time.Sleep(duration)
+		_, err = esxi.powerOffVirtualMachine(vm.Id, vm.ShutdownTimeout)
+		if err != nil {
+			return vm, fmt.Errorf("failed to shutdown after ovfProperties injection")
+		}
+	}
+
+	// Grow boot disk to boot_disk_size
+	bootDiskVmdkPath, _ := esxi.getBootDiskPath(vm.Id)
+
+	_, err = esxi.growVirtualDisk(bootDiskVmdkPath, vm.BootDiskSize)
+	if err != nil {
+		return vm, fmt.Errorf("failed to grow boot disk: %s", err)
+	}
+
+	// make updates to vmx file
+	err = esxi.updateVmxContents(true, vm)
+	if err != nil {
+		return vm, fmt.Errorf("failed to update vmx contents: %s", err)
+	}
+
+	return vm, nil
+}
+
+func (esxi *Host) getOvfToolPath() (string, error) {
+	vmWareToolsDir := fmt.Sprintf("/vmfs/volumes/%s/vmware-tools", esxi.Connection.OvfLocation)
+	ovfToolArchive := fmt.Sprintf("%s/vmware-ovftool.tar.gz", vmWareToolsDir)
+	ovfToolDir := fmt.Sprintf("%s/ovf", vmWareToolsDir)
+	ovfTool := fmt.Sprintf("%s/ovftool", ovfToolDir)
+	msg := "Configure ovftool in the host if not present"
+	notFound := "No such file or directory"
+	errorDetails := "could not configure the ovf tools in the esxi host. details: %s; err: %s" +
+		fmt.Sprintf("(if this error persist, please try to manually copy ovftool and it's suplementary files under: %s)", ovfToolDir)
+
+	_, _ = esxi.Execute(fmt.Sprintf("mkdir -p %s", ovfToolDir), "Create ovftool directory if missing")
+	if file, _ := esxi.Execute(fmt.Sprintf("ls -d %s", ovfTool), msg); strings.Contains(file, notFound) == true {
+		logging.V(9).Infof("ovftool not found, configuring it...")
+		u := "https://github.com/edmondshtogu/pulumi-esxi-native/releases/download/ovftool/vmware-ovftool.tar.gz"
+		response, err := http.Get(u)
+		if err != nil {
+			return "", fmt.Errorf(errorDetails, "failed to download the ovftool", err)
+		}
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				logging.V(9).Infof("Failed closing the request body reader! %s", err)
+			}
+		}(response.Body)
+
+		// Create a new file on the local system
+		f, _ := os.CreateTemp("", "")
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+				logging.V(9).Infof("Failed closing the file reader! %s", err)
+			}
+		}(f)
+
+		// Copy the response body to the local file
+		_, err = io.Copy(f, response.Body)
+		if err != nil {
+			return "", fmt.Errorf(errorDetails, "failed to save locally the ovftool", err)
+		}
+
+		_, err = esxi.CopyFile(f.Name(), ovfToolArchive, "copy ovftool to host")
+		if err != nil {
+			return "", fmt.Errorf(errorDetails, "failed to copy the ovftool to host", err)
+		}
+		command := fmt.Sprintf("tar -xzvf %s -C %s", ovfToolArchive, ovfToolDir)
+		stdout, err := esxi.Execute(command, "extract ovftool")
+		if err != nil {
+			return "", fmt.Errorf(errorDetails, "failed to extract the ovftool to host"+stdout, err)
+		}
+	}
+
+	return ovfTool, nil
+}
 
 func (esxi *Host) getVirtualMachineId(name string) (string, error) {
 	var command, id string
@@ -60,7 +383,7 @@ func (esxi *Host) getBootDiskPath(id string) (string, error) {
 func (esxi *Host) getDstVmxFile(id string) (string, error) {
 	var dstVmxDs, dstVmx, dstVmxFile string
 
-	//      -Get location of vmx file on esxi host
+	// Get location of vmx file on esxi host
 	command := fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|grep -oE \"\\[.*\\]\"", id)
 	stdout, err := esxi.Execute(command, "get dstVmxDs")
 	dstVmxDs = stdout
@@ -98,31 +421,26 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		return nil
 	}
 
-	var memSize, numVCpus, virtualHWVer int
-	memSize, _ = strconv.Atoi(vm.MemSize)
-	numVCpus, _ = strconv.Atoi(vm.NumVCpus)
-	virtualHWVer, _ = strconv.Atoi(vm.VirtualHWVer)
-
-	if memSize != 0 {
+	if vm.MemSize != 0 {
 		re := regexp.MustCompile("memSize = \".*\"")
-		regexReplacement = fmt.Sprintf("memSize = \"%d\"", memSize)
+		regexReplacement = fmt.Sprintf("memSize = \"%d\"", vm.MemSize)
 		vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 	}
 
-	if numVCpus != 0 {
+	if vm.NumVCpus != 0 {
 		if strings.Contains(vmxContents, "numvcpus = ") {
 			re := regexp.MustCompile("numvcpus = \".*\"")
-			regexReplacement = fmt.Sprintf("numvcpus = \"%d\"", numVCpus)
+			regexReplacement = fmt.Sprintf("numvcpus = \"%d\"", vm.NumVCpus)
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 		} else {
-			logging.V(9).Infof("updateVmxContents: Add numVCpu => %d", numVCpus)
-			vmxContents += fmt.Sprintf("\nnumvcpus = \"%d\"", numVCpus)
+			logging.V(9).Infof("updateVmxContents: Add numVCpu => %d", vm.NumVCpus)
+			vmxContents += fmt.Sprintf("\nnumvcpus = \"%d\"", vm.NumVCpus)
 		}
 	}
 
-	if virtualHWVer != 0 {
+	if vm.VirtualHWVer != 0 {
 		re := regexp.MustCompile("virtualHW.version = \".*\"")
-		regexReplacement = fmt.Sprintf("virtualHW.version = \"%d\"", virtualHWVer)
+		regexReplacement = fmt.Sprintf("virtualHW.version = \"%d\"", vm.VirtualHWVer)
 		vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 	}
 
@@ -158,16 +476,12 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		vmxContents = EncodeVMX(parsedVmx)
 	}
 
-	//
-	//  add/modify virtual disks
-	//
+	// add/modify virtual disks
 	var tmpvar string
 	var vmxContentsNew string
 	var i, j int
 
-	//
-	//  Remove all disks
-	//
+	// Remove all disks
 	regexReplacement = fmt.Sprintf("")
 	for i = 0; i < 4; i++ {
 		for j = 0; j < 16; j++ {
@@ -179,9 +493,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 	}
 
-	//
-	//  Add disks that are managed by pulumi
-	//
+	// Add disks that are managed by pulumi
 	for _, vd := range vm.VirtualDisks {
 		if vd.VirtualDiskId != "" {
 			logging.V(9).Infof("updateVmxContents: Adding => %s", vd.Slot)
@@ -208,11 +520,8 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 	}
 
-	//
-	//  Create/update networks network_interfaces
-	//
-
-	//  Define default nic type.
+	// Create/update networks network_interfaces
+	// Define default nic type.
 	var defaultNetworkType, networkType string
 	if vm.NetworkInterfaces[0].NicType != "" {
 		defaultNetworkType = vm.NetworkInterfaces[0].NicType
@@ -220,7 +529,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		defaultNetworkType = "e1000"
 	}
 
-	//  If this is first time provisioning, delete all the old ethernet configuration.
+	// If this is first time provisioning, delete all the old ethernet configuration.
 	if isNew == true {
 		logging.V(9).Infof("updateVmxContents:Delete old ethernet configuration => %d", i)
 		regexReplacement = fmt.Sprintf("")
@@ -230,13 +539,13 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 	}
 
-	//  Add/Modify virtual networks.
+	// Add/Modify virtual networks.
 	networkType = ""
 	for i, ni := range vm.NetworkInterfaces {
 		logging.V(9).Infof("updateVmxContents: ethernet%d", i)
 
 		if len(ni.VirtualNetwork) == 0 && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
-			//  This is Modify (Delete existing network configuration)
+			// This is Modify (Delete existing network configuration)
 			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Delete existing.", i)
 			regexReplacement = fmt.Sprintf("")
 			re := regexp.MustCompile(fmt.Sprintf("ethernet%d.*\n", i))
@@ -244,20 +553,20 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 
 		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
-			//  This is Modify
+			// This is Modify
 			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Modify existing.", i)
 
-			//  Modify Network Name
+			// Modify Network Name
 			re := regexp.MustCompile("ethernet" + strconv.Itoa(i) + ".networkName = \".*\"")
 			regexReplacement = fmt.Sprintf("ethernet"+strconv.Itoa(i)+".networkName = \"%s\"", ni.VirtualNetwork)
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 
-			//  Modify virtual Device
+			// Modify virtual Device
 			re = regexp.MustCompile("ethernet" + strconv.Itoa(i) + ".virtualDev = \".*\"")
 			regexReplacement = fmt.Sprintf("ethernet"+strconv.Itoa(i)+".virtualDev = \"%s\"", ni.NicType)
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 
-			//  Modify MAC (dynamic to static only. static to dynamic is not implemented)
+			// Modify MAC (dynamic to static only. static to dynamic is not implemented)
 			if ni.MacAddress != "" {
 				logging.V(9).Infof("updateVmxContents: ethernet%d Modify MAC: %s", i, ni.MacAddress)
 
@@ -276,14 +585,13 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 
 		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == false {
-			//  This is created
-
-			//  Set virtual_network name
+			// This is created
+			// Set virtual_network name
 			logging.V(9).Infof("updateVmxContents: ethernet%d Create New: %s", i, ni.VirtualNetwork)
 			tmpvar = fmt.Sprintf("\nethernet%d.networkName = \"%s\"\n", i, ni.VirtualNetwork)
 			vmxContentsNew = tmpvar
 
-			//  Set mac address
+			// Set mac address
 			if ni.MacAddress != "" {
 				tmpvar = fmt.Sprintf("ethernet%d.addressType = \"static\"\n", i)
 				vmxContentsNew = vmxContentsNew + tmpvar
@@ -292,7 +600,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 				vmxContentsNew = vmxContentsNew + tmpvar
 			}
 
-			//  Set network type
+			// Set network type
 			if len(ni.NicType) == 0 {
 				networkType = defaultNetworkType
 			} else {
@@ -308,19 +616,17 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		}
 	}
 
-	//  Add disk UUID
+	// Add disk UUID
 	if !strings.Contains(vmxContents, "disk.EnableUUID") {
 		vmxContents = vmxContents + "\ndisk.EnableUUID = \"TRUE\""
 	}
 
-	//
-	//  Write vmx file to esxi host
-	//
+	// Write vmx file to esxi host
 	logging.V(9).Infof("updateVmxContents: New vm_name.vmx => %s", vmxContents)
 
 	dstVmxFile, err := esxi.getDstVmxFile(vm.Id)
 
-	vmxContents, err = esxi.CopyFile(strings.Replace(vmxContents, "\\\"", "\"", -1), dstVmxFile, "write guest_name.vmx file")
+	vmxContents, err = esxi.CopyFile(strings.Replace(vmxContents, "\\\"", "\"", -1), dstVmxFile, "write vmx file")
 
 	err = esxi.reloadVirtualMachine(vm.Id)
 	return err
@@ -343,12 +649,9 @@ func (esxi *Host) cleanStorageFromVmx(id string) error {
 		}
 	}
 
-	//
-	//  Write vmx file to esxi host
-	//
-
+	// Write vmx file to esxi host
 	dstVmxFile, err := esxi.getDstVmxFile(id)
-	vmxContents, err = esxi.CopyFile(strings.Replace(vmxContents, "\\\"", "\"", -1), dstVmxFile, "write guest_name.vmx file")
+	vmxContents, err = esxi.CopyFile(strings.Replace(vmxContents, "\\\"", "\"", -1), dstVmxFile, "write vmx file")
 
 	err = esxi.reloadVirtualMachine(id)
 	return err
@@ -434,17 +737,15 @@ func (esxi *Host) getVirtualMachineIpAddress(id string, startupTimeout int) stri
 	var command, stdout, ipAddress, ipAddress2 string
 	var uptime int
 
-	//  Check if powered off
+	// Check if powered off
 	if esxi.getVirtualMachinePowerState(id) != "on" {
 		return ""
 	}
 
-	//
-	//  Check uptime of guest.
-	//
+	// Check uptime of guest.
 	uptime = 0
 	for uptime < startupTimeout {
-		//  Primary method to get IP
+		// Primary method to get IP
 		command = fmt.Sprintf("vim-cmd vmsvc/get.guest %s 2>/dev/null |sed '1!G;h;$!d' |awk '/deviceConfigId = 4000/,/ipAddress/' |grep -m 1 -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])'", id)
 		stdout, _ = esxi.Execute(command, "get ip_address method 1")
 		ipAddress = stdout
@@ -454,7 +755,7 @@ func (esxi *Host) getVirtualMachineIpAddress(id string, startupTimeout int) stri
 
 		time.Sleep(3 * time.Second)
 
-		//  Get uptime if above failed.
+		// Get uptime if above failed.
 		command = fmt.Sprintf("vim-cmd vmsvc/get.summary %s 2>/dev/null | grep 'uptimeSeconds ='|sed 's/^.*= //g'|sed s/,//g", id)
 		stdout, err := esxi.Execute(command, "get uptime")
 		if err != nil {
@@ -463,9 +764,7 @@ func (esxi *Host) getVirtualMachineIpAddress(id string, startupTimeout int) stri
 		uptime, _ = strconv.Atoi(stdout)
 	}
 
-	//
 	// Alternate method to get IP
-	//
 	command = fmt.Sprintf("vim-cmd vmsvc/get.guest %s 2>/dev/null | grep -m 1 '^   ipAddress = ' | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])'", id)
 	stdout, _ = esxi.Execute(command, "get ip_address method 2")
 	ipAddress2 = stdout
@@ -481,9 +780,7 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	if len(keepId) != 0 && !keepId[0] {
 		delete(outputs, "id")
 	}
-	delete(outputs, "cloneFromVirtualMachine")
-	delete(outputs, "ovfHostPathSource")
-	delete(outputs, "ovfSourceLocalPath")
+	delete(outputs, "sourcePath")
 	delete(outputs, "ovfProperties")
 	delete(outputs, "ovfPropertiesTimer")
 

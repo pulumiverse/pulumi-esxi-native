@@ -26,7 +26,7 @@ type GetVirtualMachineByIdArgs struct {
 
 type GetVirtualMachineByIdResult struct {
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize *string `pulumi:"bootDiskSize"`
+	BootDiskSize *int `pulumi:"bootDiskSize"`
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType *DiskType `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
@@ -40,7 +40,7 @@ type GetVirtualMachineByIdResult struct {
 	// The IP address reported by VMWare tools.
 	IpAddress *string `pulumi:"ipAddress"`
 	// VM memory size.
-	MemSize *string `pulumi:"memSize"`
+	MemSize *int `pulumi:"memSize"`
 	// esxi vm name.
 	Name *string `pulumi:"name"`
 	// VM network interfaces.
@@ -48,7 +48,7 @@ type GetVirtualMachineByIdResult struct {
 	// VM memory size.
 	Notes *string `pulumi:"notes"`
 	// VM number of virtual cpus.
-	NumVCpus *string `pulumi:"numVCpus"`
+	NumVCpus *int `pulumi:"numVCpus"`
 	// VM OS type.
 	Os *string `pulumi:"os"`
 	// VM power state.
@@ -62,7 +62,7 @@ type GetVirtualMachineByIdResult struct {
 	// VM virtual disks.
 	VirtualDisks []VMVirtualDisk `pulumi:"virtualDisks"`
 	// VM Virtual HW version.
-	VirtualHWVer *string `pulumi:"virtualHWVer"`
+	VirtualHWVer *int `pulumi:"virtualHWVer"`
 }
 
 // Defaults sets the appropriate defaults for GetVirtualMachineByIdResult
@@ -119,8 +119,8 @@ func (o GetVirtualMachineByIdResultOutput) ToGetVirtualMachineByIdResultOutputWi
 }
 
 // VM boot disk size. Will expand boot disk to this size.
-func (o GetVirtualMachineByIdResultOutput) BootDiskSize() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v GetVirtualMachineByIdResult) *string { return v.BootDiskSize }).(pulumi.StringPtrOutput)
+func (o GetVirtualMachineByIdResultOutput) BootDiskSize() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v GetVirtualMachineByIdResult) *int { return v.BootDiskSize }).(pulumi.IntPtrOutput)
 }
 
 // VM boot disk type. thin, zeroedthick, eagerzeroedthick
@@ -154,8 +154,8 @@ func (o GetVirtualMachineByIdResultOutput) IpAddress() pulumi.StringPtrOutput {
 }
 
 // VM memory size.
-func (o GetVirtualMachineByIdResultOutput) MemSize() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v GetVirtualMachineByIdResult) *string { return v.MemSize }).(pulumi.StringPtrOutput)
+func (o GetVirtualMachineByIdResultOutput) MemSize() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v GetVirtualMachineByIdResult) *int { return v.MemSize }).(pulumi.IntPtrOutput)
 }
 
 // esxi vm name.
@@ -174,8 +174,8 @@ func (o GetVirtualMachineByIdResultOutput) Notes() pulumi.StringPtrOutput {
 }
 
 // VM number of virtual cpus.
-func (o GetVirtualMachineByIdResultOutput) NumVCpus() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v GetVirtualMachineByIdResult) *string { return v.NumVCpus }).(pulumi.StringPtrOutput)
+func (o GetVirtualMachineByIdResultOutput) NumVCpus() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v GetVirtualMachineByIdResult) *int { return v.NumVCpus }).(pulumi.IntPtrOutput)
 }
 
 // VM OS type.
@@ -209,8 +209,8 @@ func (o GetVirtualMachineByIdResultOutput) VirtualDisks() VMVirtualDiskArrayOutp
 }
 
 // VM Virtual HW version.
-func (o GetVirtualMachineByIdResultOutput) VirtualHWVer() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v GetVirtualMachineByIdResult) *string { return v.VirtualHWVer }).(pulumi.StringPtrOutput)
+func (o GetVirtualMachineByIdResultOutput) VirtualHWVer() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v GetVirtualMachineByIdResult) *int { return v.VirtualHWVer }).(pulumi.IntPtrOutput)
 }
 
 func init() {

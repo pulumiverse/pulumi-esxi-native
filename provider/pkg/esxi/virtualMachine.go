@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,9 +37,12 @@ func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.Proper
 	return resource.NewPropertyMapFromMap(result), nil
 }
 
-func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
+func VirtualMachineRead(id string, _ resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	// read vm
-	vm = esxi.readVirtualMachine(vm)
+	vm := esxi.readVirtualMachine(VirtualMachine{
+		Id:             id,
+		StartupTimeout: 1,
+	})
 
 	if len(vm.Name) == 0 {
 		return "", nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", vm.Id)
@@ -48,14 +52,72 @@ func VirtualMachineRead(vm VirtualMachine, esxi *Host) (string, resource.Propert
 	return vm.Id, resource.NewPropertyMapFromMap(result), nil
 }
 
-func VirtualMachineCreate(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
+func VirtualMachineCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vm VirtualMachine
+	if parsed, err := parseVirtualMachine("", inputs, esxi.Connection); err == nil {
+		vm = parsed
+	} else {
+		return "", nil, err
+	}
+	powerOn := vm.Power == "on" || vm.Power == ""
+	vm, err := esxi.createVirtualMachine(vm)
+	if err != nil {
+		return "", nil, err
+	}
+	if powerOn {
+		_, err = esxi.powerOnVirtualMachine(vm.Id)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to power on the virtual machine")
+		}
+		vm.Power = "on"
+	}
 
-	return "", nil, nil
+	result := vm.toMap()
+	return vm.Id, resource.NewPropertyMapFromMap(result), nil
 }
 
-func VirtualMachineUpdate(vm VirtualMachine, esxi *Host) (string, resource.PropertyMap, error) {
+func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+	var vm VirtualMachine
+	if parsed, err := parseVirtualMachine(id, inputs, esxi.Connection); err == nil {
+		vm = parsed
+	} else {
+		return id, nil, err
+	}
 
-	return "", nil, nil
+	currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
+	if currentPowerState == "on" || currentPowerState == "suspended" {
+		_, err := esxi.powerOffVirtualMachine(vm.Id, vm.ShutdownTimeout)
+		if err != nil {
+			return id, nil, fmt.Errorf("failed to shutdown %s", err)
+		}
+	}
+
+	// make updates to vmx file
+	err := esxi.updateVmxContents(true, vm)
+	if err != nil {
+		return id, nil, fmt.Errorf("failed to update vmx contents: %s", err)
+	}
+
+	// Grow boot disk
+	bootDiskVmdkPath, _ := esxi.getBootDiskPath(vm.Id)
+
+	didGrow, err := esxi.growVirtualDisk(bootDiskVmdkPath, vm.BootDiskSize)
+	if err != nil {
+		return id, nil, fmt.Errorf("failed to grow boot disk: %s", err)
+	}
+	if didGrow {
+		err = esxi.reloadVirtualMachine(id)
+	}
+	//  power on
+	if vm.Power == "on" {
+		_, err = esxi.powerOnVirtualMachine(id)
+		if err != nil {
+			return id, nil, fmt.Errorf("failed to power on: %s", err)
+		}
+	}
+
+	result := vm.toMap()
+	return vm.Id, resource.NewPropertyMapFromMap(result), nil
 }
 
 func VirtualMachineDelete(id string, esxi *Host) error {
@@ -84,32 +146,133 @@ func VirtualMachineDelete(id string, esxi *Host) error {
 	return nil
 }
 
-func parseVirtualMachine(id string, inputs resource.PropertyMap) VirtualMachine {
+func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *ConnectionInfo) (VirtualMachine, error) {
 	vm := VirtualMachine{}
 
 	if len(id) > 0 {
 		vm.Id = id
 	}
 
-	if property, has := inputs["startupTimeout"]; has {
+	vm.Name = inputs["name"].StringValue()
+
+	if property, has := inputs["cloneFromVirtualMachine"]; has {
+		password := url.QueryEscape(connection.Password)
+		vm.SourcePath = fmt.Sprintf("vi://%s:%s@%s:%s/%s", connection.UserName, password, connection.Host, connection.SslPort, property.StringValue())
+	} else if property, has = inputs["ovfSourceLocalPath"]; has {
+		vm.SourcePath = fmt.Sprintf("local://%s", property.StringValue())
+	} else if property, has = inputs["ovfHostPathSource"]; has {
+		vm.SourcePath = property.StringValue()
+	} else {
+		vm.SourcePath = "none"
+	}
+	if property, has := inputs["bootFirmware"]; has {
+		vm.BootFirmware = property.StringValue()
+	} else {
+		vm.BootFirmware = ""
+	}
+	vm.DiskStore = inputs["diskStore"].StringValue()
+	vm.ResourcePoolName = inputs["resourcePoolName"].StringValue()
+	if vm.ResourcePoolName == "ha-root-pool" {
+		vm.ResourcePoolName = "/"
+	}
+	if property, has := inputs["bootDiskSize"]; has {
+		vm.BootDiskSize = int(property.NumberValue())
+	} else {
+		vm.BootDiskSize = 16
+	}
+	if property, has := inputs["bootDiskType"]; has {
+		vm.BootDiskType = property.StringValue()
+	} else {
+		vm.BootDiskType = "thin"
+	}
+	vm.MemSize = int(inputs["memSize"].NumberValue())
+	vm.NumVCpus = int(inputs["numVCpus"].NumberValue())
+	if property, has := inputs["virtualHWVer"]; has {
+		vm.VirtualHWVer = int(property.NumberValue())
+	} else {
+		vm.VirtualHWVer = 13
+	}
+	if property, has := inputs["networkInterfaces"]; has {
+		if items := property.ArrayValue(); len(items) > 0 {
+			vm.NetworkInterfaces = make([]NetworkInterface, len(items))
+			for i, item := range items {
+				vm.NetworkInterfaces[i] = NetworkInterface{
+					VirtualNetwork: item.ObjectValue()["virtualNetwork"].StringValue(),
+					MacAddress:     item.ObjectValue()["macAddress"].StringValue(),
+					NicType:        item.ObjectValue()["nicType"].StringValue(),
+				}
+			}
+		}
+	} else {
+		vm.NetworkInterfaces = make([]NetworkInterface, 0)
+	}
+	vm.Os = inputs["os"].StringValue()
+	if property, has := inputs["power"]; has {
+		vm.Power = property.StringValue()
+	} else {
+		vm.Power = ""
+	}
+	if property, has := inputs["startupTimeout"]; has && property.NumberValue() > 0 {
 		vm.StartupTimeout = int(property.NumberValue())
 	} else {
-		vm.StartupTimeout = 1
+		vm.StartupTimeout = 120
 	}
-
-	if property, has := inputs["memSize"]; has {
-		vm.MemSize = property.StringValue()
+	if property, has := inputs["shutdownTimeout"]; has && property.NumberValue() > 0 {
+		vm.ShutdownTimeout = int(property.NumberValue())
 	} else {
-		vm.MemSize = "1"
+		vm.ShutdownTimeout = 20
 	}
-
-	if property, has := inputs["numVCpus"]; has {
-		vm.NumVCpus = property.StringValue()
+	if property, has := inputs["virtualDisks"]; has {
+		if items := property.ArrayValue(); len(items) > 0 {
+			vm.VirtualDisks = make([]VMVirtualDisk, len(items))
+			for i, item := range items {
+				vm.VirtualDisks[i] = VMVirtualDisk{
+					VirtualDiskId: item.ObjectValue()["virtualDiskId"].StringValue(),
+					Slot:          item.ObjectValue()["slot"].StringValue(),
+				}
+			}
+		}
 	} else {
-		vm.NumVCpus = "1"
+		vm.VirtualDisks = make([]VMVirtualDisk, 0)
+	}
+	if property, has := inputs["ovfProperties"]; has {
+		if items := property.ArrayValue(); len(items) > 0 {
+			vm.OvfProperties = make([]KeyValuePair, len(items))
+			for i, item := range items {
+				vm.OvfProperties[i] = KeyValuePair{
+					Key:   item.ObjectValue()["key"].StringValue(),
+					Value: item.ObjectValue()["value"].StringValue(),
+				}
+			}
+		}
+	} else {
+		vm.OvfProperties = make([]KeyValuePair, 0)
+	}
+	if property, has := inputs["ovfPropertiesTimer"]; has && property.NumberValue() > 0 {
+		vm.ShutdownTimeout = int(property.NumberValue())
+	} else {
+		vm.ShutdownTimeout = 90
+	}
+	if property, has := inputs["notes"]; has {
+		vm.Notes = strings.Replace(property.StringValue(), "\"", "|22", -1)
+	} else {
+		vm.Notes = ""
+	}
+	if property, has := inputs["info"]; has {
+		if items := property.ArrayValue(); len(items) > 0 {
+			vm.Info = make([]KeyValuePair, len(items))
+			for i, item := range items {
+				vm.Info[i] = KeyValuePair{
+					Key:   item.ObjectValue()["key"].StringValue(),
+					Value: item.ObjectValue()["value"].StringValue(),
+				}
+			}
+		}
+	} else {
+		vm.Info = make([]KeyValuePair, 0)
 	}
 
-	return vm
+	return vm, nil
 }
 
 func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
@@ -117,24 +280,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	stdout, err := esxi.Execute(command, "Get Guest summary")
 
 	if strings.Contains(stdout, "Unable to find a VM corresponding") {
-		vm.Name = ""
-		vm.DiskStore = ""
-		vm.BootDiskSize = ""
-		vm.BootDiskType = ""
-		vm.ResourcePoolName = ""
-		vm.MemSize = ""
-		vm.NumVCpus = ""
-		vm.VirtualHWVer = ""
-		vm.Os = ""
-		vm.IpAddress = ""
-		vm.VirtualHWVer = ""
-		vm.NetworkInterfaces = make([]NetworkInterface, 0)
-		vm.BootFirmware = ""
-		vm.VirtualDisks = make([]VMVirtualDisk, 0)
-		vm.Power = ""
-		vm.Notes = ""
-		vm.Info = nil
-
+		vm = VirtualMachine{Name: ""}
 		return vm
 	}
 
@@ -148,7 +294,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			nr := strings.NewReplacer("\"", "", "\"", "")
 			vm.Name = nr.Replace(vm.Name)
 		case strings.Contains(scanner.Text(), "vmPathName = "):
-			r, _ = regexp.Compile("\\[.*\\]")
+			r, _ = regexp.Compile("\\[.*]")
 			vm.DiskStore = r.FindString(scanner.Text())
 			nr := strings.NewReplacer("[", "", "]", "")
 			vm.DiskStore = nr.Replace(vm.DiskStore)
@@ -201,27 +347,27 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
-			vm.MemSize = nr.Replace(stdout)
+			vm.MemSize, _ = strconv.Atoi(nr.Replace(stdout))
 			logging.V(9).Infof("readVirtualMachine: MemSize found => %s", vm.MemSize)
 
 		case strings.Contains(scanner.Text(), "numvcpus = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
-			vm.NumVCpus = nr.Replace(stdout)
+			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
 			logging.V(9).Infof("readVirtualMachine: NumVCpus found => %s", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "numa.autosize.vcpu."):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
-			vm.NumVCpus = nr.Replace(stdout)
+			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
 			logging.V(9).Infof("readVirtualMachine: numa.vcpu (NumVCpus) found => %s", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "virtualHW.version = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
-			vm.VirtualHWVer = strings.Replace(stdout, `"`, "", -1)
+			vm.VirtualHWVer, _ = strconv.Atoi(strings.Replace(stdout, `"`, "", -1))
 			logging.V(9).Infof("readVirtualMachine: VirtualHWVer found => %s", vm.VirtualHWVer)
 
 		case strings.Contains(scanner.Text(), "guestOS = "):
@@ -324,7 +470,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	// Get boot disk size
 	bootDiskPath, _ := esxi.getBootDiskPath(vm.Id)
 	vd, err := esxi.getVirtualDisk(bootDiskPath)
-	vm.BootDiskSize = strconv.Itoa(vd.Size)
+	vm.BootDiskSize = vd.Size
 	vm.BootDiskType = vd.DiskType
 
 	// Get guestinfo value

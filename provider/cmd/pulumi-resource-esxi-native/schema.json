@@ -434,7 +434,7 @@
                     "description": "Resource pool name to place vm."
                 },
                 "bootDiskSize": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "VM boot disk size. Will expand boot disk to this size."
                 },
                 "bootDiskType": {
@@ -443,15 +443,15 @@
                     "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                 },
                 "memSize": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "VM memory size."
                 },
                 "numVCpus": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "VM number of virtual cpus."
                 },
                 "virtualHWVer": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "VM Virtual HW version."
                 },
                 "os": {
@@ -548,8 +548,9 @@
                     "willReplaceOnChanges": true
                 },
                 "bootDiskSize": {
-                    "type": "string",
-                    "description": "VM boot disk size. Will expand boot disk to this size."
+                    "type": "integer",
+                    "description": "VM boot disk size. Will expand boot disk to this size.",
+                    "default": 16
                 },
                 "bootDiskType": {
                     "type": "string",
@@ -558,20 +559,24 @@
                     "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                 },
                 "memSize": {
-                    "type": "string",
-                    "description": "VM memory size."
+                    "type": "integer",
+                    "description": "VM memory size.",
+                    "default": 512
                 },
                 "numVCpus": {
-                    "type": "string",
-                    "description": "VM number of virtual cpus."
+                    "type": "integer",
+                    "description": "VM number of virtual cpus.",
+                    "default": 1
                 },
                 "virtualHWVer": {
-                    "type": "string",
-                    "description": "VM Virtual HW version."
+                    "type": "integer",
+                    "description": "VM Virtual HW version.",
+                    "default": 13
                 },
                 "os": {
                     "type": "string",
-                    "description": "VM OS type."
+                    "description": "VM OS type.",
+                    "default": "centos-64"
                 },
                 "networkInterfaces": {
                     "type": "array",
@@ -744,7 +749,7 @@
                         "description": "Resource pool name to place vm."
                     },
                     "bootDiskSize": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM boot disk size. Will expand boot disk to this size."
                     },
                     "bootDiskType": {
@@ -753,15 +758,15 @@
                         "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                     },
                     "memSize": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM memory size."
                     },
                     "numVCpus": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM number of virtual cpus."
                     },
                     "virtualHWVer": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM Virtual HW version."
                     },
                     "os": {
@@ -850,7 +855,7 @@
                         "description": "Resource pool name to place vm."
                     },
                     "bootDiskSize": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM boot disk size. Will expand boot disk to this size."
                     },
                     "bootDiskType": {
@@ -859,15 +864,15 @@
                         "description": "VM boot disk type. thin, zeroedthick, eagerzeroedthick"
                     },
                     "memSize": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM memory size."
                     },
                     "numVCpus": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM number of virtual cpus."
                     },
                     "virtualHWVer": {
-                        "type": "string",
+                        "type": "integer",
                         "description": "VM Virtual HW version."
                     },
                     "os": {

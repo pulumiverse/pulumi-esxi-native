@@ -15,7 +15,7 @@ type VirtualMachine struct {
 	pulumi.CustomResourceState
 
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize pulumi.StringPtrOutput `pulumi:"bootDiskSize"`
+	BootDiskSize pulumi.IntPtrOutput `pulumi:"bootDiskSize"`
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType DiskTypePtrOutput `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
@@ -27,7 +27,7 @@ type VirtualMachine struct {
 	// The IP address reported by VMWare tools.
 	IpAddress pulumi.StringPtrOutput `pulumi:"ipAddress"`
 	// VM memory size.
-	MemSize pulumi.StringOutput `pulumi:"memSize"`
+	MemSize pulumi.IntOutput `pulumi:"memSize"`
 	// esxi vm name.
 	Name pulumi.StringOutput `pulumi:"name"`
 	// VM network interfaces.
@@ -35,7 +35,7 @@ type VirtualMachine struct {
 	// VM memory size.
 	Notes pulumi.StringPtrOutput `pulumi:"notes"`
 	// VM number of virtual cpus.
-	NumVCpus pulumi.StringOutput `pulumi:"numVCpus"`
+	NumVCpus pulumi.IntOutput `pulumi:"numVCpus"`
 	// VM OS type.
 	Os pulumi.StringOutput `pulumi:"os"`
 	// VM power state.
@@ -49,7 +49,7 @@ type VirtualMachine struct {
 	// VM virtual disks.
 	VirtualDisks VMVirtualDiskArrayOutput `pulumi:"virtualDisks"`
 	// VM Virtual HW version.
-	VirtualHWVer pulumi.StringPtrOutput `pulumi:"virtualHWVer"`
+	VirtualHWVer pulumi.IntPtrOutput `pulumi:"virtualHWVer"`
 }
 
 // NewVirtualMachine registers a new resource with the given unique name, arguments, and options.
@@ -62,20 +62,23 @@ func NewVirtualMachine(ctx *pulumi.Context,
 	if args.DiskStore == nil {
 		return nil, errors.New("invalid value for required argument 'DiskStore'")
 	}
-	if args.MemSize == nil {
-		return nil, errors.New("invalid value for required argument 'MemSize'")
-	}
-	if args.NumVCpus == nil {
-		return nil, errors.New("invalid value for required argument 'NumVCpus'")
-	}
-	if args.Os == nil {
-		return nil, errors.New("invalid value for required argument 'Os'")
+	if isZero(args.BootDiskSize) {
+		args.BootDiskSize = pulumi.IntPtr(16)
 	}
 	if isZero(args.BootDiskType) {
 		args.BootDiskType = DiskType("thin")
 	}
 	if isZero(args.BootFirmware) {
 		args.BootFirmware = BootFirmwareType("bios")
+	}
+	if isZero(args.MemSize) {
+		args.MemSize = pulumi.Int(512)
+	}
+	if isZero(args.NumVCpus) {
+		args.NumVCpus = pulumi.Int(1)
+	}
+	if isZero(args.Os) {
+		args.Os = pulumi.String("centos-64")
 	}
 	if isZero(args.OvfPropertiesTimer) {
 		args.OvfPropertiesTimer = pulumi.IntPtr(6000)
@@ -88,6 +91,9 @@ func NewVirtualMachine(ctx *pulumi.Context,
 	}
 	if isZero(args.StartupTimeout) {
 		args.StartupTimeout = pulumi.IntPtr(600)
+	}
+	if isZero(args.VirtualHWVer) {
+		args.VirtualHWVer = pulumi.IntPtr(13)
 	}
 	var resource VirtualMachine
 	err := ctx.RegisterResource("esxi-native:index:VirtualMachine", name, args, &resource, opts...)
@@ -122,7 +128,7 @@ func (VirtualMachineState) ElementType() reflect.Type {
 
 type virtualMachineArgs struct {
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize *string `pulumi:"bootDiskSize"`
+	BootDiskSize *int `pulumi:"bootDiskSize"`
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType *DiskType `pulumi:"bootDiskType"`
 	// Boot type('efi' is boot uefi mode)
@@ -134,7 +140,7 @@ type virtualMachineArgs struct {
 	// pass data to VM
 	Info []KeyValuePair `pulumi:"info"`
 	// VM memory size.
-	MemSize string `pulumi:"memSize"`
+	MemSize int `pulumi:"memSize"`
 	// esxi vm name.
 	Name *string `pulumi:"name"`
 	// VM network interfaces.
@@ -142,7 +148,7 @@ type virtualMachineArgs struct {
 	// VM memory size.
 	Notes *string `pulumi:"notes"`
 	// VM number of virtual cpus.
-	NumVCpus string `pulumi:"numVCpus"`
+	NumVCpus int `pulumi:"numVCpus"`
 	// VM OS type.
 	Os string `pulumi:"os"`
 	// Path on esxi host of ovf files.
@@ -164,13 +170,13 @@ type virtualMachineArgs struct {
 	// VM virtual disks.
 	VirtualDisks []VMVirtualDisk `pulumi:"virtualDisks"`
 	// VM Virtual HW version.
-	VirtualHWVer *string `pulumi:"virtualHWVer"`
+	VirtualHWVer *int `pulumi:"virtualHWVer"`
 }
 
 // The set of arguments for constructing a VirtualMachine resource.
 type VirtualMachineArgs struct {
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize pulumi.StringPtrInput
+	BootDiskSize pulumi.IntPtrInput
 	// VM boot disk type. thin, zeroedthick, eagerzeroedthick
 	BootDiskType DiskTypePtrInput
 	// Boot type('efi' is boot uefi mode)
@@ -182,7 +188,7 @@ type VirtualMachineArgs struct {
 	// pass data to VM
 	Info KeyValuePairArrayInput
 	// VM memory size.
-	MemSize pulumi.StringInput
+	MemSize pulumi.IntInput
 	// esxi vm name.
 	Name pulumi.StringPtrInput
 	// VM network interfaces.
@@ -190,7 +196,7 @@ type VirtualMachineArgs struct {
 	// VM memory size.
 	Notes pulumi.StringPtrInput
 	// VM number of virtual cpus.
-	NumVCpus pulumi.StringInput
+	NumVCpus pulumi.IntInput
 	// VM OS type.
 	Os pulumi.StringInput
 	// Path on esxi host of ovf files.
@@ -212,7 +218,7 @@ type VirtualMachineArgs struct {
 	// VM virtual disks.
 	VirtualDisks VMVirtualDiskArrayInput
 	// VM Virtual HW version.
-	VirtualHWVer pulumi.StringPtrInput
+	VirtualHWVer pulumi.IntPtrInput
 }
 
 func (VirtualMachineArgs) ElementType() reflect.Type {
@@ -303,8 +309,8 @@ func (o VirtualMachineOutput) ToVirtualMachineOutputWithContext(ctx context.Cont
 }
 
 // VM boot disk size. Will expand boot disk to this size.
-func (o VirtualMachineOutput) BootDiskSize() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *VirtualMachine) pulumi.StringPtrOutput { return v.BootDiskSize }).(pulumi.StringPtrOutput)
+func (o VirtualMachineOutput) BootDiskSize() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v *VirtualMachine) pulumi.IntPtrOutput { return v.BootDiskSize }).(pulumi.IntPtrOutput)
 }
 
 // VM boot disk type. thin, zeroedthick, eagerzeroedthick
@@ -333,8 +339,8 @@ func (o VirtualMachineOutput) IpAddress() pulumi.StringPtrOutput {
 }
 
 // VM memory size.
-func (o VirtualMachineOutput) MemSize() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualMachine) pulumi.StringOutput { return v.MemSize }).(pulumi.StringOutput)
+func (o VirtualMachineOutput) MemSize() pulumi.IntOutput {
+	return o.ApplyT(func(v *VirtualMachine) pulumi.IntOutput { return v.MemSize }).(pulumi.IntOutput)
 }
 
 // esxi vm name.
@@ -353,8 +359,8 @@ func (o VirtualMachineOutput) Notes() pulumi.StringPtrOutput {
 }
 
 // VM number of virtual cpus.
-func (o VirtualMachineOutput) NumVCpus() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualMachine) pulumi.StringOutput { return v.NumVCpus }).(pulumi.StringOutput)
+func (o VirtualMachineOutput) NumVCpus() pulumi.IntOutput {
+	return o.ApplyT(func(v *VirtualMachine) pulumi.IntOutput { return v.NumVCpus }).(pulumi.IntOutput)
 }
 
 // VM OS type.
@@ -388,8 +394,8 @@ func (o VirtualMachineOutput) VirtualDisks() VMVirtualDiskArrayOutput {
 }
 
 // VM Virtual HW version.
-func (o VirtualMachineOutput) VirtualHWVer() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *VirtualMachine) pulumi.StringPtrOutput { return v.VirtualHWVer }).(pulumi.StringPtrOutput)
+func (o VirtualMachineOutput) VirtualHWVer() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v *VirtualMachine) pulumi.IntPtrOutput { return v.VirtualHWVer }).(pulumi.IntPtrOutput)
 }
 
 type VirtualMachineArrayOutput struct{ *pulumi.OutputState }

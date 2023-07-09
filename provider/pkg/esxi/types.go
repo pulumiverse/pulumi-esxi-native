@@ -85,13 +85,11 @@ type VirtualDisk struct {
 
 type VirtualMachine struct {
 	// VM boot disk size. Will expand boot disk to this size.
-	BootDiskSize string
+	BootDiskSize int
 	// VM boot disk type.
 	BootDiskType string
 	// Boot type('efi' is boot uefi mode)
 	BootFirmware string
-	// Source vm path on esxi host to clone.
-	CloneFromVirtualMachine string
 	// esxi DiskStore for boot disk.
 	DiskStore string
 	// pass data to VM
@@ -101,7 +99,7 @@ type VirtualMachine struct {
 	// The IP address reported by VMWare tools.
 	IpAddress string
 	// VM memory size.
-	MemSize string
+	MemSize int
 	// esxi vm name.
 	Name string
 	// VM network interfaces.
@@ -109,29 +107,27 @@ type VirtualMachine struct {
 	// VM memory size.
 	Notes string
 	// VM number of virtual cpus.
-	NumVCpus string
+	NumVCpus int
 	// VM OS type.
 	Os string
-	// Path on esxi host of ovf files.
-	OvfHostPathSource string
 	// VM OVF properties.
 	OvfProperties []KeyValuePair
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer int
-	// Local path to source ovf files.
-	OvfSourceLocalPath string
 	// VM power state.
 	Power string
 	// Resource pool name to place vm.
 	ResourcePoolName string
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.
 	ShutdownTimeout int
+	// Local path to source.
+	SourcePath string
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine.
 	StartupTimeout int
 	// VM virtual disks.
 	VirtualDisks []VMVirtualDisk
 	// VM Virtual HW version.
-	VirtualHWVer string
+	VirtualHWVer int
 }
 
 type VirtualSwitch struct {

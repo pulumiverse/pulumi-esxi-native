@@ -143,36 +143,29 @@ func (p *esxiProvider) DiffConfig(_ context.Context, req *pulumirpc.DiffRequest)
 func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	vars := req.GetVariables()
 
-	var host, user, pass, sshPort, sslPort, ovfLoc string
+	host, hostErr := getConfig(vars, "host", "ESXI_HOST")
+	user, userErr := getConfig(vars, "username", "ESXI_USERNAME")
+	pass, passErr := getConfig(vars, "password", "ESXI_PASSWORD")
+	sshPort, sshPortErr := getConfig(vars, "sshPort", "ESXI_SSH_PORT")
+	sslPort, sslPortErr := getConfig(vars, "sslPort", "ESXI_SSL_PORT")
+	ovfLoc, ovfLocErr := getConfig(vars, "ovfToolLocation", "ESXI_OVFTOOL_LOCATION")
 
-	if v, ok := varsOrEnv(vars, "esxi-native:config:host", "ESXI_HOST"); ok {
-		host = v
-	}
-	if v, ok := varsOrEnv(vars, "esxi-native:config:username", "ESXI_USERNAME"); ok {
-		user = v
-	}
-	if v, ok := varsOrEnv(vars, "esxi-native:config:password", "ESXI_PASSWORD"); ok {
-		pass = v
-	}
-	if v, ok := varsOrEnv(vars, "esxi-native:config:sshPort", "ESXI_SSH_PORT"); ok {
-		sshPort = v
-	}
-	if v, ok := varsOrEnv(vars, "esxi-native:config:sslPort", "ESXI_SSL_PORT"); ok {
-		sslPort = v
-	}
-	if v, ok := varsOrEnv(vars, "esxi-native:config:ovfToolLocation", "ESXI_OVFTOOL_LOCATION"); ok {
-		ovfLoc = v
-	}
-
-	if len(host) > 0 || len(user) > 0 || len(pass) > 0 || len(sslPort) > 0 || len(sshPort) > 0 || len(ovfLoc) > 0 {
+	if len(host) > 0 && len(user) > 0 && len(pass) > 0 && len(sslPort) > 0 && len(sshPort) > 0 && len(ovfLoc) > 0 {
 		// If all required values are not present/valid, the client will return an appropriate error.
-		esxiHost := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
-		p.esxi = &esxiHost
-	}
+		esxiHost, err := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
+		if err != nil {
+			return nil, err
+		}
+		p.esxi = esxiHost
+	} else {
+		errorMessage := "Invalid config."
+		for _, errMsg := range []string{hostErr, userErr, passErr, sshPortErr, sslPortErr, ovfLocErr} {
+			if len(errMsg) > 0 {
+				errorMessage = fmt.Sprintf("%s\n%s", errorMessage, errMsg)
+			}
+		}
 
-	err := p.esxi.ValidateCreds()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errorMessage)
 	}
 
 	p.namingService = esxi.NewAutoNamingService()
@@ -577,14 +570,12 @@ func filterNullProperties(m resource.PropertyMap) resource.PropertyMap {
 	return result
 }
 
-func varsOrEnv(vars map[string]string, key string, env ...string) (string, bool) {
-	if val, ok := vars[key]; ok {
-		return val, true
+func getConfig(vars map[string]string, key, env string) (string, string) {
+	if val, ok := vars[fmt.Sprintf("esxi-native:config:%s", key)]; ok {
+		return val, ""
 	}
-	for _, e := range env {
-		if val, ok := os.LookupEnv(e); ok {
-			return val, true
-		}
+	if val, ok := os.LookupEnv(env); ok {
+		return val, ""
 	}
-	return "", false
+	return "", fmt.Sprintf("config key 'esxi-native:config:%s', or env var.: '%s', must be provided", key, env)
 }
