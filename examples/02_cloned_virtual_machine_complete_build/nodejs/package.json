@@ -1,0 +1,10 @@
+{
+    "name": "cloned-virtual-machine-complete-build-typescript",
+    "version": "0.0.1",
+    "devDependencies": {
+        "@types/node": "latest"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "latest"
+    }
+}

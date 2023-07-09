@@ -139,7 +139,7 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 				failures[key] = fmt.Sprintf(invalidFormat, key, "in beetween 0 and 6000")
 			}
 		case "os":
-			if validateVirtualMachineOsType(property.StringValue()) {
+			if !validateVirtualMachineOsType(property.StringValue()) {
 				failures[key] = fmt.Sprintf(invalidFormat, key, "from here: https://github.com/josenk/vagrant-vmware-esxi/wiki/VMware-ESXi-6.5-guestOS-types")
 			}
 		case "networkInterfaces":
@@ -149,7 +149,7 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 			}
 			if len(items) > 0 {
 				for i, item := range items {
-					if nicType, has := item.ObjectValue()["nicType"]; has && validateNicType(nicType.StringValue()) {
+					if nicType, has := item.ObjectValue()["nicType"]; has && !validateNicType(nicType.StringValue()) {
 						itemKey := fmt.Sprintf("%s[%d].nicType", key, i)
 						failures[itemKey] = fmt.Sprintf("The property '%s' must be vlance, flexible, e1000, e1000e, vmxnet, vmxnet2 or vmxnet3!", itemKey)
 					}
@@ -206,22 +206,6 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 
 	if _, has := inputs["diskStore"]; !has {
 		failures["diskStore"] = "The property 'diskStore' is required!"
-	}
-
-	if _, has := inputs["resourcePoolName"]; !has {
-		failures["resourcePoolName"] = "The property 'resourcePoolName' is required!"
-	}
-
-	if _, has := inputs["memSize"]; !has {
-		failures["memSize"] = "The property 'memSize' is required!"
-	}
-
-	if _, has := inputs["numVCpus"]; !has {
-		failures["numVCpus"] = "The property 'numVCpus' is required!"
-	}
-
-	if _, has := inputs["os"]; !has {
-		failures["os"] = "The property 'os' is required!"
 	}
 
 	return validateResource(resourceToken, failures)

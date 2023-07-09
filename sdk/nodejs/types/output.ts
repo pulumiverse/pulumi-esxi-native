@@ -14,7 +14,7 @@ export interface KeyValuePair {
 export interface NetworkInterface {
     macAddress?: string;
     nicType?: string;
-    virtualNetwork?: string;
+    virtualNetwork: string;
 }
 
 export interface Uplink {

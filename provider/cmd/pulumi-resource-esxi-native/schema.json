@@ -163,7 +163,8 @@
                 "nicType": {
                     "type": "string"
                 }
-            }
+            },
+            "required": ["virtualNetwork"]
         },
         "esxi-native:index:VMVirtualDisk": {
             "type": "object",
@@ -503,11 +504,7 @@
                 }
             },
             "requiredInputs": [
-                "diskStore",
-                "resourcePoolName",
-                "memSize",
-                "numVCpus",
-                "os"
+                "diskStore"
             ],
             "inputProperties": {
                 "name": {
@@ -576,7 +573,7 @@
                 "os": {
                     "type": "string",
                     "description": "VM OS type.",
-                    "default": "centos-64"
+                    "default": "centos"
                 },
                 "networkInterfaces": {
                     "type": "array",

@@ -5,7 +5,6 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/tmc/scp"
@@ -14,64 +13,42 @@ import (
 
 type Host struct {
 	ClientConfig *ssh.ClientConfig
-	Client       *ssh.Client
-	Session      *ssh.Session
 	Connection   *ConnectionInfo
 }
 
-var lock = &sync.Mutex{}
-var instance *Host
-
 func NewHost(host, sshPort, sslPort, user, pass, ovfLoc string) (*Host, error) {
-	if instance == nil {
-		lock.Lock()
-		defer lock.Unlock()
-		if instance == nil {
-			connection := ConnectionInfo{
-				Host:        host,
-				SshPort:     sshPort,
-				SslPort:     sslPort,
-				UserName:    user,
-				Password:    pass,
-				OvfLocation: ovfLoc,
-			}
-			clientConfig := &ssh.ClientConfig{
-				User: connection.UserName,
-				Auth: []ssh.AuthMethod{
-					ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
-						// Reply password to all questions
-						answers := make([]string, len(questions))
-						for i := range answers {
-							answers[i] = connection.Password
-						}
+	connection := ConnectionInfo{
+		Host:        host,
+		SshPort:     sshPort,
+		SslPort:     sslPort,
+		UserName:    user,
+		Password:    pass,
+		OvfLocation: ovfLoc,
+	}
+	clientConfig := &ssh.ClientConfig{
+		User: connection.UserName,
+		Auth: []ssh.AuthMethod{
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+				// Reply password to all questions
+				answers := make([]string, len(questions))
+				for i := range answers {
+					answers[i] = connection.Password
+				}
 
-						return answers, nil
-					}),
-				},
-			}
-			clientConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+				return answers, nil
+			}),
+		},
+	}
+	clientConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 
-			instance = &Host{
-				Connection:   &connection,
-				ClientConfig: clientConfig,
-			}
+	instance := &Host{
+		Connection:   &connection,
+		ClientConfig: clientConfig,
+	}
 
-			err := connect(5)
-			if err != nil {
-				logging.V(9).Infof("Failed connecting to host! %s", err)
-				return nil, fmt.Errorf("failed to connect to esxi host; err: %s", err)
-			}
-			defer disconnect()
-
-			err = instance.validateCreds()
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			logging.V(9).Infof("Host instance already created.")
-		}
-	} else {
-		logging.V(9).Infof("Host instance already created.")
+	err := instance.validateCreds()
+	if err != nil {
+		return nil, err
 	}
 
 	return instance, nil
@@ -98,10 +75,10 @@ func (esxi *Host) validateCreds() error {
 }
 
 // Connect to esxi host using ssh
-func connect(attempt int) error {
+func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	//attempt := 10
 	for attempt > 0 {
-		client, err := ssh.Dial("tcp", instance.Connection.getSshConnection(), instance.ClientConfig)
+		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
 		if err != nil {
 			logging.V(9).Infof("Connect: Retry attempt %d", attempt)
 			attempt -= 1
@@ -112,64 +89,53 @@ func connect(attempt int) error {
 			if err != nil {
 				closeErr := client.Close()
 				if closeErr != nil {
-					return fmt.Errorf("session connection error. (closing client error: %s)", closeErr)
+					return nil, nil, fmt.Errorf("session connection error. (closing client error: %s)", closeErr)
 				}
-				return fmt.Errorf("session connection error")
+				return nil, nil, fmt.Errorf("session connection error")
 			}
 
-			instance.Client = client
-			instance.Session = session
-
-			return nil
+			return client, session, nil
 		}
 	}
-	return fmt.Errorf("client connection error")
-}
-
-func disconnect() {
-	if instance.Client != nil {
-		logging.V(9).Infof("Disconnecting SSH Client from the Host...")
-		err := instance.Client.Close()
-		if err != nil {
-			logging.V(9).Infof("Failed closing the client connection to host! %s", err)
-		}
-	}
+	return nil, nil, fmt.Errorf("client connection error")
 }
 
 func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	logging.V(9).Infof("Execute: %s", shortCmdDesc)
 
-	retried := false
-	for {
-		// Code to be executed indefinitely
-		stdoutRaw, err := esxi.Session.CombinedOutput(command)
-		stdout := strings.TrimSpace(string(stdoutRaw))
+	var attempt int
 
-		if stdout == "<unset>" && retried == false {
-			retried = true
-			attempt := 10
-			if command == "vmware --version" {
-				attempt = 3
-			}
-			err = connect(attempt)
-			if err != nil {
-				logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
-				return "failed to connect to esxi host", err
-			}
-		} else if stdout == "<unset>" && retried {
-			return "failed to connect to esxi host or Management Agent has been restarted", err
-		} else {
-			logMessage := fmt.Sprintf("Execute: cmd => %s", command)
-			if len(stdout) > 0 {
-				logMessage = fmt.Sprintf("%s\n\tstdout => %s\n", logMessage, stdout)
-			}
-			if err != nil {
-				logMessage = fmt.Sprintf("%s\tstderr => %s\n", logMessage, err)
-			}
-			logging.V(9).Infof(logMessage)
-			return stdout, err
-		}
+	if command == "vmware --version" {
+		attempt = 3
+	} else {
+		attempt = 10
 	}
+	client, session, err := esxi.connect(attempt)
+	if err != nil {
+		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		return "failed to connect to esxi host", err
+	}
+
+	stdoutRaw, err := session.CombinedOutput(command)
+	stdout := strings.TrimSpace(string(stdoutRaw))
+
+	if stdout == "<unset>" {
+		return "failed to connect to esxi host or Management Agent has been restarted", err
+	}
+
+	logMessage := fmt.Sprintf("Execute: cmd => %s", command)
+	if len(stdout) > 0 {
+		logMessage = fmt.Sprintf("%s\n\tstdout => %s\n", logMessage, stdout)
+	}
+	if err != nil {
+		logMessage = fmt.Sprintf("%s\tstderr => %s\n", logMessage, err)
+	}
+	logging.V(9).Infof(logMessage)
+	if closeErr := client.Close(); closeErr != nil {
+		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
+	}
+
+	return stdout, err
 }
 
 func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (string, error) {
@@ -186,10 +152,18 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 	}
 	defer os.Remove(f.Name())
 
-	err = scp.CopyPath(f.Name(), path, esxi.Session)
+	client, session, err := esxi.connect(10)
+	if err != nil {
+		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		return "failed to connect to esxi host", err
+	}
+	err = scp.CopyPath(f.Name(), path, session)
 	if err != nil {
 		logging.V(9).Infof("WriteFile: Failed copying the file! %s", err)
-		return "Failed to copy file to esxi host!", err
+		return "failed to copy file to esxi host", err
+	}
+	if closeErr := client.Close(); closeErr != nil {
+		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
 	}
 
 	return content, err
@@ -198,9 +172,17 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 func (esxi *Host) CopyFile(localPath string, hostPath string, shortCmdDesc string) (string, error) {
 	logging.V(9).Infof("CopyFile: %s", shortCmdDesc)
 
-	err := scp.CopyPath(localPath, hostPath, esxi.Session)
+	client, session, err := esxi.connect(10)
+	if err != nil {
+		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		return "failed to connect to esxi host", err
+	}
+	err = scp.CopyPath(localPath, hostPath, session)
 	if err != nil {
 		return "Failed to copy file to esxi host!", err
+	}
+	if closeErr := client.Close(); closeErr != nil {
+		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
 	}
 
 	return "", nil

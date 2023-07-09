@@ -47,15 +47,23 @@ class KeyValuePairArgs:
 @pulumi.input_type
 class NetworkInterfaceArgs:
     def __init__(__self__, *,
+                 virtual_network: pulumi.Input[str],
                  mac_address: Optional[pulumi.Input[str]] = None,
-                 nic_type: Optional[pulumi.Input[str]] = None,
-                 virtual_network: Optional[pulumi.Input[str]] = None):
+                 nic_type: Optional[pulumi.Input[str]] = None):
+        pulumi.set(__self__, "virtual_network", virtual_network)
         if mac_address is not None:
             pulumi.set(__self__, "mac_address", mac_address)
         if nic_type is not None:
             pulumi.set(__self__, "nic_type", nic_type)
-        if virtual_network is not None:
-            pulumi.set(__self__, "virtual_network", virtual_network)
+
+    @property
+    @pulumi.getter(name="virtualNetwork")
+    def virtual_network(self) -> pulumi.Input[str]:
+        return pulumi.get(self, "virtual_network")
+
+    @virtual_network.setter
+    def virtual_network(self, value: pulumi.Input[str]):
+        pulumi.set(self, "virtual_network", value)
 
     @property
     @pulumi.getter(name="macAddress")
@@ -74,15 +82,6 @@ class NetworkInterfaceArgs:
     @nic_type.setter
     def nic_type(self, value: Optional[pulumi.Input[str]]):
         pulumi.set(self, "nic_type", value)
-
-    @property
-    @pulumi.getter(name="virtualNetwork")
-    def virtual_network(self) -> Optional[pulumi.Input[str]]:
-        return pulumi.get(self, "virtual_network")
-
-    @virtual_network.setter
-    def virtual_network(self, value: Optional[pulumi.Input[str]]):
-        pulumi.set(self, "virtual_network", value)
 
 
 @pulumi.input_type

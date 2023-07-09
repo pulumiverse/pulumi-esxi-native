@@ -210,8 +210,8 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM memory size.
         /// </summary>
-        [Input("memSize", required: true)]
-        public Input<int> MemSize { get; set; } = null!;
+        [Input("memSize")]
+        public Input<int>? MemSize { get; set; }
 
         /// <summary>
         /// esxi vm name.
@@ -240,14 +240,14 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM number of virtual cpus.
         /// </summary>
-        [Input("numVCpus", required: true)]
-        public Input<int> NumVCpus { get; set; } = null!;
+        [Input("numVCpus")]
+        public Input<int>? NumVCpus { get; set; }
 
         /// <summary>
         /// VM OS type.
         /// </summary>
-        [Input("os", required: true)]
-        public Input<string> Os { get; set; } = null!;
+        [Input("os")]
+        public Input<string>? Os { get; set; }
 
         /// <summary>
         /// Path on esxi host of ovf files.
@@ -288,8 +288,8 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// Resource pool name to place vm.
         /// </summary>
-        [Input("resourcePoolName", required: true)]
-        public Input<string> ResourcePoolName { get; set; } = null!;
+        [Input("resourcePoolName")]
+        public Input<string>? ResourcePoolName { get; set; }
 
         /// <summary>
         /// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
@@ -328,7 +328,7 @@ namespace Pulumi.EsxiNative
             BootFirmware = Pulumi.EsxiNative.BootFirmwareType.BIOS;
             MemSize = 512;
             NumVCpus = 1;
-            Os = "centos-64";
+            Os = "centos";
             OvfPropertiesTimer = 6000;
             ResourcePoolName = "/";
             ShutdownTimeout = 600;

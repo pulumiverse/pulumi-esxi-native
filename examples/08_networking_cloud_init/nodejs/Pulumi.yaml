@@ -1,0 +1,3 @@
+name: 08_networking_cloud_init_nodejs
+runtime: nodejs
+description: An esxi networking cloud init example

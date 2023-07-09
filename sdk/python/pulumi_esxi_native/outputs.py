@@ -41,12 +41,12 @@ class NetworkInterface(dict):
     @staticmethod
     def __key_warning(key: str):
         suggest = None
-        if key == "macAddress":
+        if key == "virtualNetwork":
+            suggest = "virtual_network"
+        elif key == "macAddress":
             suggest = "mac_address"
         elif key == "nicType":
             suggest = "nic_type"
-        elif key == "virtualNetwork":
-            suggest = "virtual_network"
 
         if suggest:
             pulumi.log.warn(f"Key '{key}' not found in NetworkInterface. Access the value via the '{suggest}' property getter instead.")
@@ -60,15 +60,19 @@ class NetworkInterface(dict):
         return super().get(key, default)
 
     def __init__(__self__, *,
+                 virtual_network: str,
                  mac_address: Optional[str] = None,
-                 nic_type: Optional[str] = None,
-                 virtual_network: Optional[str] = None):
+                 nic_type: Optional[str] = None):
+        pulumi.set(__self__, "virtual_network", virtual_network)
         if mac_address is not None:
             pulumi.set(__self__, "mac_address", mac_address)
         if nic_type is not None:
             pulumi.set(__self__, "nic_type", nic_type)
-        if virtual_network is not None:
-            pulumi.set(__self__, "virtual_network", virtual_network)
+
+    @property
+    @pulumi.getter(name="virtualNetwork")
+    def virtual_network(self) -> str:
+        return pulumi.get(self, "virtual_network")
 
     @property
     @pulumi.getter(name="macAddress")
@@ -79,11 +83,6 @@ class NetworkInterface(dict):
     @pulumi.getter(name="nicType")
     def nic_type(self) -> Optional[str]:
         return pulumi.get(self, "nic_type")
-
-    @property
-    @pulumi.getter(name="virtualNetwork")
-    def virtual_network(self) -> Optional[str]:
-        return pulumi.get(self, "virtual_network")
 
 
 @pulumi.output_type

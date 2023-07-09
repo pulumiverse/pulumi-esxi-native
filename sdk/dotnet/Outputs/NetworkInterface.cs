@@ -15,7 +15,7 @@ namespace Pulumi.EsxiNative.Outputs
     {
         public readonly string? MacAddress;
         public readonly string? NicType;
-        public readonly string? VirtualNetwork;
+        public readonly string VirtualNetwork;
 
         [OutputConstructor]
         private NetworkInterface(
@@ -23,7 +23,7 @@ namespace Pulumi.EsxiNative.Outputs
 
             string? nicType,
 
-            string? virtualNetwork)
+            string virtualNetwork)
         {
             MacAddress = macAddress;
             NicType = nicType;

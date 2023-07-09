@@ -14,7 +14,7 @@ export interface KeyValuePairArgs {
 export interface NetworkInterfaceArgs {
     macAddress?: pulumi.Input<string>;
     nicType?: pulumi.Input<string>;
-    virtualNetwork?: pulumi.Input<string>;
+    virtualNetwork: pulumi.Input<string>;
 }
 
 export interface UplinkArgs {

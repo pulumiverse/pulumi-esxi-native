@@ -1,0 +1,3 @@
+name: 01_simple_virtual_machine_nodejs
+runtime: nodejs
+description: An esxi simple virtual machine example

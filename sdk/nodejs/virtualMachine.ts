@@ -121,18 +121,6 @@ export class VirtualMachine extends pulumi.CustomResource {
             if ((!args || args.diskStore === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'diskStore'");
             }
-            if ((!args || args.memSize === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'memSize'");
-            }
-            if ((!args || args.numVCpus === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'numVCpus'");
-            }
-            if ((!args || args.os === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'os'");
-            }
-            if ((!args || args.resourcePoolName === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'resourcePoolName'");
-            }
             resourceInputs["bootDiskSize"] = (args ? args.bootDiskSize : undefined) ?? 16;
             resourceInputs["bootDiskType"] = (args ? args.bootDiskType : undefined) ?? "thin";
             resourceInputs["bootFirmware"] = (args ? args.bootFirmware : undefined) ?? "bios";
@@ -144,7 +132,7 @@ export class VirtualMachine extends pulumi.CustomResource {
             resourceInputs["networkInterfaces"] = args ? args.networkInterfaces : undefined;
             resourceInputs["notes"] = args ? args.notes : undefined;
             resourceInputs["numVCpus"] = (args ? args.numVCpus : undefined) ?? 1;
-            resourceInputs["os"] = (args ? args.os : undefined) ?? "centos-64";
+            resourceInputs["os"] = (args ? args.os : undefined) ?? "centos";
             resourceInputs["ovfHostPathSource"] = args ? args.ovfHostPathSource : undefined;
             resourceInputs["ovfProperties"] = args ? args.ovfProperties : undefined;
             resourceInputs["ovfPropertiesTimer"] = (args ? args.ovfPropertiesTimer : undefined) ?? 6000;
@@ -212,7 +200,7 @@ export interface VirtualMachineArgs {
     /**
      * VM memory size.
      */
-    memSize: pulumi.Input<number>;
+    memSize?: pulumi.Input<number>;
     /**
      * esxi vm name.
      */
@@ -228,11 +216,11 @@ export interface VirtualMachineArgs {
     /**
      * VM number of virtual cpus.
      */
-    numVCpus: pulumi.Input<number>;
+    numVCpus?: pulumi.Input<number>;
     /**
      * VM OS type.
      */
-    os: pulumi.Input<string>;
+    os?: pulumi.Input<string>;
     /**
      * Path on esxi host of ovf files.
      */
@@ -256,7 +244,7 @@ export interface VirtualMachineArgs {
     /**
      * Resource pool name to place vm.
      */
-    resourcePoolName: pulumi.Input<string>;
+    resourcePoolName?: pulumi.Input<string>;
     /**
      * The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
      */

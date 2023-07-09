@@ -1,0 +1,3 @@
+name: 07_networking_nodejs
+runtime: nodejs
+description: An esxi networking example

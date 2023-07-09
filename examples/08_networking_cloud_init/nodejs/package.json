@@ -1,6 +1,6 @@
 {
-    "name": "xyz-typescript",
-    "version": "0.1.0",
+    "name": "networking-cloud-init-typescript",
+    "version": "0.0.1",
     "devDependencies": {
         "@types/node": "latest"
     },

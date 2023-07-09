@@ -30,7 +30,7 @@ func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.Proper
 	})
 
 	if len(vm.Name) == 0 {
-		return nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", vm.Id)
+		return nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", id)
 	}
 
 	result := vm.toMap(true)
@@ -45,7 +45,7 @@ func VirtualMachineRead(id string, _ resource.PropertyMap, esxi *Host) (string, 
 	})
 
 	if len(vm.Name) == 0 {
-		return "", nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", vm.Id)
+		return "", nil, fmt.Errorf("unable to find a virtual machine corresponding to the id '%s'", id)
 	}
 
 	result := vm.toMap()
@@ -171,8 +171,12 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 		vm.BootFirmware = ""
 	}
 	vm.DiskStore = inputs["diskStore"].StringValue()
-	vm.ResourcePoolName = inputs["resourcePoolName"].StringValue()
-	if vm.ResourcePoolName == "ha-root-pool" {
+	if property, has := inputs["resourcePoolName"]; has {
+		vm.ResourcePoolName = property.StringValue()
+		if vm.ResourcePoolName == "ha-root-pool" {
+			vm.ResourcePoolName = "/"
+		}
+	} else {
 		vm.ResourcePoolName = "/"
 	}
 	if property, has := inputs["bootDiskSize"]; has {
@@ -185,8 +189,16 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 	} else {
 		vm.BootDiskType = "thin"
 	}
-	vm.MemSize = int(inputs["memSize"].NumberValue())
-	vm.NumVCpus = int(inputs["numVCpus"].NumberValue())
+	if property, has := inputs["memSize"]; has {
+		vm.MemSize = int(property.NumberValue())
+	} else {
+		vm.MemSize = 512
+	}
+	if property, has := inputs["numVCpus"]; has {
+		vm.NumVCpus = int(property.NumberValue())
+	} else {
+		vm.NumVCpus = 1
+	}
 	if property, has := inputs["virtualHWVer"]; has {
 		vm.VirtualHWVer = int(property.NumberValue())
 	} else {
@@ -198,15 +210,25 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 			for i, item := range items {
 				vm.NetworkInterfaces[i] = NetworkInterface{
 					VirtualNetwork: item.ObjectValue()["virtualNetwork"].StringValue(),
-					MacAddress:     item.ObjectValue()["macAddress"].StringValue(),
-					NicType:        item.ObjectValue()["nicType"].StringValue(),
+					MacAddress:     "",
+					NicType:        "",
+				}
+				if macAddress, hasProp := item.ObjectValue()["macAddress"]; hasProp {
+					vm.NetworkInterfaces[i].MacAddress = macAddress.StringValue()
+				}
+				if nicType, hasProp := item.ObjectValue()["nicType"]; hasProp {
+					vm.NetworkInterfaces[i].MacAddress = nicType.StringValue()
 				}
 			}
 		}
 	} else {
 		vm.NetworkInterfaces = make([]NetworkInterface, 0)
 	}
-	vm.Os = inputs["os"].StringValue()
+	if property, has := inputs["os"]; has {
+		vm.Os = property.StringValue()
+	} else {
+		vm.Os = "centos"
+	}
 	if property, has := inputs["power"]; has {
 		vm.Power = property.StringValue()
 	} else {
@@ -228,7 +250,10 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 			for i, item := range items {
 				vm.VirtualDisks[i] = VMVirtualDisk{
 					VirtualDiskId: item.ObjectValue()["virtualDiskId"].StringValue(),
-					Slot:          item.ObjectValue()["slot"].StringValue(),
+					Slot:          "",
+				}
+				if slot, hasSlot := item.ObjectValue()["slot"]; hasSlot {
+					vm.VirtualDisks[i].Slot = slot.StringValue()
 				}
 			}
 		}

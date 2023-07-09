@@ -6,8 +6,10 @@
 **/.idea
 **/.ionide
 .pulumi
-Pulumi.*.yaml
 yarn.lock
+package-lock.json
 ci-scripts
 /nuget/
 provider/**/schema-embed.json
+examples/.env
+!examples/.env-template

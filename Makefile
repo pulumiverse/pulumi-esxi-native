@@ -113,7 +113,3 @@ install_go_sdk::
 install_nodejs_sdk::
 	-yarn unlink --cwd $(WORKING_DIR)/sdk/nodejs/bin
 	yarn link --cwd $(WORKING_DIR)/sdk/nodejs/bin
-
-
-up_simple_test:: provider install_provider install_nodejs_sdk
-	pulumi up --cwd examples/simple/ --yes --skip-preview --verbose 9

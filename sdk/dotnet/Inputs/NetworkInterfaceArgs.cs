@@ -18,8 +18,8 @@ namespace Pulumi.EsxiNative.Inputs
         [Input("nicType")]
         public Input<string>? NicType { get; set; }
 
-        [Input("virtualNetwork")]
-        public Input<string>? VirtualNetwork { get; set; }
+        [Input("virtualNetwork", required: true)]
+        public Input<string> VirtualNetwork { get; set; } = null!;
 
         public NetworkInterfaceArgs()
         {

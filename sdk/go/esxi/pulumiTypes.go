@@ -113,7 +113,7 @@ func (o KeyValuePairArrayOutput) Index(i pulumi.IntInput) KeyValuePairOutput {
 type NetworkInterface struct {
 	MacAddress     *string `pulumi:"macAddress"`
 	NicType        *string `pulumi:"nicType"`
-	VirtualNetwork *string `pulumi:"virtualNetwork"`
+	VirtualNetwork string  `pulumi:"virtualNetwork"`
 }
 
 // NetworkInterfaceInput is an input type that accepts NetworkInterfaceArgs and NetworkInterfaceOutput values.
@@ -130,7 +130,7 @@ type NetworkInterfaceInput interface {
 type NetworkInterfaceArgs struct {
 	MacAddress     pulumi.StringPtrInput `pulumi:"macAddress"`
 	NicType        pulumi.StringPtrInput `pulumi:"nicType"`
-	VirtualNetwork pulumi.StringPtrInput `pulumi:"virtualNetwork"`
+	VirtualNetwork pulumi.StringInput    `pulumi:"virtualNetwork"`
 }
 
 func (NetworkInterfaceArgs) ElementType() reflect.Type {
@@ -192,8 +192,8 @@ func (o NetworkInterfaceOutput) NicType() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v NetworkInterface) *string { return v.NicType }).(pulumi.StringPtrOutput)
 }
 
-func (o NetworkInterfaceOutput) VirtualNetwork() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v NetworkInterface) *string { return v.VirtualNetwork }).(pulumi.StringPtrOutput)
+func (o NetworkInterfaceOutput) VirtualNetwork() pulumi.StringOutput {
+	return o.ApplyT(func(v NetworkInterface) string { return v.VirtualNetwork }).(pulumi.StringOutput)
 }
 
 type NetworkInterfaceArrayOutput struct{ *pulumi.OutputState }

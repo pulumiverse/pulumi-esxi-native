@@ -1,0 +1,3 @@
+name: 02_cloned_virtual_machine_complete_build_nodejs
+runtime: nodejs
+description: An esxi cloned virtual machine complete build example

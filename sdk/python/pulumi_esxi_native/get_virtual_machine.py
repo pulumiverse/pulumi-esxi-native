@@ -21,8 +21,8 @@ __all__ = [
 @pulumi.output_type
 class GetVirtualMachineResult:
     def __init__(__self__, boot_disk_size=None, boot_disk_type=None, boot_firmware=None, disk_store=None, id=None, info=None, ip_address=None, mem_size=None, name=None, network_interfaces=None, notes=None, num_v_cpus=None, os=None, power=None, resource_pool_name=None, shutdown_timeout=None, startup_timeout=None, virtual_disks=None, virtual_hw_ver=None):
-        if boot_disk_size and not isinstance(boot_disk_size, str):
-            raise TypeError("Expected argument 'boot_disk_size' to be a str")
+        if boot_disk_size and not isinstance(boot_disk_size, int):
+            raise TypeError("Expected argument 'boot_disk_size' to be a int")
         pulumi.set(__self__, "boot_disk_size", boot_disk_size)
         if boot_disk_type and not isinstance(boot_disk_type, str):
             raise TypeError("Expected argument 'boot_disk_type' to be a str")
@@ -42,8 +42,8 @@ class GetVirtualMachineResult:
         if ip_address and not isinstance(ip_address, str):
             raise TypeError("Expected argument 'ip_address' to be a str")
         pulumi.set(__self__, "ip_address", ip_address)
-        if mem_size and not isinstance(mem_size, str):
-            raise TypeError("Expected argument 'mem_size' to be a str")
+        if mem_size and not isinstance(mem_size, int):
+            raise TypeError("Expected argument 'mem_size' to be a int")
         pulumi.set(__self__, "mem_size", mem_size)
         if name and not isinstance(name, str):
             raise TypeError("Expected argument 'name' to be a str")
@@ -54,8 +54,8 @@ class GetVirtualMachineResult:
         if notes and not isinstance(notes, str):
             raise TypeError("Expected argument 'notes' to be a str")
         pulumi.set(__self__, "notes", notes)
-        if num_v_cpus and not isinstance(num_v_cpus, str):
-            raise TypeError("Expected argument 'num_v_cpus' to be a str")
+        if num_v_cpus and not isinstance(num_v_cpus, int):
+            raise TypeError("Expected argument 'num_v_cpus' to be a int")
         pulumi.set(__self__, "num_v_cpus", num_v_cpus)
         if os and not isinstance(os, str):
             raise TypeError("Expected argument 'os' to be a str")
@@ -75,13 +75,13 @@ class GetVirtualMachineResult:
         if virtual_disks and not isinstance(virtual_disks, list):
             raise TypeError("Expected argument 'virtual_disks' to be a list")
         pulumi.set(__self__, "virtual_disks", virtual_disks)
-        if virtual_hw_ver and not isinstance(virtual_hw_ver, str):
-            raise TypeError("Expected argument 'virtual_hw_ver' to be a str")
+        if virtual_hw_ver and not isinstance(virtual_hw_ver, int):
+            raise TypeError("Expected argument 'virtual_hw_ver' to be a int")
         pulumi.set(__self__, "virtual_hw_ver", virtual_hw_ver)
 
     @property
     @pulumi.getter(name="bootDiskSize")
-    def boot_disk_size(self) -> Optional[str]:
+    def boot_disk_size(self) -> Optional[int]:
         """
         VM boot disk size. Will expand boot disk to this size.
         """
@@ -137,7 +137,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="memSize")
-    def mem_size(self) -> Optional[str]:
+    def mem_size(self) -> Optional[int]:
         """
         VM memory size.
         """
@@ -169,7 +169,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="numVCpus")
-    def num_v_cpus(self) -> Optional[str]:
+    def num_v_cpus(self) -> Optional[int]:
         """
         VM number of virtual cpus.
         """
@@ -225,7 +225,7 @@ class GetVirtualMachineResult:
 
     @property
     @pulumi.getter(name="virtualHWVer")
-    def virtual_hw_ver(self) -> Optional[str]:
+    def virtual_hw_ver(self) -> Optional[int]:
         """
         VM Virtual HW version.
         """

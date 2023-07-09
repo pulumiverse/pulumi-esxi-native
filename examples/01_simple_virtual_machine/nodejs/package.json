@@ -1,0 +1,10 @@
+{
+    "name": "simple-virtual-machine-typescript",
+    "version": "0.0.1",
+    "devDependencies": {
+        "@types/node": "latest"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "latest"
+    }
+}
