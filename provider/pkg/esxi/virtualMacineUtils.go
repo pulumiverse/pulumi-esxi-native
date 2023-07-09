@@ -18,7 +18,6 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	// check if path already exists.
 	fullPATH := fmt.Sprintf("/vmfs/volumes/%s/%s", vm.DiskStore, vm.Name)
 	bootDiskVmdkPath := fmt.Sprintf("\"/vmfs/volumes/%s/%s/%s.vmdk\"", vm.DiskStore, vm.Name, vm.Name)
-
 	command := fmt.Sprintf("ls -d %s", bootDiskVmdkPath)
 	stdout, _ := esxi.Execute(command, "check if guest path already exists.")
 	if strings.Contains(stdout, "No such file or directory") != true {
@@ -39,35 +38,35 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	isoFileName := ""
 	// Build VM by default/black config
 	vmxContents :=
-		fmt.Sprintf("config.version = \\\"8\\\"\n") +
-			fmt.Sprintf("virtualHW.version = \\\"%d\\\"\n", vm.VirtualHWVer) +
-			fmt.Sprintf("displayName = \\\"%s\\\"\n", vm.Name) +
-			fmt.Sprintf("numvcpus = \\\"%d\\\"\n", vm.NumVCpus) +
-			fmt.Sprintf("memSize = \\\"%d\\\"\n", vm.MemSize) +
-			fmt.Sprintf("guestOS = \\\"%s\\\"\n", vm.Os) +
-			fmt.Sprintf("annotation = \\\"%s\\\"\n", vm.Notes) +
-			fmt.Sprintf("floppy0.present = \\\"FALSE\\\"\n") +
-			fmt.Sprintf("scsi0.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("scsi0.sharedBus = \\\"none\\\"\n") +
-			fmt.Sprintf("scsi0.virtualDev = \\\"lsilogic\\\"\n") +
-			fmt.Sprintf("disk.EnableUUID = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge0.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge4.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge4.virtualDev = \\\"pcieRootPort\\\"\n") +
-			fmt.Sprintf("pciBridge4.functions = \\\"8\\\"\n") +
-			fmt.Sprintf("pciBridge5.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge5.virtualDev = \\\"pcieRootPort\\\"\n") +
-			fmt.Sprintf("pciBridge5.functions = \\\"8\\\"\n") +
-			fmt.Sprintf("pciBridge6.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge6.virtualDev = \\\"pcieRootPort\\\"\n") +
-			fmt.Sprintf("pciBridge6.functions = \\\"8\\\"\n") +
-			fmt.Sprintf("pciBridge7.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("pciBridge7.virtualDev = \\\"pcieRootPort\\\"\n") +
-			fmt.Sprintf("pciBridge7.functions = \\\"8\\\"\n") +
-			fmt.Sprintf("scsi0:0.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("scsi0:0.fileName = \\\"%s.vmdk\\\"\n", vm.Name) +
-			fmt.Sprintf("scsi0:0.deviceType = \\\"scsi-hardDisk\\\"\n") +
-			fmt.Sprintf("nvram = \\\"%s.nvram\\\"\n", vm.Name)
+		fmt.Sprintf("config.version = \"8\"\n") +
+			fmt.Sprintf("virtualHW.version = \"%d\"\n", vm.VirtualHWVer) +
+			fmt.Sprintf("displayName = \"%s\"\n", vm.Name) +
+			fmt.Sprintf("numvcpus = \"%d\"\n", vm.NumVCpus) +
+			fmt.Sprintf("memSize = \"%d\"\n", vm.MemSize) +
+			fmt.Sprintf("guestOS = \"%s\"\n", vm.Os) +
+			fmt.Sprintf("annotation = \"%s\"\n", vm.Notes) +
+			fmt.Sprintf("floppy0.present = \"FALSE\"\n") +
+			fmt.Sprintf("scsi0.present = \"TRUE\"\n") +
+			fmt.Sprintf("scsi0.sharedBus = \"none\"\n") +
+			fmt.Sprintf("scsi0.virtualDev = \"lsilogic\"\n") +
+			fmt.Sprintf("disk.EnableUUID = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge0.present = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge4.present = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge4.virtualDev = \"pcieRootPort\"\n") +
+			fmt.Sprintf("pciBridge4.functions = \"8\"\n") +
+			fmt.Sprintf("pciBridge5.present = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge5.virtualDev = \"pcieRootPort\"\n") +
+			fmt.Sprintf("pciBridge5.functions = \"8\"\n") +
+			fmt.Sprintf("pciBridge6.present = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge6.virtualDev = \"pcieRootPort\"\n") +
+			fmt.Sprintf("pciBridge6.functions = \"8\"\n") +
+			fmt.Sprintf("pciBridge7.present = \"TRUE\"\n") +
+			fmt.Sprintf("pciBridge7.virtualDev = \"pcieRootPort\"\n") +
+			fmt.Sprintf("pciBridge7.functions = \"8\"\n") +
+			fmt.Sprintf("scsi0:0.present = \"TRUE\"\n") +
+			fmt.Sprintf("scsi0:0.fileName = \"%s.vmdk\"\n", vm.Name) +
+			fmt.Sprintf("scsi0:0.deviceType = \"scsi-hardDisk\"\n") +
+			fmt.Sprintf("nvram = \"%s.nvram\"\n", vm.Name)
 	if vm.BootFirmware == "efi" {
 		vmxContents = vmxContents +
 			fmt.Sprintf("firmware = \\\"efi\\\"\n")
@@ -78,16 +77,16 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	// TODO: to be checked how we can set the ISO file
 	if hasISO {
 		vmxContents = vmxContents +
-			fmt.Sprintf("ide1:0.present = \\\"TRUE\\\"\n") +
+			fmt.Sprintf("ide1:0.present = \"TRUE\"\n") +
 			fmt.Sprintf("ide1:0.fileName = \\\"emptyBackingString\\\"\n") +
 			fmt.Sprintf("ide1:0.deviceType = \\\"atapi-cdrom\\\"\n") +
-			fmt.Sprintf("ide1:0.startConnected = \\\"FALSE\\\"\n") +
-			fmt.Sprintf("ide1:0.clientDevice = \\\"TRUE\\\"\n")
+			fmt.Sprintf("ide1:0.startConnected = \"FALSE\"\n") +
+			fmt.Sprintf("ide1:0.clientDevice = \"TRUE\"\n")
 	} else {
 		vmxContents = vmxContents +
-			fmt.Sprintf("ide1:0.present = \\\"TRUE\\\"\n") +
-			fmt.Sprintf("ide1:0.fileName = \\\"%s\\\"\n", isoFileName) +
-			fmt.Sprintf("ide1:0.deviceType = \\\"cdrom-raw\\\"\n")
+			fmt.Sprintf("ide1:0.present = \"TRUE\"\n") +
+			fmt.Sprintf("ide1:0.fileName = \"%s\"\n", isoFileName) +
+			fmt.Sprintf("ide1:0.deviceType = \"cdrom-raw\"\n")
 	}
 
 	// Write vmx file to esxi host

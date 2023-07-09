@@ -171,6 +171,10 @@ func (esxi *Host) growVirtualDisk(id string, size int) (bool, error) {
 
 	current, err := esxi.getVirtualDisk(id)
 
+	if current.Size == size {
+		return true, nil
+	}
+
 	if current.Size > size {
 		return false, fmt.Errorf("not able to shrink virtual disk: %s", id)
 	}
@@ -207,20 +211,20 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 		diskDir = parts[2]
 	} else {
 		diskDir = strings.TrimLeft(path, fmt.Sprintf("%s/", diskStore))
-		diskDir = strings.TrimLeft(diskDir, fmt.Sprintf("/%s", diskName))
+		diskDir = strings.TrimRight(diskDir, fmt.Sprintf("/%s", diskName))
 	}
 
 	// Test if virtual disk exists
 	command := fmt.Sprintf("test -s \"%s\"", id)
-	_, err := esxi.Execute(command, "test if virtual disk exists")
+	stdout, err := esxi.Execute(command, "test if virtual disk exists")
 	if err != nil {
-		return VirtualDisk{}, err
+		return VirtualDisk{}, fmt.Errorf("virtual disk %s doesn't exist, err: %s %s", id, stdout, err)
 	}
 
 	//  Get virtual disk flat size
 	s = strings.Split(diskName, ".")
 	if len(s) < 2 {
-		return VirtualDisk{}, err
+		return VirtualDisk{}, fmt.Errorf("virtual disk name %s is not valid", diskName)
 	}
 	diskNameFlat := fmt.Sprintf("%s-flat.%s", s[0], s[1])
 
@@ -228,7 +232,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 		diskStore, diskDir, diskNameFlat)
 	flatSize, err = esxi.Execute(command, "Get size")
 	if err != nil {
-		return VirtualDisk{}, err
+		return VirtualDisk{}, fmt.Errorf("failed to read virtual disk %s size, err: %s %s", id, flatSize, err)
 	}
 	flatSizeI64, _ = strconv.ParseInt(flatSize, 10, 64)
 	diskSize = int(flatSizeI64 / 1024 / 1024 / 1024)
@@ -255,7 +259,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 
 	return VirtualDisk{
 		diskDir, diskStore, diskType, diskName, diskName, diskSize,
-	}, err
+	}, nil
 }
 
 func (vd *VirtualDisk) toMap(keepId ...bool) map[string]interface{} {
