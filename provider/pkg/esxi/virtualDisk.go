@@ -181,9 +181,9 @@ func (esxi *Host) growVirtualDisk(id string, size int) (bool, error) {
 
 	if current.Size < size {
 		command := fmt.Sprintf("/bin/vmkfstools -X %dG \"%s\"", size, id)
-		_, err = esxi.Execute(command, "grow disk")
+		stdout, err := esxi.Execute(command, "grow disk")
 		if err != nil {
-			return didGrowDisk, err
+			return false, fmt.Errorf("%s err: %s", stdout, err)
 		}
 		didGrowDisk = true
 	}
@@ -208,7 +208,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	diskStore = parts[0]
 	diskName = parts[len(parts)-1]
 	if len(parts) == 3 {
-		diskDir = parts[2]
+		diskDir = parts[1]
 	} else {
 		diskDir = strings.TrimLeft(path, fmt.Sprintf("%s/", diskStore))
 		diskDir = strings.TrimRight(diskDir, fmt.Sprintf("/%s", diskName))
@@ -258,7 +258,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	}
 
 	return VirtualDisk{
-		diskDir, diskStore, diskType, diskName, diskName, diskSize,
+		diskDir, diskStore, diskType, id, diskName, diskSize,
 	}, nil
 }
 

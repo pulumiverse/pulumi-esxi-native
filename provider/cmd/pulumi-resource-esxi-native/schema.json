@@ -517,12 +517,12 @@
                     "description": "Source vm path on esxi host to clone.",
                     "willReplaceOnChanges": true
                 },
-                "ovfHostPathSource": {
+                "ovfSource": {
                     "type": "string",
-                    "description": "Path on esxi host of ovf files.",
+                    "description": "Path or URL on esxi host of ovf files.",
                     "willReplaceOnChanges": true
                 },
-                "ovfSourceLocalPath": {
+                "ovfLocalSource": {
                     "type": "string",
                     "description": "Local path to source ovf files.",
                     "willReplaceOnChanges": true

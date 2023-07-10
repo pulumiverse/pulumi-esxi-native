@@ -133,10 +133,10 @@ export class VirtualMachine extends pulumi.CustomResource {
             resourceInputs["notes"] = args ? args.notes : undefined;
             resourceInputs["numVCpus"] = (args ? args.numVCpus : undefined) ?? 1;
             resourceInputs["os"] = (args ? args.os : undefined) ?? "centos";
-            resourceInputs["ovfHostPathSource"] = args ? args.ovfHostPathSource : undefined;
+            resourceInputs["ovfLocalSource"] = args ? args.ovfLocalSource : undefined;
             resourceInputs["ovfProperties"] = args ? args.ovfProperties : undefined;
             resourceInputs["ovfPropertiesTimer"] = (args ? args.ovfPropertiesTimer : undefined) ?? 6000;
-            resourceInputs["ovfSourceLocalPath"] = args ? args.ovfSourceLocalPath : undefined;
+            resourceInputs["ovfSource"] = args ? args.ovfSource : undefined;
             resourceInputs["power"] = args ? args.power : undefined;
             resourceInputs["resourcePoolName"] = (args ? args.resourcePoolName : undefined) ?? "/";
             resourceInputs["shutdownTimeout"] = (args ? args.shutdownTimeout : undefined) ?? 600;
@@ -222,9 +222,9 @@ export interface VirtualMachineArgs {
      */
     os?: pulumi.Input<string>;
     /**
-     * Path on esxi host of ovf files.
+     * Local path to source ovf files.
      */
-    ovfHostPathSource?: pulumi.Input<string>;
+    ovfLocalSource?: pulumi.Input<string>;
     /**
      * VM OVF properties.
      */
@@ -234,9 +234,9 @@ export interface VirtualMachineArgs {
      */
     ovfPropertiesTimer?: pulumi.Input<number>;
     /**
-     * Local path to source ovf files.
+     * Path or URL on esxi host of ovf files.
      */
-    ovfSourceLocalPath?: pulumi.Input<string>;
+    ovfSource?: pulumi.Input<string>;
     /**
      * VM power state.
      */

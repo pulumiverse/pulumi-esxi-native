@@ -227,7 +227,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			ovfToolPath, extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
 		re := regexp.MustCompile(`vi://.*?@`)
 		logging.V(9).Infof("ovf_cmd: %s\n", re.ReplaceAllString(ovfCmd, "vi://XXXX:YYYY@"))
-		command := fmt.Sprintf("/bin/bash -c %s", ovfCmd)
+		command := fmt.Sprintf("/bin/sh -c %s", ovfCmd)
 		stdout, err := esxi.Execute(command, "execute ovftool script")
 		logging.V(9).Infof("ovftool output: %q\n", stdout)
 		if err != nil {

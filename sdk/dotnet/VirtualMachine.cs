@@ -250,10 +250,10 @@ namespace Pulumi.EsxiNative
         public Input<string>? Os { get; set; }
 
         /// <summary>
-        /// Path on esxi host of ovf files.
+        /// Local path to source ovf files.
         /// </summary>
-        [Input("ovfHostPathSource")]
-        public Input<string>? OvfHostPathSource { get; set; }
+        [Input("ovfLocalSource")]
+        public Input<string>? OvfLocalSource { get; set; }
 
         [Input("ovfProperties")]
         private InputList<Inputs.KeyValuePairArgs>? _ovfProperties;
@@ -274,10 +274,10 @@ namespace Pulumi.EsxiNative
         public Input<int>? OvfPropertiesTimer { get; set; }
 
         /// <summary>
-        /// Local path to source ovf files.
+        /// Path or URL on esxi host of ovf files.
         /// </summary>
-        [Input("ovfSourceLocalPath")]
-        public Input<string>? OvfSourceLocalPath { get; set; }
+        [Input("ovfSource")]
+        public Input<string>? OvfSource { get; set; }
 
         /// <summary>
         /// VM power state.

@@ -151,14 +151,14 @@ type virtualMachineArgs struct {
 	NumVCpus *int `pulumi:"numVCpus"`
 	// VM OS type.
 	Os *string `pulumi:"os"`
-	// Path on esxi host of ovf files.
-	OvfHostPathSource *string `pulumi:"ovfHostPathSource"`
+	// Local path to source ovf files.
+	OvfLocalSource *string `pulumi:"ovfLocalSource"`
 	// VM OVF properties.
 	OvfProperties []KeyValuePair `pulumi:"ovfProperties"`
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer *int `pulumi:"ovfPropertiesTimer"`
-	// Local path to source ovf files.
-	OvfSourceLocalPath *string `pulumi:"ovfSourceLocalPath"`
+	// Path or URL on esxi host of ovf files.
+	OvfSource *string `pulumi:"ovfSource"`
 	// VM power state.
 	Power *string `pulumi:"power"`
 	// Resource pool name to place vm.
@@ -199,14 +199,14 @@ type VirtualMachineArgs struct {
 	NumVCpus pulumi.IntPtrInput
 	// VM OS type.
 	Os pulumi.StringPtrInput
-	// Path on esxi host of ovf files.
-	OvfHostPathSource pulumi.StringPtrInput
+	// Local path to source ovf files.
+	OvfLocalSource pulumi.StringPtrInput
 	// VM OVF properties.
 	OvfProperties KeyValuePairArrayInput
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer pulumi.IntPtrInput
-	// Local path to source ovf files.
-	OvfSourceLocalPath pulumi.StringPtrInput
+	// Path or URL on esxi host of ovf files.
+	OvfSource pulumi.StringPtrInput
 	// VM power state.
 	Power pulumi.StringPtrInput
 	// Resource pool name to place vm.
