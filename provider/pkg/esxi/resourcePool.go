@@ -44,7 +44,7 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 		shares, _ := strconv.Atoi(rp.CpuShares)
 		command = fmt.Sprintf("%s --cpu-shares=%d", command, shares)
 	}
-	command = fmt.Sprintf("--mem-min=%d", rp.MemMin)
+	command = fmt.Sprintf("%s --mem-min=%d", command, rp.MemMin)
 	command = fmt.Sprintf("%s --mem-min-expandable=%s", command, rp.MemMinExpandable)
 	if rp.MemMax > 0 {
 		command = fmt.Sprintf("%s --mem-max=%d", command, rp.MemMax)
@@ -61,7 +61,7 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 		return "", nil, fmt.Errorf("failed to get parent pool id: %s", err)
 	}
 
-	command = fmt.Sprintf("%s %s %s", command, parentPoolId, rp.Id)
+	command = fmt.Sprintf("%s %s %s", command, parentPoolId, rp.Name)
 	command = fmt.Sprintf("vim-cmd hostsvc/rsrc/create %s", command)
 
 	stdout, err = esxi.Execute(command, "create resource pool")
@@ -114,7 +114,7 @@ func ResourcePoolUpdate(id string, inputs resource.PropertyMap, esxi *Host) (str
 		command = fmt.Sprintf("%s --cpu-shares=%d", command, shares)
 	}
 	if rp.MemMin > 0 {
-		command = fmt.Sprintf("--mem-min=%d", rp.MemMin)
+		command = fmt.Sprintf("%s --mem-min=%d", command, rp.MemMin)
 	}
 	command = fmt.Sprintf("%s --mem-min-expandable=%s", command, rp.MemMinExpandable)
 	if rp.MemMax > 0 {
@@ -180,7 +180,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 	if property, has := inputs["cpuMin"]; has {
 		rp.CpuMin = int(property.NumberValue())
 	} else {
-		rp.CpuMin = 0
+		rp.CpuMin = 100
 	}
 	if property, has := inputs["cpuMinExpandable"]; has {
 		rp.CpuMinExpandable = property.StringValue()
@@ -200,7 +200,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 	if property, has := inputs["memMin"]; has {
 		rp.MemMin = int(property.NumberValue())
 	} else {
-		rp.MemMin = 0
+		rp.MemMin = 200
 	}
 	if property, has := inputs["memMinExpandable"]; has {
 		rp.MemMinExpandable = property.StringValue()
@@ -272,10 +272,8 @@ func (esxi *Host) getResourcePoolName(id string) (string, error) {
 	result := re.Split(stdout, -1)
 
 	for i := range result {
-
 		resourcePoolName = ""
 		if result[i] != "path" && result[i] != "host" && result[i] != "user" && result[i] != "" {
-
 			r := strings.NewReplacer("name>", "", "</name", "")
 			command = fmt.Sprintf("grep -B1 '<objID>%s</objID>' /etc/vmware/hostd/pools.xml | grep -o name.*name", result[i])
 			stdout, _ = esxi.Execute(command, "get resource pool name")

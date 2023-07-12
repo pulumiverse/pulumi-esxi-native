@@ -115,3 +115,9 @@ install_nodejs_sdk::
 	yarn link --cwd $(WORKING_DIR)/sdk/nodejs/bin
 
 prepare_test:: provider install_provider install_nodejs_sdk
+
+test_02:: prepare_test
+	export PULUMI_CONFIG_PASSPHRASE=""
+	pulumi login --local
+	pulumi up --yes --diff --stack make --cwd examples/02_cloned_virtual_machine_complete_build/nodejs
+	pulumi destroy --stack make --cwd examples/02_cloned_virtual_machine_complete_build/nodejs

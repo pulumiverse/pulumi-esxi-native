@@ -223,16 +223,14 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			return VirtualMachine{}, err
 		}
 
-		ovfCmd := fmt.Sprintf("%s --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s' %s '%s' '%s'",
+		ovfCmd := fmt.Sprintf("%s --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s'%s '%s' '%s'",
 			ovfToolPath, extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
 		re := regexp.MustCompile(`vi://.*?@`)
-		logging.V(9).Infof("ovf_cmd: %s\n", re.ReplaceAllString(ovfCmd, "vi://XXXX:YYYY@"))
-		command := fmt.Sprintf("/bin/sh -c %s", ovfCmd)
+		command := fmt.Sprintf("sh %s", ovfCmd)
 		stdout, err := esxi.Execute(command, "execute ovftool script")
-		logging.V(9).Infof("ovftool output: %q\n", stdout)
 		if err != nil {
-			logging.V(9).Infof("Failed, There was an ovftool Error: %s\n%s\n", stdout, err)
-			return VirtualMachine{}, fmt.Errorf("There was an ovftool Error: %s\n%s\n", stdout, err)
+			return VirtualMachine{}, fmt.Errorf("there was an ovftool error: cmd<%s>; stdout<%s>; err<%s>",
+				re.ReplaceAllString(command, "vi://****:******@"), stdout, err)
 		}
 	}
 
