@@ -23,32 +23,29 @@
             },
             "sshPort": {
                 "type": "string",
-                "description": "ESXi Host SSH Port config",
-                "default": "22"
+                "description": "ESXi Host SSH Port config"
             },
             "sslPort": {
                 "type": "string",
-                "description": "ESXi Host SSL Port config",
-                "default": "443"
+                "description": "ESXi Host SSL Port config"
             },
             "username": {
                 "type": "string",
-                "description": "ESXi Username config",
-                "default": "root"
+                "description": "ESXi Username config"
             },
             "password": {
                 "type": "string",
                 "description": "ESXi Password config"
             },
-            "ovfToolLocation": {
+            "metadataStore": {
                 "type": "string",
-                "description": "ESXi Datastore Name config were ovftool will be configured"
+                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         },
         "required": [
             "host",
             "password",
-            "ovfToolDatastoreName"
+            "metadataStore"
         ]
     },
     "provider": {
@@ -56,7 +53,7 @@
         "required": [
             "host",
             "password",
-            "ovfToolLocation"
+            "metadataStore"
         ],
         "properties": {
             "host": {
@@ -80,15 +77,15 @@
                 "type": "string",
                 "description": "ESXi Password config"
             },
-            "ovfToolLocation": {
+            "metadataStore": {
                 "type": "string",
-                "description": "ESXi Datastore Name config were ovftool will be configured"
+                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         },
         "requiredInputs": [
             "host",
             "password",
-            "ovfToolLocation"
+            "metadataStore"
         ],
         "inputProperties": {
             "host": {
@@ -114,9 +111,9 @@
                 "type": "string",
                 "description": "ESXi Password config"
             },
-            "ovfToolLocation": {
+            "metadataStore": {
                 "type": "string",
-                "description": "ESXi Datastore Name config were ovftool will be configured"
+                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         }
     },

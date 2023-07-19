@@ -148,9 +148,15 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 	pass, passErr := getConfig(vars, "password", "ESXI_PASSWORD")
 	sshPort, sshPortErr := getConfig(vars, "sshPort", "ESXI_SSH_PORT")
 	sslPort, sslPortErr := getConfig(vars, "sslPort", "ESXI_SSL_PORT")
-	ovfLoc, ovfLocErr := getConfig(vars, "ovfToolLocation", "ESXI_OVFTOOL_LOCATION")
+	ovfLoc, ovfLocErr := getConfig(vars, "metadataStore", "ESXI_METADATA_STORE")
+	if len(sshPort) > 0 {
+		sshPort = "22"
+	}
+	if len(sslPort) > 0 {
+		sslPort = "443"
+	}
 
-	if len(host) > 0 && len(user) > 0 && len(pass) > 0 && len(sslPort) > 0 && len(sshPort) > 0 && len(ovfLoc) > 0 {
+	if len(host) > 0 && len(user) > 0 && len(pass) > 0 && len(ovfLoc) > 0 {
 		// If all required values are not present/valid, the client will return an appropriate error.
 		esxiHost, err := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
 		if err != nil {

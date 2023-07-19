@@ -147,7 +147,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			return vm, err
 		}
 	} else {
-		// Build VM by ovftool
+		// Build VM with packer
 		// Check if source file exist.
 		if strings.HasPrefix(vm.SourcePath, "http://") || strings.HasPrefix(vm.SourcePath, "https://") {
 			resp, err := http.Get(vm.SourcePath)
@@ -190,7 +190,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			}
 		}
 
-		// Set params for ovftool
+		// Set params for packer
 		if vm.BootDiskType == "zeroedthick" {
 			vm.BootDiskType = "thick"
 		}
@@ -227,9 +227,9 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			ovfToolPath, extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
 		re := regexp.MustCompile(`vi://.*?@`)
 		command := fmt.Sprintf("sh %s", ovfCmd)
-		stdout, err := esxi.Execute(command, "execute ovftool script")
+		stdout, err := esxi.Execute(command, "execute packer script")
 		if err != nil {
-			return VirtualMachine{}, fmt.Errorf("there was an ovftool error: cmd<%s>; stdout<%s>; err<%s>",
+			return VirtualMachine{}, fmt.Errorf("there was an packer error: cmd<%s>; stdout<%s>; err<%s>",
 				re.ReplaceAllString(command, "vi://****:******@"), stdout, err)
 		}
 	}
@@ -240,9 +240,9 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 		return VirtualMachine{}, fmt.Errorf("failed to get vm id: %s", err)
 	}
 
-	// ovf_properties require ovftool to power on the VM to inject the properties.
+	// ovfProperties require packer to power on the VM to inject the properties.
 	// Unfortunately, there is no way to know when cloud-init is finished?!?!?  Just need
-	// to wait for ovf_properties_timer seconds, then shutdown/power-off to continue...
+	// to wait for ovfPropertiesTimer seconds, then shutdown/power-off to continue...
 	if hasOvfProperties == true {
 		currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
 		if currentPowerState != "on" {
