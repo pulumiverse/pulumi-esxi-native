@@ -185,7 +185,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 
 	//  Add uplink if needed
 	for i := range vs.Uplinks {
-		if Contains(foundUplinks, vs.Uplinks[i].Name) == false {
+		if !Contains(foundUplinks, vs.Uplinks[i].Name) {
 			command = fmt.Sprintf("esxcli network vswitch standard uplink add -u \"%s\" -v \"%s\"",
 				vs.Uplinks[i].Name, vs.Name)
 
@@ -202,7 +202,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 	//  Remove uplink if needed
 	selector := func(upLink Uplink) string { return upLink.Name }
 	for _, item := range foundUplinks {
-		if ContainsValue(vs.Uplinks, selector, item) == false {
+		if !ContainsValue(vs.Uplinks, selector, item) {
 			log.Printf("[vswitchUpdate] delete uplink (%s)\n", item)
 			command = fmt.Sprintf("esxcli network vswitch standard uplink remove -u \"%s\" -v \"%s\"",
 				item, vs.Name)

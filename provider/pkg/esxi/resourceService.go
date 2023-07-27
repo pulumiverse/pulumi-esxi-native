@@ -57,8 +57,7 @@ func (receiver *ResourceService) Validate(token string, inputs resource.Property
 	params := []reflect.Value{reflect.ValueOf(token), reflect.ValueOf(inputs)}
 
 	functionHandler := reflect.ValueOf(handler)
-	var functionResult []reflect.Value
-	functionResult = functionHandler.Call(params)
+	functionResult := functionHandler.Call(params)
 	result := functionResult[0].Interface().([]*pulumirpc.CheckFailure)
 	return result, nil
 }
@@ -74,8 +73,7 @@ func (receiver *ResourceService) Invoke(token string, inputs resource.PropertyMa
 	}
 
 	functionHandler := reflect.ValueOf(handler)
-	var functionResult []reflect.Value
-	functionResult = functionHandler.Call(params)
+	functionResult := functionHandler.Call(params)
 	result := functionResult[0].Interface().(resource.PropertyMap)
 	err := functionResult[1].Interface()
 	if err != nil {
@@ -111,8 +109,7 @@ func (receiver *ResourceService) Delete(token string, id string, esxi *Host) err
 	}
 
 	functionHandler := reflect.ValueOf(handler)
-	var functionResult []reflect.Value
-	functionResult = functionHandler.Call(params)
+	functionResult := functionHandler.Call(params)
 	err := functionResult[0].Interface()
 	if err != nil {
 		return err.(error)

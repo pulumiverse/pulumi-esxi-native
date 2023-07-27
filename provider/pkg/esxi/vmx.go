@@ -50,18 +50,18 @@ func EncodeVMX(contents map[string]string) string {
 
 // WriteVMX takes a path to a VMX file and contents in the form of a
 // map and writes it out.
-func WriteVMX(path string, data map[string]string) (err error) {
+func WriteVMX(path string, data map[string]string) error {
 	f, err := os.Create(path)
 	if err != nil {
-		return
+		return err
 	}
 	defer f.Close()
 
 	var buf bytes.Buffer
 	buf.WriteString(EncodeVMX(data))
 	if _, err = io.Copy(f, &buf); err != nil {
-		return
+		return err
 	}
 
-	return
+	return nil
 }

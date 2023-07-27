@@ -85,7 +85,7 @@ func VirtualDiskDelete(id string, esxi *Host) error {
 	command := fmt.Sprintf("/bin/vmkfstools -U \"%s\"", id)
 	stdout, err := esxi.Execute(command, "destroy virtual disk")
 	if err != nil {
-		if strings.Contains(err.Error(), "Process exited with status 255") == true {
+		if strings.Contains(err.Error(), "Process exited with status 255") {
 			logging.V(9).Infof("already deleted:%s", id)
 		} else {
 			logging.V(9).Infof("failed destroy virtual disk id: %s", stdout)
@@ -145,22 +145,22 @@ func (esxi *Host) validateDiskStore(diskStore string) error {
 	var command, stdout string
 	var err error
 
-	command = fmt.Sprintf("esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'")
+	command = "esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'"
 	stdout, err = esxi.Execute(command, "get list of disk stores")
 	if err != nil {
 		return fmt.Errorf("unable to get list of disk stores: %s", err)
 	}
 
-	if strings.Contains(stdout, diskStore) == false {
-		command = fmt.Sprintf("esxcli storage filesystem rescan")
+	if !strings.Contains(stdout, diskStore) {
+		command = "esxcli storage filesystem rescan"
 		_, _ = esxi.Execute(command, "refresh filesystems")
 
-		command = fmt.Sprintf("esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'")
+		command = "esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'"
 		stdout, err = esxi.Execute(command, "get list of disk stores")
 		if err != nil {
 			return fmt.Errorf("unable to get list of disk stores: %s", err)
 		}
-		if strings.Contains(stdout, diskStore) == false {
+		if !strings.Contains(stdout, diskStore) {
 			return fmt.Errorf("disk store %s does not exist; available disk stores: %s", diskStore, stdout)
 		}
 	}

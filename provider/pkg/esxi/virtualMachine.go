@@ -410,7 +410,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 				if (results[1] == "0") && (results[2] == "0") {
 					// Skip boot disk
 				} else {
-					if strings.Contains(results[3], "fileName") == true {
+					if strings.Contains(results[3], "fileName") {
 						logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[4])
 
 						vm.VirtualDisks = append(vm.VirtualDisks, VMVirtualDisk{
@@ -445,7 +445,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			//	  }
 
 			case "address":
-				if isGeneratedMAC[index] == false {
+				if !isGeneratedMAC[index] {
 					networkInterfaces[index].MacAddress = results[3]
 					logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
 				}

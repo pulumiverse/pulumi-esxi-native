@@ -79,18 +79,14 @@ func PortGroupRead(id string, inputs resource.PropertyMap, esxi *Host) (string, 
 	return esxi.readPortGroup(pg)
 }
 
-func extractId(id string) (name, vSwitch string, err error) {
+func extractId(id string) (string, string, error) {
 	if idParts := strings.Split(id, "/"); len(id) > 0 && len(idParts) == 2 {
-		name = idParts[1]
-		vSwitch = idParts[0]
-		err = nil
+		name := idParts[1]
+		vSwitch := idParts[0]
+		return name, vSwitch, nil
 	} else {
-		name = ""
-		vSwitch = ""
-		err = fmt.Errorf("port group id is invalid %s", id)
+		return "", "", fmt.Errorf("port group id is invalid %s", id)
 	}
-
-	return name, vSwitch, err
 }
 
 func parsePortGroup(id string, inputs resource.PropertyMap) (PortGroup, error) {
@@ -136,7 +132,7 @@ func parsePortGroup(id string, inputs resource.PropertyMap) (PortGroup, error) {
 }
 
 func (esxi *Host) updatePortGroup(pg PortGroup) error {
-	command := fmt.Sprintf("esxcli network vswitch standard portgroup set -v \"%s\" -p \"%s\"",
+	command := fmt.Sprintf("esxcli network vswitch standard portgroup set -v \"%d\" -p \"%s\"",
 		pg.Vlan, pg.Name)
 
 	stdout, err := esxi.Execute(command, "port group set vlan")

@@ -9,22 +9,25 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
+const (
+	invalidFormat    = "The property '%s' is invalid! The value %s"
+	propertyRequired = "The property '%s' is required!"
+)
+
 func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	}
 
 	if _, has := inputs["vSwitch"]; !has {
-		failures["vSwitch"] = "The property 'vSwitch' is required!"
+		failures["vSwitch"] = fmt.Sprintf(propertyRequired, "vSwitch")
 	}
 
 	if _, has := inputs["vlan"]; !has {
-		failures["vlan"] = "The property 'vlan' is required!"
+		failures["vlan"] = fmt.Sprintf(propertyRequired, "vlan")
 	}
-
-	invalidFormat := "The property '%s' is invalid! The value %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)
@@ -46,14 +49,12 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 	failures := make(map[string]string)
 
 	if property, has := inputs["name"]; !has {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	} else if value := property.StringValue(); has && value == "/" {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	} else if has && value[0] == '/' {
 		failures["name"] = "The property 'name' cannot start with '/'!"
 	}
-
-	invalidFormat := "The property '%s' is invalid! The value %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)
@@ -80,27 +81,24 @@ func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*p
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	}
 
 	if _, has := inputs["diskStore"]; !has {
-		failures["diskStore"] = "The property 'diskStore' is required!"
+		failures["diskStore"] = fmt.Sprintf(propertyRequired, "diskStore")
 	}
 
 	if _, has := inputs["directory"]; !has {
-		failures["directory"] = "The property 'directory' is required!"
+		failures["directory"] = fmt.Sprintf(propertyRequired, "directory")
 	}
 
 	if _, has := inputs["diskType"]; !has {
-		failures["diskType"] = "The property 'diskType' is required!"
+		failures["diskType"] = fmt.Sprintf(propertyRequired, "diskType")
 	}
-
-	invalidFormat := "The property '%s' is invalid! The value %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)
-		switch key {
-		case "diskType":
+		if key == "diskType" {
 			value := property.StringValue()
 			if _, err := strconv.Atoi(value); !contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
 				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of the thin, zeroedthick or eagerzeroedthick (%s)", err))
@@ -113,7 +111,6 @@ func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*p
 
 func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := map[string]string{}
-	invalidFormat := "The property '%s' is invalid! The value should be %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)
@@ -124,24 +121,24 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of the thin, zeroedthick or eagerzeroedthick (%s)", err))
 			}
 		case "bootDiskSize":
-			if property.NumberValue() < 1 && property.NumberValue() > 62000 {
-				failures[key] = fmt.Sprintf(invalidFormat, key, "in beetween 1 and 62000")
+			if property.NumberValue() < 1 || property.NumberValue() > 62000 {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "should be in beetween 1 and 62000")
 			}
 		case "shutdownTimeout":
-			if property.NumberValue() < 0 && property.NumberValue() > 600 {
-				failures[key] = fmt.Sprintf(invalidFormat, key, "in beetween 0 and 600")
+			if property.NumberValue() < 0 || property.NumberValue() > 600 {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "should be in beetween 0 and 600")
 			}
 		case "startupTimeout":
-			if property.NumberValue() < 0 && property.NumberValue() > 600 {
-				failures[key] = fmt.Sprintf(invalidFormat, key, "in beetween 0 and 600")
+			if property.NumberValue() < 0 || property.NumberValue() > 600 {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "should be in beetween 0 and 600")
 			}
 		case "ovfPropertiesTimer":
-			if property.NumberValue() < 0 && property.NumberValue() > 6000 {
-				failures[key] = fmt.Sprintf(invalidFormat, key, "in beetween 0 and 6000")
+			if property.NumberValue() < 0 || property.NumberValue() > 6000 {
+				failures[key] = fmt.Sprintf(invalidFormat, key, "should be in beetween 0 and 6000")
 			}
 		case "os":
 			if !validateVirtualMachineOsType(property.StringValue()) {
-				failures[key] = fmt.Sprintf(invalidFormat, key, "from here: https://github.com/josenk/vagrant-vmware-esxi/wiki/VMware-ESXi-6.5-guestOS-types")
+				failures[key] = fmt.Sprintf(invalidFormat, key, "should be from here: https://github.com/josenk/vagrant-vmware-esxi/wiki/VMware-ESXi-6.5-guestOS-types")
 			}
 		case "networkInterfaces":
 			items := property.ArrayValue()
@@ -161,14 +158,13 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 			items := property.ArrayValue()
 			if len(items) > 0 {
 				for i, ovfProperty := range items {
-					itemErrorFormat := "The property '%s' is required!"
 					if _, has := ovfProperty.ObjectValue()["key"]; !has {
 						itemKey := fmt.Sprintf("%s[%d].key", key, i)
-						failures[itemKey] = fmt.Sprintf(itemErrorFormat, itemKey)
+						failures[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
 					}
 					if _, has := ovfProperty.ObjectValue()["value"]; !has {
 						itemKey := fmt.Sprintf("%s[%d].value", key, i)
-						failures[itemKey] = fmt.Sprintf(itemErrorFormat, itemKey)
+						failures[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
 					}
 				}
 			}
@@ -202,11 +198,11 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 	}
 
 	if _, has := inputs["name"]; !has {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	}
 
 	if _, has := inputs["diskStore"]; !has {
-		failures["diskStore"] = "The property 'diskStore' is required!"
+		failures["diskStore"] = fmt.Sprintf(propertyRequired, "diskStore")
 	}
 
 	return validateResource(resourceToken, failures)
@@ -216,10 +212,8 @@ func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []
 	failures := make(map[string]string)
 
 	if _, has := inputs["name"]; !has {
-		failures["name"] = "The property 'name' is required!"
+		failures["name"] = fmt.Sprintf(propertyRequired, "name")
 	}
-
-	invalidFormat := "The property '%s' is invalid! The value %s"
 
 	for propertyName, property := range inputs {
 		key := string(propertyName)
@@ -227,7 +221,7 @@ func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []
 		case "linkDiscoveryMode":
 			value := property.StringValue()
 			if !contains([]string{"down", "listen", "advertise", "both"}, value) {
-				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of down, listen, advertise or both"))
+				failures[key] = fmt.Sprintf(invalidFormat, key, "must be one of down, listen, advertise or both")
 			}
 		case "upLinks":
 			upLinks := property.ArrayValue()

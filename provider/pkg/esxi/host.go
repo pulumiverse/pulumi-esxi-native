@@ -11,6 +11,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const (
+	failedToConnect = "failed to connect to esxi host"
+)
+
 type Host struct {
 	ClientConfig *ssh.ClientConfig
 	Connection   *ConnectionInfo
@@ -58,7 +62,7 @@ func (esxi *Host) validateCreds() error {
 	var remoteCmd string
 	var err error
 
-	remoteCmd = fmt.Sprintf("vmware --version")
+	remoteCmd = "vmware --version"
 	_, err = esxi.Execute(remoteCmd, "Connectivity test, get vmware version")
 	if err != nil {
 		return fmt.Errorf("failed to connect to esxi host: %s", err)
@@ -111,7 +115,7 @@ func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	client, session, err := esxi.connect(attempt)
 	if err != nil {
 		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
-		return "failed to connect to esxi host", err
+		return failedToConnect, err
 	}
 
 	stdoutRaw, err := session.CombinedOutput(command)
@@ -153,12 +157,12 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 	client, session, err := esxi.connect(10)
 	if err != nil {
 		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
-		return "failed to connect to esxi host", err
+		return failedToConnect, err
 	}
 	err = scp.CopyPath(f.Name(), path, session)
 	if err != nil {
 		logging.V(9).Infof("WriteFile: Failed copying the file! %s", err)
-		return "failed to copy file to esxi host", err
+		return failedToConnect, err
 	}
 	if closeErr := client.Close(); closeErr != nil {
 		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
@@ -173,7 +177,7 @@ func (esxi *Host) CopyFile(localPath string, hostPath string, shortCmdDesc strin
 	client, session, err := esxi.connect(10)
 	if err != nil {
 		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
-		return "failed to connect to esxi host", err
+		return failedToConnect, err
 	}
 	err = scp.CopyPath(localPath, hostPath, session)
 	if err != nil {

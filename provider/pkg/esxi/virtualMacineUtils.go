@@ -21,13 +21,13 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	bootDiskVmdkPath := fmt.Sprintf("\"/vmfs/volumes/%s/%s/%s.vmdk\"", vm.DiskStore, vm.Name, vm.Name)
 	command := fmt.Sprintf("ls -d %s", bootDiskVmdkPath)
 	stdout, _ := esxi.Execute(command, "check if guest path already exists.")
-	if strings.Contains(stdout, "No such file or directory") != true {
+	if !strings.Contains(stdout, "No such file or directory") {
 		return VirtualMachine{}, fmt.Errorf("virtual machine may already exists. vmdkPATH:%s", bootDiskVmdkPath)
 	}
 
 	command = fmt.Sprintf("ls -d \"%s\"", fullPATH)
 	stdout, _ = esxi.Execute(command, "check if guest path already exists.")
-	if strings.Contains(stdout, "No such file or directory") == true {
+	if strings.Contains(stdout, "No such file or directory") {
 		command = fmt.Sprintf("mkdir \"%s\"", fullPATH)
 		_, err := esxi.Execute(command, "create guest path")
 		if err != nil {
@@ -38,14 +38,14 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	hasISO := false
 	isoFileName := ""
 	// Build VM by default/black config
-	vmxContents := fmt.Sprintf("config.version = \"8\"\n") +
+	vmxContents := "config.version = \"8\"\n" +
 		fmt.Sprintf("virtualHW.version = \"%d\"\n", vm.VirtualHWVer) +
 		fmt.Sprintf("displayName = \"%s\"\n", vm.Name) +
 		fmt.Sprintf("numvcpus = \"%d\"\n", vm.NumVCpus) +
 		fmt.Sprintf("memSize = \"%d\"\n", vm.MemSize) +
 		fmt.Sprintf("guestOS = \"%s\"\n", vm.Os) +
 		fmt.Sprintf("annotation = \"%s\"\n", vm.Notes) +
-		fmt.Sprintf("floppy0.present = \"FALSE\"\n") +
+		fmt.Sprintf("floppy0.present = \"%s\"\n", "FALSE") +
 		fmt.Sprintf("scsi0.present = \"TRUE\"\n") +
 		fmt.Sprintf("scsi0.sharedBus = \"none\"\n") +
 		fmt.Sprintf("scsi0.virtualDev = \"lsilogic\"\n") +
@@ -65,14 +65,12 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 		fmt.Sprintf("pciBridge7.functions = \"8\"\n") +
 		fmt.Sprintf("scsi0:0.present = \"TRUE\"\n") +
 		fmt.Sprintf("scsi0:0.fileName = \"%s.vmdk\"\n", vm.Name) +
-		fmt.Sprintf("scsi0:0.deviceType = \"scsi-hardDisk\"\n") +
+		fmt.Sprintf("scsi0:0.deviceType = \"%s\"\n", "scsi-hardDisk") +
 		fmt.Sprintf("nvram = \"%s.nvram\"\n", vm.Name)
 	if vm.BootFirmware == "efi" {
-		vmxContents = vmxContents +
-			fmt.Sprintf("firmware = \\\"efi\\\"\n")
+		vmxContents = vmxContents + "firmware = \\\"efi\\\"\n"
 	} else if vm.BootFirmware == "bios" {
-		vmxContents = vmxContents +
-			fmt.Sprintf("firmware = \\\"bios\\\"\n")
+		vmxContents = vmxContents + "firmware = \\\"bios\\\"\n"
 	}
 	// TODO: to be checked how we can set the ISO file
 	if hasISO {
@@ -184,7 +182,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			logging.V(9).Infof("Source is in host.\n")
 			command := fmt.Sprintf("ls -d %s", vm.SourcePath)
 			stdout, _ := esxi.Execute(command, "check if guest path already exists.")
-			if strings.Contains(stdout, "No such file or directory") == true {
+			if strings.Contains(stdout, "No such file or directory") {
 				logging.V(9).Infof("File not found, Error: %s\n", err)
 				return VirtualMachine{}, fmt.Errorf("file not found on host: %s", vm.SourcePath)
 			}
@@ -243,7 +241,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 	// ovfProperties require packer to power on the VM to inject the properties.
 	// Unfortunately, there is no way to know when cloud-init is finished?!?!?  Just need
 	// to wait for ovfPropertiesTimer seconds, then shutdown/power-off to continue...
-	if hasOvfProperties == true {
+	if hasOvfProperties {
 		currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
 		if currentPowerState != "on" {
 			return vm, fmt.Errorf("failed to poweron after ovfProperties injection")
@@ -524,7 +522,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	}
 
 	// If this is first time provisioning, delete all the old ethernet configuration.
-	if isNew == true {
+	if isNew {
 		logging.V(9).Infof("updateVmxContents:Delete old ethernet configuration => %d", i)
 		regexReplacement = fmt.Sprintf("")
 		for i = 0; i < 9; i++ {
@@ -538,7 +536,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	for i, ni := range vm.NetworkInterfaces {
 		logging.V(9).Infof("updateVmxContents: ethernet%d", i)
 
-		if len(ni.VirtualNetwork) == 0 && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
+		if len(ni.VirtualNetwork) == 0 && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is Modify (Delete existing network configuration)
 			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Delete existing.", i)
 			regexReplacement = fmt.Sprintf("")
@@ -546,7 +544,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 		}
 
-		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == true {
+		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is Modify
 			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Modify existing.", i)
 
@@ -578,7 +576,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 			}
 		}
 
-		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) == false {
+		if ni.VirtualNetwork != "" && !strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is created
 			// Set virtual_network name
 			logging.V(9).Infof("updateVmxContents: ethernet%d Create New: %s", i, ni.VirtualNetwork)
@@ -713,11 +711,11 @@ func (esxi *Host) getVirtualMachinePowerState(id string) string {
 		return "Unknown"
 	}
 
-	if strings.Contains(stdout, "Powered off") == true {
+	if strings.Contains(stdout, "Powered off") {
 		return "off"
-	} else if strings.Contains(stdout, "Powered on") == true {
+	} else if strings.Contains(stdout, "Powered on") {
 		return "on"
-	} else if strings.Contains(stdout, "Suspended") == true {
+	} else if strings.Contains(stdout, "Suspended") {
 		return "suspended"
 	} else {
 		return "Unknown"

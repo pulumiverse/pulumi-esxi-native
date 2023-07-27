@@ -11,6 +11,10 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
+const (
+	rootPool = "ha-root-pool"
+)
+
 func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
 	var rp ResourcePool
 	var command string
@@ -234,7 +238,7 @@ func (esxi *Host) readResourcePool(rp ResourcePool) (string, resource.PropertyMa
 
 func (esxi *Host) getResourcePoolId(name string) (string, error) {
 	if name == "/" || name == "Resources" {
-		return "ha-root-pool", nil
+		return rootPool, nil
 	}
 
 	result := strings.Split(name, "/")
@@ -257,7 +261,7 @@ func (esxi *Host) getResourcePoolName(id string) (string, error) {
 
 	fullResourcePoolName = ""
 
-	if id == "ha-root-pool" {
+	if id == rootPool {
 		return "/", nil
 	}
 
@@ -297,7 +301,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 	// Get full Resource Pool Path
 	command := fmt.Sprintf("vim-cmd hostsvc/rsrc/pool_config_get %s", rp.Id)
 	stdout, err := esxi.Execute(command, "get resource pool config")
-	if strings.Contains(stdout, "deleted") == true {
+	if strings.Contains(stdout, "deleted") {
 		return rp, err
 	}
 	if err != nil {
@@ -314,7 +318,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 
 		case strings.Contains(scanner.Text(), "reservation = "):
 			r, _ := regexp.Compile("[0-9]+")
-			if isCpuFlag == true {
+			if isCpuFlag {
 				rp.CpuMin, _ = strconv.Atoi(r.FindString(scanner.Text()))
 			} else {
 				rp.MemMin, _ = strconv.Atoi(r.FindString(scanner.Text()))
@@ -322,7 +326,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 
 		case strings.Contains(scanner.Text(), "expandableReservation = "):
 			r, _ := regexp.Compile("(true|false)")
-			if isCpuFlag == true {
+			if isCpuFlag {
 				rp.CpuMinExpandable = r.FindString(scanner.Text())
 			} else {
 				rp.MemMinExpandable = r.FindString(scanner.Text())
@@ -334,7 +338,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 			if tmpvar < 0 {
 				tmpvar = 0
 			}
-			if isCpuFlag == true {
+			if isCpuFlag {
 				rp.CpuMax = tmpvar
 			} else {
 				rp.MemMax = tmpvar
@@ -342,7 +346,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 
 		case strings.Contains(scanner.Text(), "shares = "):
 			r, _ := regexp.Compile("[0-9]+")
-			if isCpuFlag == true {
+			if isCpuFlag {
 				rp.CpuShares = r.FindString(scanner.Text())
 			} else {
 				rp.MemShares = r.FindString(scanner.Text())
@@ -351,7 +355,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 		case strings.Contains(scanner.Text(), "level = "):
 			r, _ := regexp.Compile("(low|high|normal)")
 			if r.FindString(scanner.Text()) != "" {
-				if isCpuFlag == true {
+				if isCpuFlag {
 					rp.CpuShares = r.FindString(scanner.Text())
 				} else {
 					rp.MemShares = r.FindString(scanner.Text())
