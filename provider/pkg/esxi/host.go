@@ -2,10 +2,11 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 
 	"github.com/tmc/scp"
 	"golang.org/x/crypto/ssh"
@@ -76,7 +77,7 @@ func (esxi *Host) validateCreds() error {
 
 // Connect to esxi host using ssh
 func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
-	//attempt := 10
+
 	for attempt > 0 {
 		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
 		if err != nil {
@@ -84,7 +85,6 @@ func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 			attempt -= 1
 			time.Sleep(1 * time.Second)
 		} else {
-
 			session, err := client.NewSession()
 			if err != nil {
 				closeErr := client.Close()

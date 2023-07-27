@@ -17,6 +17,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 	structpb "github.com/golang/protobuf/ptypes/struct"
@@ -29,7 +31,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"os"
 )
 
 type cancellationContext struct {
@@ -65,7 +66,8 @@ type esxiProvider struct {
 var _ pulumirpc.ResourceProviderServer = (*esxiProvider)(nil)
 
 func newESXiNativeProvider(host *provider.HostClient, name, version string, pulumiSchema []byte) (
-	pulumirpc.ResourceProviderServer, error) {
+	pulumirpc.ResourceProviderServer, error,
+) {
 	return &esxiProvider{
 		host:         host,
 		canceler:     makeCancellationContext(),

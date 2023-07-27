@@ -2,10 +2,11 @@ package schema
 
 import (
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 	"strconv"
 	"strings"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
 func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
@@ -193,10 +194,10 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 				}
 			}
 			// TODO: recheck if it is okay
-			//case "virtualHWVer":
-			//	if contains([]string{"0","4","7","8","9","10","11","12","13","14"}, property.StringValue()) {
-			//		failures[key] = fmt.Sprintf(invalidFormat, key, "4,7,8,9,10,11,12,13 or 14")
-			//	}
+			//  case "virtualHWVer":
+			//	  if contains([]string{"0","4","7","8","9","10","11","12","13","14"}, property.StringValue()) {
+			//		  failures[key] = fmt.Sprintf(invalidFormat, key, "4,7,8,9,10,11,12,13 or 14")
+			//	  }
 		}
 	}
 

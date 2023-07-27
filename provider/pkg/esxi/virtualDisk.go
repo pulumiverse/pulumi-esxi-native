@@ -2,10 +2,11 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"strconv"
 	"strings"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {

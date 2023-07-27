@@ -35,7 +35,7 @@ func EncodeVMX(contents map[string]string) string {
 
 	i := 0
 	keys := make([]string, len(contents))
-	for k, _ := range contents {
+	for k := range contents {
 		keys[i] = k
 		i++
 	}

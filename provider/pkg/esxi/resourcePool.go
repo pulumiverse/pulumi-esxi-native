@@ -3,11 +3,12 @@ package esxi
 import (
 	"bufio"
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {

@@ -79,10 +79,14 @@ build:: gen provider dotnet_sdk go_sdk nodejs_sdk python_sdk
 only_build:: build
 
 lint::
-	for DIR in "provider" "sdk" "tests" ; do \
-		pushd $$DIR && golangci-lint run -c ../.golangci.yml --timeout 10m && popd ; \
+	for DIR in "provider" "sdk" ; do \
+		pushd $$DIR && golangci-lint run -c ../.golangci.yaml && popd ; \
 	done
 
+lint-fix:
+	for DIR in "provider" "sdk" ; do \
+		pushd $$DIR && golangci-lint run -c ../.golangci.yaml --fix && popd ; \
+	done
 
 install_provider::
 	(cd provider && go install $(VERSION_FLAGS) ${PROJECT}/${PROVIDER_PATH}/cmd/$(PROVIDER))

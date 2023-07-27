@@ -2,11 +2,12 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
 func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {

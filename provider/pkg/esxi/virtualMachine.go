@@ -3,13 +3,14 @@ package esxi
 import (
 	"bufio"
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
@@ -366,7 +367,6 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	//  Read vmxContents line-by-line to get current settings.
 	scanner = bufio.NewScanner(strings.NewReader(vmxContents))
 	for scanner.Scan() {
-
 		switch {
 		case strings.Contains(scanner.Text(), "memSize = "):
 			r, _ = regexp.Compile("\".*\"")
@@ -438,11 +438,11 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 
 			//  Done't save generatedAddress...   It should not be saved because it
 			//  should be considered dynamic & is breaks the update MAC address code.
-			//case "generatedAddress":
-			//	if isGeneratedMAC[index] == true {
+			//  case "generatedAddress":
+			//	  if isGeneratedMAC[index] == true {
 			//		networkInterfaces[index].MacAddress = results[3]
 			//	    logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
-			//	}
+			//	  }
 
 			case "address":
 				if isGeneratedMAC[index] == false {

@@ -2,7 +2,6 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {
@@ -37,36 +38,35 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 	hasISO := false
 	isoFileName := ""
 	// Build VM by default/black config
-	vmxContents :=
-		fmt.Sprintf("config.version = \"8\"\n") +
-			fmt.Sprintf("virtualHW.version = \"%d\"\n", vm.VirtualHWVer) +
-			fmt.Sprintf("displayName = \"%s\"\n", vm.Name) +
-			fmt.Sprintf("numvcpus = \"%d\"\n", vm.NumVCpus) +
-			fmt.Sprintf("memSize = \"%d\"\n", vm.MemSize) +
-			fmt.Sprintf("guestOS = \"%s\"\n", vm.Os) +
-			fmt.Sprintf("annotation = \"%s\"\n", vm.Notes) +
-			fmt.Sprintf("floppy0.present = \"FALSE\"\n") +
-			fmt.Sprintf("scsi0.present = \"TRUE\"\n") +
-			fmt.Sprintf("scsi0.sharedBus = \"none\"\n") +
-			fmt.Sprintf("scsi0.virtualDev = \"lsilogic\"\n") +
-			fmt.Sprintf("disk.EnableUUID = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge0.present = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge4.present = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge4.virtualDev = \"pcieRootPort\"\n") +
-			fmt.Sprintf("pciBridge4.functions = \"8\"\n") +
-			fmt.Sprintf("pciBridge5.present = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge5.virtualDev = \"pcieRootPort\"\n") +
-			fmt.Sprintf("pciBridge5.functions = \"8\"\n") +
-			fmt.Sprintf("pciBridge6.present = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge6.virtualDev = \"pcieRootPort\"\n") +
-			fmt.Sprintf("pciBridge6.functions = \"8\"\n") +
-			fmt.Sprintf("pciBridge7.present = \"TRUE\"\n") +
-			fmt.Sprintf("pciBridge7.virtualDev = \"pcieRootPort\"\n") +
-			fmt.Sprintf("pciBridge7.functions = \"8\"\n") +
-			fmt.Sprintf("scsi0:0.present = \"TRUE\"\n") +
-			fmt.Sprintf("scsi0:0.fileName = \"%s.vmdk\"\n", vm.Name) +
-			fmt.Sprintf("scsi0:0.deviceType = \"scsi-hardDisk\"\n") +
-			fmt.Sprintf("nvram = \"%s.nvram\"\n", vm.Name)
+	vmxContents := fmt.Sprintf("config.version = \"8\"\n") +
+		fmt.Sprintf("virtualHW.version = \"%d\"\n", vm.VirtualHWVer) +
+		fmt.Sprintf("displayName = \"%s\"\n", vm.Name) +
+		fmt.Sprintf("numvcpus = \"%d\"\n", vm.NumVCpus) +
+		fmt.Sprintf("memSize = \"%d\"\n", vm.MemSize) +
+		fmt.Sprintf("guestOS = \"%s\"\n", vm.Os) +
+		fmt.Sprintf("annotation = \"%s\"\n", vm.Notes) +
+		fmt.Sprintf("floppy0.present = \"FALSE\"\n") +
+		fmt.Sprintf("scsi0.present = \"TRUE\"\n") +
+		fmt.Sprintf("scsi0.sharedBus = \"none\"\n") +
+		fmt.Sprintf("scsi0.virtualDev = \"lsilogic\"\n") +
+		fmt.Sprintf("disk.EnableUUID = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge0.present = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge4.present = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge4.virtualDev = \"pcieRootPort\"\n") +
+		fmt.Sprintf("pciBridge4.functions = \"8\"\n") +
+		fmt.Sprintf("pciBridge5.present = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge5.virtualDev = \"pcieRootPort\"\n") +
+		fmt.Sprintf("pciBridge5.functions = \"8\"\n") +
+		fmt.Sprintf("pciBridge6.present = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge6.virtualDev = \"pcieRootPort\"\n") +
+		fmt.Sprintf("pciBridge6.functions = \"8\"\n") +
+		fmt.Sprintf("pciBridge7.present = \"TRUE\"\n") +
+		fmt.Sprintf("pciBridge7.virtualDev = \"pcieRootPort\"\n") +
+		fmt.Sprintf("pciBridge7.functions = \"8\"\n") +
+		fmt.Sprintf("scsi0:0.present = \"TRUE\"\n") +
+		fmt.Sprintf("scsi0:0.fileName = \"%s.vmdk\"\n", vm.Name) +
+		fmt.Sprintf("scsi0:0.deviceType = \"scsi-hardDisk\"\n") +
+		fmt.Sprintf("nvram = \"%s.nvram\"\n", vm.Name)
 	if vm.BootFirmware == "efi" {
 		vmxContents = vmxContents +
 			fmt.Sprintf("firmware = \\\"efi\\\"\n")
@@ -406,7 +406,6 @@ func (esxi *Host) readVmxContents(id string) (string, error) {
 }
 
 func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
-
 	var regexReplacement string
 
 	vmxContents, err := esxi.readVmxContents(vm.Id)
@@ -482,7 +481,6 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	regexReplacement = fmt.Sprintf("")
 	for i = 0; i < 4; i++ {
 		for j = 0; j < 16; j++ {
-
 			if (i != 0 || j != 0) && j != 7 {
 				re := regexp.MustCompile(fmt.Sprintf("scsi%d:%d.*\n", i, j))
 				vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
@@ -513,7 +511,6 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 			if !strings.Contains(vmxContents, tmpvar) {
 				vmxContents += "\n" + tmpvar
 			}
-
 		}
 	}
 
@@ -683,9 +680,7 @@ func (esxi *Host) powerOffVirtualMachine(id string, shutdownTimeout int) (string
 	savedPowerState := esxi.getVirtualMachinePowerState(id)
 	if savedPowerState == "off" {
 		return "", nil
-
 	} else if savedPowerState == "on" {
-
 		if shutdownTimeout != 0 {
 			command = fmt.Sprintf("vim-cmd vmsvc/power.shutdown %s", id)
 			stdout, _ = esxi.Execute(command, "vmsvc/power.shutdown")
@@ -704,7 +699,6 @@ func (esxi *Host) powerOffVirtualMachine(id string, shutdownTimeout int) (string
 		time.Sleep(1 * time.Second)
 
 		return stdout, nil
-
 	} else {
 		command = fmt.Sprintf("vim-cmd vmsvc/power.off %s", id)
 		stdout, _ = esxi.Execute(command, "vmsvc/power.off")

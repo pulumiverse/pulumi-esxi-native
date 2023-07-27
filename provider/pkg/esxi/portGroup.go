@@ -2,11 +2,12 @@ package esxi
 
 import (
 	"fmt"
-	"github.com/jszwec/csvutil"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jszwec/csvutil"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
 func PortGroupCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {

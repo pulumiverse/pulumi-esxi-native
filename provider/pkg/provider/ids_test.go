@@ -4,9 +4,9 @@ package provider
 
 import (
 	"fmt"
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	"testing"
 
+	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/esxi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/stretchr/testify/require"
 )

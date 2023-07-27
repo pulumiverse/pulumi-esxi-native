@@ -16,9 +16,10 @@
 package main
 
 import (
-	_ "embed"
 	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/provider"
 	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/version"
+
+	_ "embed"
 )
 
 var providerName = "esxi-native"
