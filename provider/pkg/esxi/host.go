@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
-
 	"github.com/tmc/scp"
 	"golang.org/x/crypto/ssh"
 )
@@ -77,7 +76,6 @@ func (esxi *Host) validateCreds() error {
 
 // Connect to esxi host using ssh
 func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
-
 	for attempt > 0 {
 		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
 		if err != nil {
