@@ -159,8 +159,6 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 	if property, has := inputs["cloneFromVirtualMachine"]; has {
 		password := url.QueryEscape(connection.Password)
 		vm.SourcePath = fmt.Sprintf("vi://%s:%s@%s:%s/%s", connection.UserName, password, connection.Host, connection.SslPort, property.StringValue())
-	} else if property, has = inputs["ovfLocalSource"]; has {
-		vm.SourcePath = fmt.Sprintf("local://%s", property.StringValue())
 	} else if property, has = inputs["ovfSource"]; has {
 		vm.SourcePath = property.StringValue()
 	} else {

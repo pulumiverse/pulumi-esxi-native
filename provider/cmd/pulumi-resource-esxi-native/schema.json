@@ -522,12 +522,7 @@
                 },
                 "ovfSource": {
                     "type": "string",
-                    "description": "Path or URL on esxi host of ovf files.",
-                    "willReplaceOnChanges": true
-                },
-                "ovfLocalSource": {
-                    "type": "string",
-                    "description": "Local path to source ovf files.",
+                    "description": "Path or URL of ovf file source.",
                     "willReplaceOnChanges": true
                 },
                 "bootFirmware": {

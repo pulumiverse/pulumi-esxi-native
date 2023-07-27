@@ -1,13 +1,17 @@
 package esxi
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -145,9 +149,13 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			return vm, err
 		}
 	} else {
-		// Build VM with packer
+		// Build VM with ovftool
 		// Check if source file exist.
-		if strings.HasPrefix(vm.SourcePath, "http://") || strings.HasPrefix(vm.SourcePath, "https://") {
+		const (
+			httpSchema  = "http://"
+			httpsSchema = "https://"
+		)
+		if strings.HasPrefix(vm.SourcePath, httpSchema) || strings.HasPrefix(vm.SourcePath, httpsSchema) {
 			resp, err := http.Get(vm.SourcePath)
 			if (err != nil) || (resp.StatusCode != 200) {
 				logging.V(9).Infof("URL not accessible: %s", vm.SourcePath)
@@ -161,30 +169,13 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			defer func(Body io.ReadCloser) {
 				_ = Body.Close()
 			}(resp.Body)
-			// TODO: check if file should be downloaded in the host instead
 		} else if strings.HasPrefix(vm.SourcePath, "vi://") {
 			logging.V(9).Infof("Source is Guest VM (vi).\n")
-		} else if strings.HasPrefix(vm.SourcePath, "local://") {
-			logging.V(9).Infof("Source is local.\n")
-			filePath := strings.TrimLeft(vm.SourcePath, "local://")
-			if _, err := os.Stat(filePath); os.IsNotExist(err) {
-				logging.V(9).Infof("File not found, Error: %s\n", err)
-				return VirtualMachine{}, fmt.Errorf("file not found locally: %s", filePath)
-			} else {
-				nameParts := strings.Split(vm.SourcePath, "/")
-				vm.SourcePath = fmt.Sprintf("/vmfs/volumes/%s/%s", vm.DiskStore, nameParts[len(nameParts)-1])
-				_, err = esxi.CopyFile(filePath, vm.SourcePath, "copy source file to host")
-				if err != nil {
-					return VirtualMachine{}, err
-				}
-			}
 		} else {
-			logging.V(9).Infof("Source is in host.\n")
-			command := fmt.Sprintf("ls -d %s", vm.SourcePath)
-			stdout, _ := esxi.Execute(command, "check if guest path already exists.")
-			if strings.Contains(stdout, "No such file or directory") {
+			logging.V(9).Infof("Source is local.\n")
+			if _, err := os.Stat(vm.SourcePath); os.IsNotExist(err) {
 				logging.V(9).Infof("File not found, Error: %s\n", err)
-				return VirtualMachine{}, fmt.Errorf("file not found on host: %s", vm.SourcePath)
+				return VirtualMachine{}, fmt.Errorf("file not found locally: %s", vm.SourcePath)
 			}
 		}
 
@@ -216,19 +207,67 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 			log.Println("ovf_properties extra_params: " + extraParams)
 		}
 
-		ovfToolPath, err := esxi.getOvfToolPath()
-		if err != nil {
-			return VirtualMachine{}, err
+		ovfCmd := fmt.Sprintf("ovftool --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s'%s '%s' '%s'",
+			extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
+		re := regexp.MustCompile(`vi://.*?@`)
+
+		osShellCmd := "/bin/bash"
+		osShellCmdOpt := "-c"
+
+		var ovfBat *os.File
+		if runtime.GOOS == "windows" {
+			osShellCmd = "cmd.exe"
+			osShellCmdOpt = "/c"
+
+			ovfCmd = strings.Replace(ovfCmd, "'", "\"", -1)
+
+			ovfBat, _ = ioutil.TempFile("", "ovfCmd*.bat")
+
+			_, err = os.Stat(ovfBat.Name())
+			// delete file if exists
+			if os.IsExist(err) {
+				err = os.Remove(ovfBat.Name())
+				if err != nil {
+					return VirtualMachine{}, fmt.Errorf("unable to delete existing %s: %w", ovfBat.Name(), err)
+				}
+			}
+
+			//  create new batch file
+			file, err := os.Create(ovfBat.Name())
+			if err != nil {
+				defer file.Close()
+				return VirtualMachine{}, fmt.Errorf("unable to create %s: %w", ovfBat.Name(), err)
+			}
+
+			_, err = file.WriteString(strings.Replace(ovfCmd, "%", "%%", -1))
+			if err != nil {
+				defer file.Close()
+				return VirtualMachine{}, fmt.Errorf("unable to write to %s: %w", ovfBat.Name(), err)
+			}
+
+			err = file.Close()
+			if err != nil {
+				defer file.Close()
+				return VirtualMachine{}, fmt.Errorf("unable to close %s: %w", ovfBat.Name(), err)
+			}
+			ovfCmd = ovfBat.Name()
 		}
 
-		ovfCmd := fmt.Sprintf("%s --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s'%s '%s' '%s'",
-			ovfToolPath, extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
-		re := regexp.MustCompile(`vi://.*?@`)
-		command := fmt.Sprintf("sh %s", ovfCmd)
-		stdout, err := esxi.Execute(command, "execute packer script")
+		//  Execute ovftool script (or batch) here.
+		cmd := exec.Command(osShellCmd, osShellCmdOpt, ovfCmd)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err = cmd.Run()
+
+		//  Attempt to delete tmp batch file.
+		if ovfBat != nil {
+			_ = cmd.Wait()
+			_ = os.Remove(ovfBat.Name())
+		}
+
 		if err != nil {
-			return VirtualMachine{}, fmt.Errorf("there was an packer error: cmd<%s>; stdout<%s>; err<%s>",
-				re.ReplaceAllString(command, "vi://****:******@"), stdout, err)
+			return VirtualMachine{}, fmt.Errorf("there was an ovftool error: cmd<%s>; stdout<%s>; err<%w>",
+				re.ReplaceAllString(ovfCmd, "vi://****:******@"), out.String(), err)
 		}
 	}
 
@@ -271,60 +310,6 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 	}
 
 	return vm, nil
-}
-
-func (esxi *Host) getOvfToolPath() (string, error) {
-	vmWareToolsDir := fmt.Sprintf("/vmfs/volumes/%s/vmware-tools", esxi.Connection.OvfLocation)
-	ovfToolArchive := fmt.Sprintf("%s/vmware-ovftool.tar.gz", vmWareToolsDir)
-	ovfToolDir := fmt.Sprintf("%s/ovf", vmWareToolsDir)
-	ovfTool := fmt.Sprintf("%s/ovftool", ovfToolDir)
-	msg := "Configure ovftool in the host if not present"
-	notFound := "No such file or directory"
-	errorDetails := "could not configure the ovf tools in the esxi host. details: %s; err: %s" +
-		fmt.Sprintf("(if this error persist, please try to manually copy ovftool and it's suplementary files under: %s)", ovfToolDir)
-
-	_, _ = esxi.Execute(fmt.Sprintf("mkdir -p %s", ovfToolDir), "Create ovftool directory if missing")
-	if file, _ := esxi.Execute(fmt.Sprintf("ls -d %s", ovfTool), msg); strings.Contains(file, notFound) == true {
-		logging.V(9).Infof("ovftool not found, configuring it...")
-		u := "https://github.com/edmondshtogu/pulumi-esxi-native/releases/download/ovftool/vmware-ovftool.tar.gz"
-		response, err := http.Get(u)
-		if err != nil {
-			return "", fmt.Errorf(errorDetails, "failed to download the ovftool", err)
-		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				logging.V(9).Infof("Failed closing the request body reader! %s", err)
-			}
-		}(response.Body)
-
-		// Create a new file on the local system
-		f, _ := os.CreateTemp("", "")
-		defer func(f *os.File) {
-			err := f.Close()
-			if err != nil {
-				logging.V(9).Infof("Failed closing the file reader! %s", err)
-			}
-		}(f)
-
-		// Copy the response body to the local file
-		_, err = io.Copy(f, response.Body)
-		if err != nil {
-			return "", fmt.Errorf(errorDetails, "failed to save locally the ovftool", err)
-		}
-
-		_, err = esxi.CopyFile(f.Name(), ovfToolArchive, "copy ovftool to host")
-		if err != nil {
-			return "", fmt.Errorf(errorDetails, "failed to copy the ovftool to host", err)
-		}
-		command := fmt.Sprintf("tar -xzvf %s -C %s", ovfToolArchive, ovfToolDir)
-		stdout, err := esxi.Execute(command, "extract ovftool")
-		if err != nil {
-			return "", fmt.Errorf(errorDetails, "failed to extract the ovftool to host"+stdout, err)
-		}
-	}
-
-	return ovfTool, nil
 }
 
 func (esxi *Host) getVirtualMachineId(name string) (string, error) {

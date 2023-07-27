@@ -17,6 +17,9 @@ the consolidated work-in-progress branch. Do not request it onto another branch.
 > **IMPORTANT:** The contribution details are stated [here](CONTRIBUTING.md)
 
 ## Requirements
+-   The VMware [ovftool](https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL443) is required to be installed in the workstation where pulumi will be executed.  
+    > **NOTE:** `ovftool` installer for windows doesn't put ovftool.exe in your path. 
+      You will need to manually set your path.
 -   You MUST enable ssh access on your ESXi hypervisor.
     > Google 'How to enable ssh access on esxi'
       >- In general, you should know how to use terraform, esxi and some networking...
