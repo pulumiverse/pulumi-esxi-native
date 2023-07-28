@@ -29,7 +29,6 @@ class VirtualMachineArgs:
                  notes: Optional[pulumi.Input[str]] = None,
                  num_v_cpus: Optional[pulumi.Input[int]] = None,
                  os: Optional[pulumi.Input[str]] = None,
-                 ovf_local_source: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source: Optional[pulumi.Input[str]] = None,
@@ -53,10 +52,9 @@ class VirtualMachineArgs:
         :param pulumi.Input[str] notes: VM memory size.
         :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
-        :param pulumi.Input[str] ovf_local_source: Local path to source ovf files.
         :param pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]] ovf_properties: VM OVF properties.
         :param pulumi.Input[int] ovf_properties_timer: The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
-        :param pulumi.Input[str] ovf_source: Path or URL on esxi host of ovf files.
+        :param pulumi.Input[str] ovf_source: Path or URL of ovf file source.
         :param pulumi.Input[str] power: VM power state.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input[int] shutdown_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
@@ -99,8 +97,6 @@ class VirtualMachineArgs:
             os = 'centos'
         if os is not None:
             pulumi.set(__self__, "os", os)
-        if ovf_local_source is not None:
-            pulumi.set(__self__, "ovf_local_source", ovf_local_source)
         if ovf_properties is not None:
             pulumi.set(__self__, "ovf_properties", ovf_properties)
         if ovf_properties_timer is None:
@@ -275,18 +271,6 @@ class VirtualMachineArgs:
         pulumi.set(self, "os", value)
 
     @property
-    @pulumi.getter(name="ovfLocalSource")
-    def ovf_local_source(self) -> Optional[pulumi.Input[str]]:
-        """
-        Local path to source ovf files.
-        """
-        return pulumi.get(self, "ovf_local_source")
-
-    @ovf_local_source.setter
-    def ovf_local_source(self, value: Optional[pulumi.Input[str]]):
-        pulumi.set(self, "ovf_local_source", value)
-
-    @property
     @pulumi.getter(name="ovfProperties")
     def ovf_properties(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]]:
         """
@@ -314,7 +298,7 @@ class VirtualMachineArgs:
     @pulumi.getter(name="ovfSource")
     def ovf_source(self) -> Optional[pulumi.Input[str]]:
         """
-        Path or URL on esxi host of ovf files.
+        Path or URL of ovf file source.
         """
         return pulumi.get(self, "ovf_source")
 
@@ -412,7 +396,6 @@ class VirtualMachine(pulumi.CustomResource):
                  notes: Optional[pulumi.Input[str]] = None,
                  num_v_cpus: Optional[pulumi.Input[int]] = None,
                  os: Optional[pulumi.Input[str]] = None,
-                 ovf_local_source: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source: Optional[pulumi.Input[str]] = None,
@@ -439,10 +422,9 @@ class VirtualMachine(pulumi.CustomResource):
         :param pulumi.Input[str] notes: VM memory size.
         :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
         :param pulumi.Input[str] os: VM OS type.
-        :param pulumi.Input[str] ovf_local_source: Local path to source ovf files.
         :param pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]] ovf_properties: VM OVF properties.
         :param pulumi.Input[int] ovf_properties_timer: The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
-        :param pulumi.Input[str] ovf_source: Path or URL on esxi host of ovf files.
+        :param pulumi.Input[str] ovf_source: Path or URL of ovf file source.
         :param pulumi.Input[str] power: VM power state.
         :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input[int] shutdown_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
@@ -485,7 +467,6 @@ class VirtualMachine(pulumi.CustomResource):
                  notes: Optional[pulumi.Input[str]] = None,
                  num_v_cpus: Optional[pulumi.Input[int]] = None,
                  os: Optional[pulumi.Input[str]] = None,
-                 ovf_local_source: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input[pulumi.InputType['KeyValuePairArgs']]]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source: Optional[pulumi.Input[str]] = None,
@@ -530,7 +511,6 @@ class VirtualMachine(pulumi.CustomResource):
             if os is None:
                 os = 'centos'
             __props__.__dict__["os"] = os
-            __props__.__dict__["ovf_local_source"] = ovf_local_source
             __props__.__dict__["ovf_properties"] = ovf_properties
             if ovf_properties_timer is None:
                 ovf_properties_timer = 6000

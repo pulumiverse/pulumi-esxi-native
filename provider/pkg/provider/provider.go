@@ -150,7 +150,6 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 	pass, passErr := getConfig(vars, "password", "ESXI_PASSWORD")
 	sshPort, sshPortErr := getConfig(vars, "sshPort", "ESXI_SSH_PORT")
 	sslPort, sslPortErr := getConfig(vars, "sslPort", "ESXI_SSL_PORT")
-	ovfLoc, ovfLocErr := getConfig(vars, "metadataStore", "ESXI_METADATA_STORE")
 	if len(sshPort) > 0 {
 		sshPort = "22"
 	}
@@ -158,16 +157,16 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 		sslPort = "443"
 	}
 
-	if len(host) > 0 && len(user) > 0 && len(pass) > 0 && len(ovfLoc) > 0 {
+	if len(host) > 0 && len(user) > 0 && len(pass) > 0 {
 		// If all required values are not present/valid, the client will return an appropriate error.
-		esxiHost, err := esxi.NewHost(host, sshPort, sslPort, user, pass, ovfLoc)
+		esxiHost, err := esxi.NewHost(host, sshPort, sslPort, user, pass)
 		if err != nil {
 			return nil, err
 		}
 		p.esxi = esxiHost
 	} else {
 		errorMessage := "Invalid config."
-		for _, errMsg := range []string{hostErr, userErr, passErr, sshPortErr, sslPortErr, ovfLocErr} {
+		for _, errMsg := range []string{hostErr, userErr, passErr, sshPortErr, sslPortErr} {
 			if len(errMsg) > 0 {
 				errorMessage = fmt.Sprintf("%s\n%s", errorMessage, errMsg)
 			}

@@ -19,17 +19,6 @@ Object.defineProperty(exports, "host", {
 });
 
 /**
- * ESXi Datastore Name config were ovftool will be configured
- */
-export declare const ovfToolLocation: string | undefined;
-Object.defineProperty(exports, "ovfToolLocation", {
-    get() {
-        return __config.get("ovfToolLocation");
-    },
-    enumerable: true,
-});
-
-/**
  * ESXi Password config
  */
 export declare const password: string | undefined;
@@ -43,10 +32,10 @@ Object.defineProperty(exports, "password", {
 /**
  * ESXi Host SSH Port config
  */
-export declare const sshPort: string;
+export declare const sshPort: string | undefined;
 Object.defineProperty(exports, "sshPort", {
     get() {
-        return __config.get("sshPort") ?? "22";
+        return __config.get("sshPort");
     },
     enumerable: true,
 });
@@ -54,10 +43,10 @@ Object.defineProperty(exports, "sshPort", {
 /**
  * ESXi Host SSL Port config
  */
-export declare const sslPort: string;
+export declare const sslPort: string | undefined;
 Object.defineProperty(exports, "sslPort", {
     get() {
-        return __config.get("sslPort") ?? "443";
+        return __config.get("sslPort");
     },
     enumerable: true,
 });
@@ -65,10 +54,10 @@ Object.defineProperty(exports, "sslPort", {
 /**
  * ESXi Username config
  */
-export declare const username: string;
+export declare const username: string | undefined;
 Object.defineProperty(exports, "username", {
     get() {
-        return __config.get("username") ?? "root";
+        return __config.get("username");
     },
     enumerable: true,
 });

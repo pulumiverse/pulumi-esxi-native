@@ -151,13 +151,11 @@ type virtualMachineArgs struct {
 	NumVCpus *int `pulumi:"numVCpus"`
 	// VM OS type.
 	Os *string `pulumi:"os"`
-	// Local path to source ovf files.
-	OvfLocalSource *string `pulumi:"ovfLocalSource"`
 	// VM OVF properties.
 	OvfProperties []KeyValuePair `pulumi:"ovfProperties"`
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer *int `pulumi:"ovfPropertiesTimer"`
-	// Path or URL on esxi host of ovf files.
+	// Path or URL of ovf file source.
 	OvfSource *string `pulumi:"ovfSource"`
 	// VM power state.
 	Power *string `pulumi:"power"`
@@ -199,13 +197,11 @@ type VirtualMachineArgs struct {
 	NumVCpus pulumi.IntPtrInput
 	// VM OS type.
 	Os pulumi.StringPtrInput
-	// Local path to source ovf files.
-	OvfLocalSource pulumi.StringPtrInput
 	// VM OVF properties.
 	OvfProperties KeyValuePairArrayInput
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
 	OvfPropertiesTimer pulumi.IntPtrInput
-	// Path or URL on esxi host of ovf files.
+	// Path or URL of ovf file source.
 	OvfSource pulumi.StringPtrInput
 	// VM power state.
 	Power pulumi.StringPtrInput
@@ -247,7 +243,7 @@ func (i *VirtualMachine) ToVirtualMachineOutputWithContext(ctx context.Context) 
 // VirtualMachineArrayInput is an input type that accepts VirtualMachineArray and VirtualMachineArrayOutput values.
 // You can construct a concrete instance of `VirtualMachineArrayInput` via:
 //
-//	VirtualMachineArray{ VirtualMachineArgs{...} }
+//          VirtualMachineArray{ VirtualMachineArgs{...} }
 type VirtualMachineArrayInput interface {
 	pulumi.Input
 
@@ -272,7 +268,7 @@ func (i VirtualMachineArray) ToVirtualMachineArrayOutputWithContext(ctx context.
 // VirtualMachineMapInput is an input type that accepts VirtualMachineMap and VirtualMachineMapOutput values.
 // You can construct a concrete instance of `VirtualMachineMapInput` via:
 //
-//	VirtualMachineMap{ "key": VirtualMachineArgs{...} }
+//          VirtualMachineMap{ "key": VirtualMachineArgs{...} }
 type VirtualMachineMapInput interface {
 	pulumi.Input
 

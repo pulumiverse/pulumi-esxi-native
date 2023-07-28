@@ -140,7 +140,7 @@ func (i *ResourcePool) ToResourcePoolOutputWithContext(ctx context.Context) Reso
 // ResourcePoolArrayInput is an input type that accepts ResourcePoolArray and ResourcePoolArrayOutput values.
 // You can construct a concrete instance of `ResourcePoolArrayInput` via:
 //
-//	ResourcePoolArray{ ResourcePoolArgs{...} }
+//          ResourcePoolArray{ ResourcePoolArgs{...} }
 type ResourcePoolArrayInput interface {
 	pulumi.Input
 
@@ -165,7 +165,7 @@ func (i ResourcePoolArray) ToResourcePoolArrayOutputWithContext(ctx context.Cont
 // ResourcePoolMapInput is an input type that accepts ResourcePoolMap and ResourcePoolMapOutput values.
 // You can construct a concrete instance of `ResourcePoolMapInput` via:
 //
-//	ResourcePoolMap{ "key": ResourcePoolArgs{...} }
+//          ResourcePoolMap{ "key": ResourcePoolArgs{...} }
 type ResourcePoolMapInput interface {
 	pulumi.Input
 

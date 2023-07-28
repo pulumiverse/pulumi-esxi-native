@@ -18,7 +18,7 @@ type KeyValuePair struct {
 // KeyValuePairInput is an input type that accepts KeyValuePairArgs and KeyValuePairOutput values.
 // You can construct a concrete instance of `KeyValuePairInput` via:
 //
-//	KeyValuePairArgs{...}
+//          KeyValuePairArgs{...}
 type KeyValuePairInput interface {
 	pulumi.Input
 
@@ -46,7 +46,7 @@ func (i KeyValuePairArgs) ToKeyValuePairOutputWithContext(ctx context.Context) K
 // KeyValuePairArrayInput is an input type that accepts KeyValuePairArray and KeyValuePairArrayOutput values.
 // You can construct a concrete instance of `KeyValuePairArrayInput` via:
 //
-//	KeyValuePairArray{ KeyValuePairArgs{...} }
+//          KeyValuePairArray{ KeyValuePairArgs{...} }
 type KeyValuePairArrayInput interface {
 	pulumi.Input
 
@@ -119,7 +119,7 @@ type NetworkInterface struct {
 // NetworkInterfaceInput is an input type that accepts NetworkInterfaceArgs and NetworkInterfaceOutput values.
 // You can construct a concrete instance of `NetworkInterfaceInput` via:
 //
-//	NetworkInterfaceArgs{...}
+//          NetworkInterfaceArgs{...}
 type NetworkInterfaceInput interface {
 	pulumi.Input
 
@@ -148,7 +148,7 @@ func (i NetworkInterfaceArgs) ToNetworkInterfaceOutputWithContext(ctx context.Co
 // NetworkInterfaceArrayInput is an input type that accepts NetworkInterfaceArray and NetworkInterfaceArrayOutput values.
 // You can construct a concrete instance of `NetworkInterfaceArrayInput` via:
 //
-//	NetworkInterfaceArray{ NetworkInterfaceArgs{...} }
+//          NetworkInterfaceArray{ NetworkInterfaceArgs{...} }
 type NetworkInterfaceArrayInput interface {
 	pulumi.Input
 
@@ -224,7 +224,7 @@ type Uplink struct {
 // UplinkInput is an input type that accepts UplinkArgs and UplinkOutput values.
 // You can construct a concrete instance of `UplinkInput` via:
 //
-//	UplinkArgs{...}
+//          UplinkArgs{...}
 type UplinkInput interface {
 	pulumi.Input
 
@@ -252,7 +252,7 @@ func (i UplinkArgs) ToUplinkOutputWithContext(ctx context.Context) UplinkOutput 
 // UplinkArrayInput is an input type that accepts UplinkArray and UplinkArrayOutput values.
 // You can construct a concrete instance of `UplinkArrayInput` via:
 //
-//	UplinkArray{ UplinkArgs{...} }
+//          UplinkArray{ UplinkArgs{...} }
 type UplinkArrayInput interface {
 	pulumi.Input
 
@@ -322,7 +322,7 @@ type VMVirtualDisk struct {
 // VMVirtualDiskInput is an input type that accepts VMVirtualDiskArgs and VMVirtualDiskOutput values.
 // You can construct a concrete instance of `VMVirtualDiskInput` via:
 //
-//	VMVirtualDiskArgs{...}
+//          VMVirtualDiskArgs{...}
 type VMVirtualDiskInput interface {
 	pulumi.Input
 
@@ -351,7 +351,7 @@ func (i VMVirtualDiskArgs) ToVMVirtualDiskOutputWithContext(ctx context.Context)
 // VMVirtualDiskArrayInput is an input type that accepts VMVirtualDiskArray and VMVirtualDiskArrayOutput values.
 // You can construct a concrete instance of `VMVirtualDiskArrayInput` via:
 //
-//	VMVirtualDiskArray{ VMVirtualDiskArgs{...} }
+//          VMVirtualDiskArray{ VMVirtualDiskArgs{...} }
 type VMVirtualDiskArrayInput interface {
 	pulumi.Input
 

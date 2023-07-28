@@ -249,12 +249,6 @@ namespace Pulumi.EsxiNative
         [Input("os")]
         public Input<string>? Os { get; set; }
 
-        /// <summary>
-        /// Local path to source ovf files.
-        /// </summary>
-        [Input("ovfLocalSource")]
-        public Input<string>? OvfLocalSource { get; set; }
-
         [Input("ovfProperties")]
         private InputList<Inputs.KeyValuePairArgs>? _ovfProperties;
 
@@ -274,7 +268,7 @@ namespace Pulumi.EsxiNative
         public Input<int>? OvfPropertiesTimer { get; set; }
 
         /// <summary>
-        /// Path or URL on esxi host of ovf files.
+        /// Path or URL of ovf file source.
         /// </summary>
         [Input("ovfSource")]
         public Input<string>? OvfSource { get; set; }

@@ -23,13 +23,6 @@ class _ExportableConfig(types.ModuleType):
         return __config__.get('host')
 
     @property
-    def ovf_tool_location(self) -> Optional[str]:
-        """
-        ESXi Datastore Name config were ovftool will be configured
-        """
-        return __config__.get('ovfToolLocation')
-
-    @property
     def password(self) -> Optional[str]:
         """
         ESXi Password config
@@ -37,23 +30,23 @@ class _ExportableConfig(types.ModuleType):
         return __config__.get('password')
 
     @property
-    def ssh_port(self) -> str:
+    def ssh_port(self) -> Optional[str]:
         """
         ESXi Host SSH Port config
         """
-        return __config__.get('sshPort') or '22'
+        return __config__.get('sshPort')
 
     @property
-    def ssl_port(self) -> str:
+    def ssl_port(self) -> Optional[str]:
         """
         ESXi Host SSL Port config
         """
-        return __config__.get('sslPort') or '443'
+        return __config__.get('sslPort')
 
     @property
-    def username(self) -> str:
+    def username(self) -> Optional[str]:
         """
         ESXi Username config
         """
-        return __config__.get('username') or 'root'
+        return __config__.get('username')
 

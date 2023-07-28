@@ -134,7 +134,7 @@ func (i *VirtualSwitch) ToVirtualSwitchOutputWithContext(ctx context.Context) Vi
 // VirtualSwitchArrayInput is an input type that accepts VirtualSwitchArray and VirtualSwitchArrayOutput values.
 // You can construct a concrete instance of `VirtualSwitchArrayInput` via:
 //
-//	VirtualSwitchArray{ VirtualSwitchArgs{...} }
+//          VirtualSwitchArray{ VirtualSwitchArgs{...} }
 type VirtualSwitchArrayInput interface {
 	pulumi.Input
 
@@ -159,7 +159,7 @@ func (i VirtualSwitchArray) ToVirtualSwitchArrayOutputWithContext(ctx context.Co
 // VirtualSwitchMapInput is an input type that accepts VirtualSwitchMap and VirtualSwitchMapOutput values.
 // You can construct a concrete instance of `VirtualSwitchMapInput` via:
 //
-//	VirtualSwitchMap{ "key": VirtualSwitchArgs{...} }
+//          VirtualSwitchMap{ "key": VirtualSwitchArgs{...} }
 type VirtualSwitchMapInput interface {
 	pulumi.Input
 

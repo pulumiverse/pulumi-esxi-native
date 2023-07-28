@@ -17,9 +17,12 @@ the consolidated work-in-progress branch. Do not request it onto another branch.
 > **IMPORTANT:** The contribution details are stated [here](CONTRIBUTING.md)
 
 ## Requirements
+-   The VMware [ovftool](https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL443) is required to be installed in the workstation where pulumi will be executed.  
+    > **NOTE:** `ovftool` installer for windows doesn't put ovftool.exe in your path. 
+      You will need to manually set your path.
 -   You MUST enable ssh access on your ESXi hypervisor.
-* Google 'How to enable ssh access on esxi'
--   In general, you should know how to use terraform, esxi and some networking...
+    > Google 'How to enable ssh access on esxi'
+      >- In general, you should know how to use terraform, esxi and some networking...
 * You will most likely need a DHCP server on your primary network if you are deploying VMs with public OVF/OVA/VMX images.  (Sources that have unconfigured primary interfaces.)
 - The source OVF/OVA/VMX images must have open-vm-tools or vmware-tools installed to properly import an IPAddress.  (you need this to run provisioners)
 
@@ -28,9 +31,9 @@ the consolidated work-in-progress branch. Do not request it onto another branch.
 * Source image can be a clone of a VM or local vmx, ovf, ova file. This provider uses ovftool, so there should be a wide compatibility.
 * Supports adding your VM to Resource Pools to partition CPU and memory usage from other VMs on your ESXi host.
 * Pulumi will Create, Destroy, Update & Import Resource Pools.
-* Pulumi will Create, Destroy, Update & Import Guest VMs.
-* Pulumi will Create, Destroy, Update & Import Extra Storage for Guests.
-* Pulumi will Create, Destroy, Update & Import vSwitches.
+* Pulumi will Create, Destroy, Update & Import Virtual Machines.
+* Pulumi will Create, Destroy, Update & Import Virtual Disks.
+* Pulumi will Create, Destroy, Update & Import Virtual Switches.
 * Pulumi will Create, Destroy, Update & Import Port Groups.
 
 ## Why this provider?
@@ -51,9 +54,9 @@ TODO: Details will be added here
 
 ## Known issues with vmware_esxi
 
-* Using a local source vmx files should not have any networks configured. There is very limited network interface mapping abilities in ovf_tools for vmx files.  
+* Using a local source vmx files should not have any networks configured. There is very limited network interface mapping abilities in packer for vmx files.  
   It's best to simply clean out all network information from your vmx file. The plugin will add network configuration to the destination vm guest as required.
-* terraform import cannot import the guest disk type (thick, thin, etc.) if the VM is powered on and cannot import the guest ip_address if it's powered off.
+* pulumi import cannot import the guest disk type (thick, thin, etc.) if the VM is powered on and cannot import the guest `ipAddress` if it's powered off.
 * Only `numVCpus` are supported, `numCores` is not.
 * Doesn't support CD-ROM or floppy.
 * Doesn't support Shared bus Interfaces, or Shared disks.

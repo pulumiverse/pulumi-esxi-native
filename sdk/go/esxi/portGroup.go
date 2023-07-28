@@ -129,7 +129,7 @@ func (i *PortGroup) ToPortGroupOutputWithContext(ctx context.Context) PortGroupO
 // PortGroupArrayInput is an input type that accepts PortGroupArray and PortGroupArrayOutput values.
 // You can construct a concrete instance of `PortGroupArrayInput` via:
 //
-//	PortGroupArray{ PortGroupArgs{...} }
+//          PortGroupArray{ PortGroupArgs{...} }
 type PortGroupArrayInput interface {
 	pulumi.Input
 
@@ -154,7 +154,7 @@ func (i PortGroupArray) ToPortGroupArrayOutputWithContext(ctx context.Context) P
 // PortGroupMapInput is an input type that accepts PortGroupMap and PortGroupMapOutput values.
 // You can construct a concrete instance of `PortGroupMapInput` via:
 //
-//	PortGroupMap{ "key": PortGroupArgs{...} }
+//          PortGroupMap{ "key": PortGroupArgs{...} }
 type PortGroupMapInput interface {
 	pulumi.Input
 

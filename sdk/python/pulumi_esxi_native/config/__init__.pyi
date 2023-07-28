@@ -14,27 +14,22 @@ host: Optional[str]
 ESXi Host Name config
 """
 
-ovfToolLocation: Optional[str]
-"""
-ESXi Datastore Name config were ovftool will be configured
-"""
-
 password: Optional[str]
 """
 ESXi Password config
 """
 
-sshPort: str
+sshPort: Optional[str]
 """
 ESXi Host SSH Port config
 """
 
-sslPort: str
+sslPort: Optional[str]
 """
 ESXi Host SSL Port config
 """
 
-username: str
+username: Optional[str]
 """
 ESXi Username config
 """

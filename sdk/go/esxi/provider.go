@@ -17,8 +17,6 @@ type Provider struct {
 
 	// ESXi Host Name config
 	Host pulumi.StringOutput `pulumi:"host"`
-	// ESXi Datastore Name config were ovftool will be configured
-	OvfToolLocation pulumi.StringOutput `pulumi:"ovfToolLocation"`
 	// ESXi Password config
 	Password pulumi.StringOutput `pulumi:"password"`
 	// ESXi Host SSH Port config
@@ -38,9 +36,6 @@ func NewProvider(ctx *pulumi.Context,
 
 	if args.Host == nil {
 		return nil, errors.New("invalid value for required argument 'Host'")
-	}
-	if args.OvfToolLocation == nil {
-		return nil, errors.New("invalid value for required argument 'OvfToolLocation'")
 	}
 	if args.Password == nil {
 		return nil, errors.New("invalid value for required argument 'Password'")
@@ -65,8 +60,6 @@ func NewProvider(ctx *pulumi.Context,
 type providerArgs struct {
 	// ESXi Host Name config
 	Host string `pulumi:"host"`
-	// ESXi Datastore Name config were ovftool will be configured
-	OvfToolLocation string `pulumi:"ovfToolLocation"`
 	// ESXi Password config
 	Password string `pulumi:"password"`
 	// ESXi Host SSH Port config
@@ -81,8 +74,6 @@ type providerArgs struct {
 type ProviderArgs struct {
 	// ESXi Host Name config
 	Host pulumi.StringInput
-	// ESXi Datastore Name config were ovftool will be configured
-	OvfToolLocation pulumi.StringInput
 	// ESXi Password config
 	Password pulumi.StringInput
 	// ESXi Host SSH Port config
@@ -133,11 +124,6 @@ func (o ProviderOutput) ToProviderOutputWithContext(ctx context.Context) Provide
 // ESXi Host Name config
 func (o ProviderOutput) Host() pulumi.StringOutput {
 	return o.ApplyT(func(v *Provider) pulumi.StringOutput { return v.Host }).(pulumi.StringOutput)
-}
-
-// ESXi Datastore Name config were ovftool will be configured
-func (o ProviderOutput) OvfToolLocation() pulumi.StringOutput {
-	return o.ApplyT(func(v *Provider) pulumi.StringOutput { return v.OvfToolLocation }).(pulumi.StringOutput)
 }
 
 // ESXi Password config

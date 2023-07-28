@@ -36,24 +36,18 @@
             "password": {
                 "type": "string",
                 "description": "ESXi Password config"
-            },
-            "metadataStore": {
-                "type": "string",
-                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         },
         "required": [
             "host",
-            "password",
-            "metadataStore"
+            "password"
         ]
     },
     "provider": {
         "description": "The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.",
         "required": [
             "host",
-            "password",
-            "metadataStore"
+            "password"
         ],
         "properties": {
             "host": {
@@ -76,16 +70,11 @@
             "password": {
                 "type": "string",
                 "description": "ESXi Password config"
-            },
-            "metadataStore": {
-                "type": "string",
-                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         },
         "requiredInputs": [
             "host",
-            "password",
-            "metadataStore"
+            "password"
         ],
         "inputProperties": {
             "host": {
@@ -110,10 +99,6 @@
             "password": {
                 "type": "string",
                 "description": "ESXi Password config"
-            },
-            "metadataStore": {
-                "type": "string",
-                "description": "ESXi Datastore Name where provider will store its additional configurations and tools (ex.: packer)"
             }
         }
     },

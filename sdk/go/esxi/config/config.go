@@ -13,11 +13,6 @@ func GetHost(ctx *pulumi.Context) string {
 	return config.Get(ctx, "esxi-native:host")
 }
 
-// ESXi Datastore Name config were ovftool will be configured
-func GetOvfToolLocation(ctx *pulumi.Context) string {
-	return config.Get(ctx, "esxi-native:ovfToolLocation")
-}
-
 // ESXi Password config
 func GetPassword(ctx *pulumi.Context) string {
 	return config.Get(ctx, "esxi-native:password")
@@ -25,27 +20,15 @@ func GetPassword(ctx *pulumi.Context) string {
 
 // ESXi Host SSH Port config
 func GetSshPort(ctx *pulumi.Context) string {
-	v, err := config.Try(ctx, "esxi-native:sshPort")
-	if err == nil {
-		return v
-	}
-	return "22"
+	return config.Get(ctx, "esxi-native:sshPort")
 }
 
 // ESXi Host SSL Port config
 func GetSslPort(ctx *pulumi.Context) string {
-	v, err := config.Try(ctx, "esxi-native:sslPort")
-	if err == nil {
-		return v
-	}
-	return "443"
+	return config.Get(ctx, "esxi-native:sslPort")
 }
 
 // ESXi Username config
 func GetUsername(ctx *pulumi.Context) string {
-	v, err := config.Try(ctx, "esxi-native:username")
-	if err == nil {
-		return v
-	}
-	return "root"
+	return config.Get(ctx, "esxi-native:username")
 }

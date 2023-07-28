@@ -20,14 +20,13 @@ type Host struct {
 	Connection   *ConnectionInfo
 }
 
-func NewHost(host, sshPort, sslPort, user, pass, ovfLoc string) (*Host, error) {
+func NewHost(host, sshPort, sslPort, user, pass string) (*Host, error) {
 	connection := ConnectionInfo{
-		Host:        host,
-		SshPort:     sshPort,
-		SslPort:     sslPort,
-		UserName:    user,
-		Password:    pass,
-		OvfLocation: ovfLoc,
+		Host:     host,
+		SshPort:  sshPort,
+		SslPort:  sslPort,
+		UserName: user,
+		Password: pass,
 	}
 	clientConfig := &ssh.ClientConfig{
 		User: connection.UserName,

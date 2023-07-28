@@ -52,8 +52,6 @@ func getConfig(t *testing.T) map[string]string {
 			config["esxi-native:config:sshPort"] = value
 		case "ESXI_SSL_PORT":
 			config["esxi-native:config:sslPort"] = value
-		case "ESXI_OVFTOOL_LOCATION":
-			config["esxi-native:config:ovfToolLocation"] = value
 		}
 	}
 

@@ -42,16 +42,6 @@ namespace Pulumi.EsxiNative
             set => _host.Set(value);
         }
 
-        private static readonly __Value<string?> _ovfToolLocation = new __Value<string?>(() => __config.Get("ovfToolLocation"));
-        /// <summary>
-        /// ESXi Datastore Name config were ovftool will be configured
-        /// </summary>
-        public static string? OvfToolLocation
-        {
-            get => _ovfToolLocation.Get();
-            set => _ovfToolLocation.Set(value);
-        }
-
         private static readonly __Value<string?> _password = new __Value<string?>(() => __config.Get("password"));
         /// <summary>
         /// ESXi Password config
@@ -62,7 +52,7 @@ namespace Pulumi.EsxiNative
             set => _password.Set(value);
         }
 
-        private static readonly __Value<string?> _sshPort = new __Value<string?>(() => __config.Get("sshPort") ?? "22");
+        private static readonly __Value<string?> _sshPort = new __Value<string?>(() => __config.Get("sshPort"));
         /// <summary>
         /// ESXi Host SSH Port config
         /// </summary>
@@ -72,7 +62,7 @@ namespace Pulumi.EsxiNative
             set => _sshPort.Set(value);
         }
 
-        private static readonly __Value<string?> _sslPort = new __Value<string?>(() => __config.Get("sslPort") ?? "443");
+        private static readonly __Value<string?> _sslPort = new __Value<string?>(() => __config.Get("sslPort"));
         /// <summary>
         /// ESXi Host SSL Port config
         /// </summary>
@@ -82,7 +72,7 @@ namespace Pulumi.EsxiNative
             set => _sslPort.Set(value);
         }
 
-        private static readonly __Value<string?> _username = new __Value<string?>(() => __config.Get("username") ?? "root");
+        private static readonly __Value<string?> _username = new __Value<string?>(() => __config.Get("username"));
         /// <summary>
         /// ESXi Username config
         /// </summary>
