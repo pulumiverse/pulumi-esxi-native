@@ -7,7 +7,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"errors"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -41,6 +42,7 @@ func NewPortGroup(ctx *pulumi.Context,
 	if args.Vlan == nil {
 		return nil, errors.New("invalid value for required argument 'Vlan'")
 	}
+	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource PortGroup
 	err := ctx.RegisterResource("esxi-native:index:PortGroup", name, args, &resource, opts...)
 	if err != nil {
@@ -129,7 +131,7 @@ func (i *PortGroup) ToPortGroupOutputWithContext(ctx context.Context) PortGroupO
 // PortGroupArrayInput is an input type that accepts PortGroupArray and PortGroupArrayOutput values.
 // You can construct a concrete instance of `PortGroupArrayInput` via:
 //
-//          PortGroupArray{ PortGroupArgs{...} }
+//	PortGroupArray{ PortGroupArgs{...} }
 type PortGroupArrayInput interface {
 	pulumi.Input
 
@@ -154,7 +156,7 @@ func (i PortGroupArray) ToPortGroupArrayOutputWithContext(ctx context.Context) P
 // PortGroupMapInput is an input type that accepts PortGroupMap and PortGroupMapOutput values.
 // You can construct a concrete instance of `PortGroupMapInput` via:
 //
-//          PortGroupMap{ "key": PortGroupArgs{...} }
+//	PortGroupMap{ "key": PortGroupArgs{...} }
 type PortGroupMapInput interface {
 	pulumi.Input
 

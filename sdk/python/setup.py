@@ -38,6 +38,7 @@ def readme():
 
 
 setup(name='pulumi_esxi_native',
+      python_requires='>=3.7',
       version=VERSION,
       description="VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
       long_description=readme(),

@@ -37,7 +37,7 @@ clone = new VirtualMachine("vm-clone",{
     power: "on",
     //  cloneFromVirtualMachine uses ovftool to clone an existing VM on your esxi host.
     //  This example will clone a VM named "centos7", we created above, located in the "Templates" resource pool.
-    //  ovfSource/ovfLocalSource uses ovftool to produce a clone from an ovf or vmx image. (typically produced using the ovf_tool).
+    //  ovfSource uses ovftool to produce a clone from an ovf or vmx image. (typically produced using the ovf_tool).
     //    Basically clone_from_vm clones from sources on the esxi host and ovf_source clones from sources on your local hard disk or a URL.
     //    These two options are mutually exclusive.
     cloneFromVirtualMachine: "Templates/centos7",

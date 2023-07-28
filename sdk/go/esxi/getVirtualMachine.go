@@ -7,10 +7,12 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 func LookupVirtualMachine(ctx *pulumi.Context, args *LookupVirtualMachineArgs, opts ...pulumi.InvokeOption) (*LookupVirtualMachineResult, error) {
+	opts = internal.PkgInvokeDefaultOpts(opts)
 	var rv LookupVirtualMachineResult
 	err := ctx.Invoke("esxi-native:index:getVirtualMachine", args, &rv, opts...)
 	if err != nil {
@@ -71,11 +73,11 @@ func (val *LookupVirtualMachineResult) Defaults() *LookupVirtualMachineResult {
 		return nil
 	}
 	tmp := *val
-	if isZero(tmp.ShutdownTimeout) {
+	if tmp.ShutdownTimeout == nil {
 		shutdownTimeout_ := 600
 		tmp.ShutdownTimeout = &shutdownTimeout_
 	}
-	if isZero(tmp.StartupTimeout) {
+	if tmp.StartupTimeout == nil {
 		startupTimeout_ := 600
 		tmp.StartupTimeout = &startupTimeout_
 	}

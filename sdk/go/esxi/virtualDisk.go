@@ -7,7 +7,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"errors"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -39,12 +40,13 @@ func NewVirtualDisk(ctx *pulumi.Context,
 	if args.DiskStore == nil {
 		return nil, errors.New("invalid value for required argument 'DiskStore'")
 	}
-	if isZero(args.DiskType) {
+	if args.DiskType == nil {
 		args.DiskType = DiskType("thin")
 	}
-	if isZero(args.Size) {
+	if args.Size == nil {
 		args.Size = pulumi.IntPtr(1)
 	}
+	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource VirtualDisk
 	err := ctx.RegisterResource("esxi-native:index:VirtualDisk", name, args, &resource, opts...)
 	if err != nil {
@@ -129,7 +131,7 @@ func (i *VirtualDisk) ToVirtualDiskOutputWithContext(ctx context.Context) Virtua
 // VirtualDiskArrayInput is an input type that accepts VirtualDiskArray and VirtualDiskArrayOutput values.
 // You can construct a concrete instance of `VirtualDiskArrayInput` via:
 //
-//          VirtualDiskArray{ VirtualDiskArgs{...} }
+//	VirtualDiskArray{ VirtualDiskArgs{...} }
 type VirtualDiskArrayInput interface {
 	pulumi.Input
 
@@ -154,7 +156,7 @@ func (i VirtualDiskArray) ToVirtualDiskArrayOutputWithContext(ctx context.Contex
 // VirtualDiskMapInput is an input type that accepts VirtualDiskMap and VirtualDiskMapOutput values.
 // You can construct a concrete instance of `VirtualDiskMapInput` via:
 //
-//          VirtualDiskMap{ "key": VirtualDiskArgs{...} }
+//	VirtualDiskMap{ "key": VirtualDiskArgs{...} }
 type VirtualDiskMapInput interface {
 	pulumi.Input
 

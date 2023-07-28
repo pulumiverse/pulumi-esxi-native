@@ -7,7 +7,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"errors"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -62,39 +63,40 @@ func NewVirtualMachine(ctx *pulumi.Context,
 	if args.DiskStore == nil {
 		return nil, errors.New("invalid value for required argument 'DiskStore'")
 	}
-	if isZero(args.BootDiskSize) {
+	if args.BootDiskSize == nil {
 		args.BootDiskSize = pulumi.IntPtr(16)
 	}
-	if isZero(args.BootDiskType) {
+	if args.BootDiskType == nil {
 		args.BootDiskType = DiskType("thin")
 	}
-	if isZero(args.BootFirmware) {
+	if args.BootFirmware == nil {
 		args.BootFirmware = BootFirmwareType("bios")
 	}
-	if isZero(args.MemSize) {
+	if args.MemSize == nil {
 		args.MemSize = pulumi.IntPtr(512)
 	}
-	if isZero(args.NumVCpus) {
+	if args.NumVCpus == nil {
 		args.NumVCpus = pulumi.IntPtr(1)
 	}
-	if isZero(args.Os) {
+	if args.Os == nil {
 		args.Os = pulumi.StringPtr("centos")
 	}
-	if isZero(args.OvfPropertiesTimer) {
+	if args.OvfPropertiesTimer == nil {
 		args.OvfPropertiesTimer = pulumi.IntPtr(6000)
 	}
-	if isZero(args.ResourcePoolName) {
+	if args.ResourcePoolName == nil {
 		args.ResourcePoolName = pulumi.StringPtr("/")
 	}
-	if isZero(args.ShutdownTimeout) {
+	if args.ShutdownTimeout == nil {
 		args.ShutdownTimeout = pulumi.IntPtr(600)
 	}
-	if isZero(args.StartupTimeout) {
+	if args.StartupTimeout == nil {
 		args.StartupTimeout = pulumi.IntPtr(600)
 	}
-	if isZero(args.VirtualHWVer) {
+	if args.VirtualHWVer == nil {
 		args.VirtualHWVer = pulumi.IntPtr(13)
 	}
+	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource VirtualMachine
 	err := ctx.RegisterResource("esxi-native:index:VirtualMachine", name, args, &resource, opts...)
 	if err != nil {
@@ -243,7 +245,7 @@ func (i *VirtualMachine) ToVirtualMachineOutputWithContext(ctx context.Context) 
 // VirtualMachineArrayInput is an input type that accepts VirtualMachineArray and VirtualMachineArrayOutput values.
 // You can construct a concrete instance of `VirtualMachineArrayInput` via:
 //
-//          VirtualMachineArray{ VirtualMachineArgs{...} }
+//	VirtualMachineArray{ VirtualMachineArgs{...} }
 type VirtualMachineArrayInput interface {
 	pulumi.Input
 
@@ -268,7 +270,7 @@ func (i VirtualMachineArray) ToVirtualMachineArrayOutputWithContext(ctx context.
 // VirtualMachineMapInput is an input type that accepts VirtualMachineMap and VirtualMachineMapOutput values.
 // You can construct a concrete instance of `VirtualMachineMapInput` via:
 //
-//          VirtualMachineMap{ "key": VirtualMachineArgs{...} }
+//	VirtualMachineMap{ "key": VirtualMachineArgs{...} }
 type VirtualMachineMapInput interface {
 	pulumi.Input
 

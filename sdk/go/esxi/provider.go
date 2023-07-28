@@ -7,7 +7,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/pkg/errors"
+	"errors"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -40,15 +41,16 @@ func NewProvider(ctx *pulumi.Context,
 	if args.Password == nil {
 		return nil, errors.New("invalid value for required argument 'Password'")
 	}
-	if isZero(args.SshPort) {
+	if args.SshPort == nil {
 		args.SshPort = pulumi.StringPtr("22")
 	}
-	if isZero(args.SslPort) {
+	if args.SslPort == nil {
 		args.SslPort = pulumi.StringPtr("443")
 	}
-	if isZero(args.Username) {
+	if args.Username == nil {
 		args.Username = pulumi.StringPtr("root")
 	}
+	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Provider
 	err := ctx.RegisterResource("pulumi:providers:esxi-native", name, args, &resource, opts...)
 	if err != nil {

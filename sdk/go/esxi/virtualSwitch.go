@@ -7,6 +7,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -38,6 +39,7 @@ func NewVirtualSwitch(ctx *pulumi.Context,
 		args = &VirtualSwitchArgs{}
 	}
 
+	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource VirtualSwitch
 	err := ctx.RegisterResource("esxi-native:index:VirtualSwitch", name, args, &resource, opts...)
 	if err != nil {
@@ -134,7 +136,7 @@ func (i *VirtualSwitch) ToVirtualSwitchOutputWithContext(ctx context.Context) Vi
 // VirtualSwitchArrayInput is an input type that accepts VirtualSwitchArray and VirtualSwitchArrayOutput values.
 // You can construct a concrete instance of `VirtualSwitchArrayInput` via:
 //
-//          VirtualSwitchArray{ VirtualSwitchArgs{...} }
+//	VirtualSwitchArray{ VirtualSwitchArgs{...} }
 type VirtualSwitchArrayInput interface {
 	pulumi.Input
 
@@ -159,7 +161,7 @@ func (i VirtualSwitchArray) ToVirtualSwitchArrayOutputWithContext(ctx context.Co
 // VirtualSwitchMapInput is an input type that accepts VirtualSwitchMap and VirtualSwitchMapOutput values.
 // You can construct a concrete instance of `VirtualSwitchMapInput` via:
 //
-//          VirtualSwitchMap{ "key": VirtualSwitchArgs{...} }
+//	VirtualSwitchMap{ "key": VirtualSwitchArgs{...} }
 type VirtualSwitchMapInput interface {
 	pulumi.Input
 
