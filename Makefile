@@ -120,8 +120,8 @@ install_nodejs_sdk::
 
 prepare_test:: provider install_provider install_nodejs_sdk
 
-test_02:: prepare_test
+test_04ts:: prepare_test
 	export PULUMI_CONFIG_PASSPHRASE=""
 	pulumi login --local
-	pulumi up --yes --diff --stack make --cwd examples/02_cloned_virtual_machine_complete_build/nodejs
-	pulumi destroy --stack make --cwd examples/02_cloned_virtual_machine_complete_build/nodejs
+	pulumi up --yes --diff --stack make --cwd examples/04_talos_linux/nodejs
+	pulumi destroy --stack make --cwd examples/04_talos_linux/nodejs

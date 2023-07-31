@@ -33,10 +33,10 @@ func Test03ResourcePoolsAdditionalStorage(t *testing.T) {
 	integration.ProgramTest(t, &test)
 }
 
-func Test04CoreOSAndIgnition(t *testing.T) {
+func Test04TalosLinux(t *testing.T) {
 	test := getNodeJSBaseOptions(t).
 		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "04_core_os_and_ignition", "nodejs"),
+			Dir: filepath.Join(getCwd(t), "04_talos_linux", "nodejs"),
 		})
 
 	integration.ProgramTest(t, &test)

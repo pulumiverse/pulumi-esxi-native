@@ -118,6 +118,10 @@ func parseVirtualDisk(id string, inputs resource.PropertyMap) (VirtualDisk, erro
 	}
 
 	vd.Name = inputs["name"].StringValue()
+	if !strings.HasSuffix(vd.Name, ".vmdk") {
+		vd.Name = fmt.Sprintf("%s.vmdk", vd.Name)
+	}
+
 	vd.DiskStore = inputs["diskStore"].StringValue()
 	vd.Directory = inputs["directory"].StringValue()
 	vd.DiskType = inputs["diskType"].StringValue()

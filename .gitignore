@@ -13,3 +13,7 @@ ci-scripts
 provider/**/schema-embed.json
 examples/.env
 !examples/.env-template
+examples/**/controlplane.yaml
+examples/**/worker.yaml
+examples/**/talosconfig
+examples/**/cp.patch.yaml

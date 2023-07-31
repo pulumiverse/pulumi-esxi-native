@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -41,54 +40,56 @@ func (esxi *Host) createPlainVirtualMachine(vm VirtualMachine) (VirtualMachine, 
 
 	hasISO := false
 	isoFileName := ""
-	// Build VM by default/black config
-	vmxContents := "config.version = \"8\"\n" +
-		fmt.Sprintf("virtualHW.version = \"%d\"\n", vm.VirtualHWVer) +
-		fmt.Sprintf("displayName = \"%s\"\n", vm.Name) +
-		fmt.Sprintf("numvcpus = \"%d\"\n", vm.NumVCpus) +
-		fmt.Sprintf("memSize = \"%d\"\n", vm.MemSize) +
-		fmt.Sprintf("guestOS = \"%s\"\n", vm.Os) +
-		fmt.Sprintf("annotation = \"%s\"\n", vm.Notes) +
-		fmt.Sprintf("floppy0.present = \"%s\"\n", "FALSE") +
-		fmt.Sprintf("scsi0.present = \"TRUE\"\n") +
-		fmt.Sprintf("scsi0.sharedBus = \"none\"\n") +
-		fmt.Sprintf("scsi0.virtualDev = \"lsilogic\"\n") +
-		fmt.Sprintf("disk.EnableUUID = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge0.present = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge4.present = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge4.virtualDev = \"pcieRootPort\"\n") +
-		fmt.Sprintf("pciBridge4.functions = \"8\"\n") +
-		fmt.Sprintf("pciBridge5.present = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge5.virtualDev = \"pcieRootPort\"\n") +
-		fmt.Sprintf("pciBridge5.functions = \"8\"\n") +
-		fmt.Sprintf("pciBridge6.present = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge6.virtualDev = \"pcieRootPort\"\n") +
-		fmt.Sprintf("pciBridge6.functions = \"8\"\n") +
-		fmt.Sprintf("pciBridge7.present = \"TRUE\"\n") +
-		fmt.Sprintf("pciBridge7.virtualDev = \"pcieRootPort\"\n") +
-		fmt.Sprintf("pciBridge7.functions = \"8\"\n") +
-		fmt.Sprintf("scsi0:0.present = \"TRUE\"\n") +
-		fmt.Sprintf("scsi0:0.fileName = \"%s.vmdk\"\n", vm.Name) +
-		fmt.Sprintf("scsi0:0.deviceType = \"%s\"\n", "scsi-hardDisk") +
-		fmt.Sprintf("nvram = \"%s.nvram\"\n", vm.Name)
+	// Build VMX file content
+	vmxContents := fmt.Sprintf(`config.version = "8"
+virtualHW.version = "%d"
+displayName = "%s"
+numvcpus = "%d"
+memSize = "%d"
+guestOS = "%s"
+annotation = "%s"
+floppy0.present = "FALSE"
+scsi0.present = "TRUE"
+scsi0.sharedBus = "none"
+scsi0.virtualDev = "lsilogic"
+disk.EnableUUID = "TRUE"
+pciBridge0.present = "TRUE"
+pciBridge4.present = "TRUE"
+pciBridge4.virtualDev = "pcieRootPort"
+pciBridge4.functions = "8"
+pciBridge5.present = "TRUE"
+pciBridge5.virtualDev = "pcieRootPort"
+pciBridge5.functions = "8"
+pciBridge6.present = "TRUE"
+pciBridge6.virtualDev = "pcieRootPort"
+pciBridge6.functions = "8"
+pciBridge7.present = "TRUE"
+pciBridge7.virtualDev = "pcieRootPort"
+pciBridge7.functions = "8"
+scsi0:0.present = "TRUE"
+scsi0:0.fileName = "%s.vmdk"
+scsi0:0.deviceType = "scsi-hardDisk"
+nvram = "%s.nvram"`, vm.VirtualHWVer, vm.Name, vm.NumVCpus, vm.MemSize, vm.Os, vm.Notes, vm.Name, vm.Name)
+
 	if vm.BootFirmware == "efi" {
-		vmxContents = vmxContents + "firmware = \\\"efi\\\"\n"
+		vmxContents += "\nfirmware = \"efi\""
 	} else if vm.BootFirmware == "bios" {
-		vmxContents = vmxContents + "firmware = \\\"bios\\\"\n"
+		vmxContents += "\nfirmware = \"bios\""
 	}
-	// TODO: to be checked how we can set the ISO file
+
+	// Check and set ISO file
 	if hasISO {
-		vmxContents = vmxContents +
-			fmt.Sprintf("ide1:0.present = \"TRUE\"\n") +
-			fmt.Sprintf("ide1:0.fileName = \\\"emptyBackingString\\\"\n") +
-			fmt.Sprintf("ide1:0.deviceType = \\\"atapi-cdrom\\\"\n") +
-			fmt.Sprintf("ide1:0.startConnected = \"FALSE\"\n") +
-			fmt.Sprintf("ide1:0.clientDevice = \"TRUE\"\n")
+		vmxContents += fmt.Sprintf(`
+ide1:0.present = "TRUE"
+ide1:0.fileName = "%s"
+ide1:0.deviceType = "cdrom-raw"`, isoFileName)
 	} else {
-		vmxContents = vmxContents +
-			fmt.Sprintf("ide1:0.present = \"TRUE\"\n") +
-			fmt.Sprintf("ide1:0.fileName = \"%s\"\n", isoFileName) +
-			fmt.Sprintf("ide1:0.deviceType = \"cdrom-raw\"\n")
+		vmxContents += `
+ide1:0.present = "TRUE"
+ide1:0.fileName = "emptyBackingString"
+ide1:0.deviceType = "atapi-cdrom"
+ide1:0.startConnected = "FALSE"
+ide1:0.clientDevice = "TRUE"`
 	}
 
 	// Write vmx file to esxi host
@@ -186,29 +187,31 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 
 		username := url.QueryEscape(esxi.Connection.UserName)
 		password := url.QueryEscape(esxi.Connection.Password)
-		dstPath := fmt.Sprintf("vi://%s:%s@%s:%s/%s", username, password, esxi.Connection.Host, esxi.Connection.SslPort, vm.ResourcePoolName)
+		dstPath := fmt.Sprintf("vi://%s:%s@%s:%s/", username, password, esxi.Connection.Host, esxi.Connection.SslPort)
+		if vm.ResourcePoolName != "/" {
+			dstPath = fmt.Sprintf("%s/%s", dstPath, vm.ResourcePoolName)
+		}
 
 		netParam := ""
 		if (strings.HasSuffix(vm.SourcePath, ".ova") || strings.HasSuffix(vm.SourcePath, ".ovf")) && len(vm.NetworkInterfaces) > 0 && vm.NetworkInterfaces[0].VirtualNetwork != "" {
 			netParam = fmt.Sprintf(" --network='%s'", vm.NetworkInterfaces[0].VirtualNetwork)
 		}
 
-		extraParams := ""
+		extraParams := "--X:logToConsole --X:logLevel=info"
 		if (len(vm.OvfProperties) > 0) && (strings.HasSuffix(vm.SourcePath, ".ova") || strings.HasSuffix(vm.SourcePath, ".ovf")) {
 			hasOvfProperties = true
 			// in order to process any OVF params, guest should be immediately powered on
 			// This is because the ESXi host doesn't have a cache to store the OVF parameters, like the vCenter Server does.
 			// Therefore, you MUST use the ‘--X:injectOvfEnv’ option with the ‘--poweron’ option
-			extraParams = "--X:injectOvfEnv --allowExtraConfig --powerOn "
+			extraParams = fmt.Sprintf("%s --X:injectOvfEnv --allowExtraConfig --powerOn", extraParams)
 
 			for _, prop := range vm.OvfProperties {
-				extraParams = fmt.Sprintf("%s --prop:%s='%s' ", extraParams, prop.Key, prop.Value)
+				extraParams = fmt.Sprintf("%s --prop:%s='%s'", extraParams, prop.Key, prop.Value)
 			}
-			log.Println("ovf_properties extra_params: " + extraParams)
 		}
 
-		ovfCmd := fmt.Sprintf("ovftool --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%d --name='%s' --overwrite -ds='%s'%s '%s' '%s'",
-			extraParams, vm.BootDiskSize, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
+		ovfCmd := fmt.Sprintf("ovftool --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s -dm=%s --name='%s' --overwrite -ds='%s'%s '%s' '%s'",
+			extraParams, vm.BootDiskType, vm.Name, vm.DiskStore, netParam, vm.SourcePath, dstPath)
 		re := regexp.MustCompile(`vi://.*?@`)
 
 		osShellCmd := "/bin/bash"

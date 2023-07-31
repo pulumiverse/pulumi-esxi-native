@@ -1,1 +1,6 @@
-
+config:
+  esxi-native:host: <host-ip-address-or-name>
+  esxi-native:password: <secure-password>
+  esxi-native:sshPort: "22"
+  esxi-native:sslPort: "443"
+  esxi-native:username: root

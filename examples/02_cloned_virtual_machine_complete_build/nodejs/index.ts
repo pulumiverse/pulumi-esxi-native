@@ -1,5 +1,5 @@
-import * as esxi from "@edmondshtogu/pulumi-esxi-native";
 import {ResourcePool, VirtualMachine} from "@edmondshtogu/pulumi-esxi-native";
+import {concat} from "@pulumi/pulumi";
 
 // This Guest VM is a clone of an existing Guest VM named "centos7" (must exist and
 // be powered off), located in the "Templates" resource pool.  vmtest02 will be powered
@@ -40,8 +40,7 @@ clone = new VirtualMachine("vm-clone",{
     //  ovfSource uses ovftool to produce a clone from an ovf or vmx image. (typically produced using the ovf_tool).
     //    Basically clone_from_vm clones from sources on the esxi host and ovf_source clones from sources on your local hard disk or a URL.
     //    These two options are mutually exclusive.
-    cloneFromVirtualMachine: "Templates/centos7",
-    //ovfLocalSource: "/my_local_system_path/centos-7-min/centos-7.vmx"
+    cloneFromVirtualMachine:  concat(pool.name, "/", template.name),
     networkInterfaces: [
         {
             virtualNetwork: "default",
