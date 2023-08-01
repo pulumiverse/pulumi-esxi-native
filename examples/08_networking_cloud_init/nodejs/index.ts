@@ -1,6 +1,6 @@
 import { gzip } from 'zlib';
 import {Output} from "@pulumi/pulumi";
-import {PortGroup, VirtualSwitch, VirtualMachine} from "@edmondshtogu/pulumi-esxi-native";
+import {PortGroup, VirtualSwitch, VirtualMachine} from "@pulumiverse/pulumi-esxi-native";
 
 function base64gzip(input: string): Promise<string> {
     return new Promise((resolve, reject) => {

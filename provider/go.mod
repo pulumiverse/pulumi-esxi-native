@@ -1,4 +1,4 @@
-module github.com/edmondshtogu/pulumi-esxi-native/provider
+module github.com/pulumiverse/pulumi-esxi-native/provider
 
 go 1.20
 

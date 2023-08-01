@@ -7,8 +7,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumiverse/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 )
 
 var _ = internal.GetEnvOrDefault
@@ -317,7 +317,7 @@ func (o UplinkArrayOutput) Index(i pulumi.IntInput) UplinkOutput {
 }
 
 type VMVirtualDisk struct {
-	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+	// SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
 	Slot          *string `pulumi:"slot"`
 	VirtualDiskId string  `pulumi:"virtualDiskId"`
 }
@@ -334,7 +334,7 @@ type VMVirtualDiskInput interface {
 }
 
 type VMVirtualDiskArgs struct {
-	// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+	// SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
 	Slot          pulumi.StringPtrInput `pulumi:"slot"`
 	VirtualDiskId pulumi.StringInput    `pulumi:"virtualDiskId"`
 }
@@ -390,7 +390,7 @@ func (o VMVirtualDiskOutput) ToVMVirtualDiskOutputWithContext(ctx context.Contex
 	return o
 }
 
-// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+// SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
 func (o VMVirtualDiskOutput) Slot() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v VMVirtualDisk) *string { return v.Slot }).(pulumi.StringPtrOutput)
 }

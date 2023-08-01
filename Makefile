@@ -2,8 +2,8 @@ PROJECT_NAME := Pulumi esxi-native Resource Provider
 
 PACK             := esxi-native
 PACKDIR          := sdk
-PROJECT          := github.com/edmondshtogu/pulumi-esxi-native
-NODE_MODULE_NAME := @edmondshtogu/pulumi-esxi-native
+PROJECT          := github.com/pulumiverse/pulumi-esxi-native
+NODE_MODULE_NAME := @pulumiverse/pulumi-esxi-native
 NUGET_PKG_NAME   := Pulumi.ESXiNative
 
 PROVIDER        := pulumi-resource-${PACK}
@@ -118,10 +118,5 @@ install_nodejs_sdk::
 	-yarn unlink --cwd $(WORKING_DIR)/sdk/nodejs/bin
 	yarn link --cwd $(WORKING_DIR)/sdk/nodejs/bin
 
-prepare_test:: provider install_provider install_nodejs_sdk
-
-test_04ts:: prepare_test
-	export PULUMI_CONFIG_PASSPHRASE=""
-	pulumi login --local
-	pulumi up --yes --diff --stack make --cwd examples/04_talos_linux/nodejs
-	pulumi destroy --stack make --cwd examples/04_talos_linux/nodejs
+setup_nodejs_examples:: provider install_provider install_nodejs_sdk
+	find ./examples/ -maxdepth 2 -type d -name 'nodejs' -exec sh -c 'cd "{}" && yarn link "$(NODE_MODULE_NAME)"' \;

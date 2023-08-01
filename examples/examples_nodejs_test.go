@@ -7,72 +7,41 @@ import (
 )
 
 func Test01SimpleVirtualMachineTs(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "01_simple_virtual_machine", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("01_simple_virtual_machine", t)
 }
 
 func Test02ClonedVirtualMachineCompleteBuild(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "02_cloned_virtual_machine_complete_build", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("02_cloned_virtual_machine_complete_build", t)
 }
 
 func Test03ResourcePoolsAdditionalStorage(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "03_resource_pools_additional_storage", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("03_resource_pools_additional_storage", t)
 }
 
 func Test04TalosLinux(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "04_talos_linux", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("04_talos_linux", t)
 }
 
 func Test05CloudInitAndTemplates(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "05_cloud_init_and_templates", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("05_cloud_init_and_templates", t)
 }
 
 func Test06OVFProperties(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "06_ovf_properties", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("06_ovf_properties", t)
 }
 
 func Test07Networking(t *testing.T) {
-	test := getNodeJSBaseOptions(t).
-		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "07_networking", "nodejs"),
-		})
-
-	integration.ProgramTest(t, &test)
+	testExample("07_networking", t)
 }
 
 func Test08NetworkingCloudInit(t *testing.T) {
+	testExample("08_networking_cloud_init", t)
+}
+
+func testExample(name string, t *testing.T) {
 	test := getNodeJSBaseOptions(t).
 		With(integration.ProgramTestOptions{
-			Dir: filepath.Join(getCwd(t), "08_networking_cloud_init", "nodejs"),
+			Dir: filepath.Join(getCwd(t), name, "nodejs"),
 		})
 
 	integration.ProgramTest(t, &test)
@@ -82,7 +51,7 @@ func getNodeJSBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	base := getBaseOptions(t)
 	baseJS := base.With(integration.ProgramTestOptions{
 		Dependencies: []string{
-			"@edmondshtogu/pulumi-esxi-native",
+			"@pulumiverse/pulumi-esxi-native",
 		},
 	})
 

@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Immutable;
 
-namespace Pulumi.EsxiNative
+namespace Pulumiverse.EsxiNative
 {
     public static class Config
     {

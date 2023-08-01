@@ -8,8 +8,8 @@ import (
 	"reflect"
 
 	"errors"
-	"github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumiverse/pulumi-esxi-native/sdk/v3/go/esxi/internal"
 )
 
 // The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.

@@ -2,6 +2,7 @@
     "name": "esxi-native",
     "displayName": "ESXi Native",
     "version": "0.0.1",
+    "pluginDownloadURL": "github://api.github.com/pulumiverse",
     "description": "VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
     "keywords": [
         "esxi",
@@ -10,9 +11,9 @@
         "infrastructure",
         "on-prem"
     ],
-    "homepage": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "homepage": "https://github.com/pulumiverse/pulumi-esxi-native",
     "license": "Apache-2.0",
-    "repository": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "repository": "https://github.com/pulumiverse/pulumi-esxi-native",
     "logoUrl": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/fa724ca8721330922afc7056dc3ff648015423c336131364294def9378041324.png",
     "publisher": "Edmond Shtogu",
     "config": {
@@ -37,11 +38,7 @@
                 "type": "string",
                 "description": "ESXi Password config"
             }
-        },
-        "required": [
-            "host",
-            "password"
-        ]
+        }
     },
     "provider": {
         "description": "The provider type for the ESXi native package. By default, resources use package-wide configuration settings, however an explicit `Provider` instance may be created and passed during resource construction to achieve fine-grained programmatic control over provider settings. See the [documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.",
@@ -156,7 +153,7 @@
                 },
                 "slot": {
                     "type": "string",
-                    "description": "SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed."
+                    "description": "SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed."
                 }
             },
             "required": ["virtualDiskId"]
@@ -908,21 +905,23 @@
     },
     "language": {
         "csharp": {
+            "rootNamespace": "Pulumiverse",
             "packageReferences": {
                 "Pulumi": "3.*"
             }
         },
         "go": {
             "generateResourceContainerTypes": true,
-            "importBasePath": "github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi"
+            "importBasePath": "github.com/pulumiverse/pulumi-esxi-native/sdk/v3/go/esxi"
         },
         "nodejs": {
-            "packageName": "@edmondshtogu/pulumi-esxi-native",
+            "packageName": "@pulumiverse/pulumi-esxi-native",
             "dependencies": {
                 "@pulumi/pulumi": "^3.0.0"
             }
         },
         "python": {
+            "packageName": "pulumiverse_pulumi-esxi-native",
             "requires": {
                 "pulumi": ">=3.0.0,<4.0.0"
             }

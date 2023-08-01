@@ -1,4 +1,4 @@
-module github.com/edmondshtogu/pulumi-esxi-native/examples
+module github.com/pulumiverse/pulumi-esxi-native/examples
 
 go 1.20
 

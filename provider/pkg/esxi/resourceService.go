@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/schema"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
+	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/schema"
 )
 
 type functionsMapper map[string]interface{}

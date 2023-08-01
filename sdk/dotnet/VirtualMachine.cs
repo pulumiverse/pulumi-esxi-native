@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
+using Pulumi;
 
-namespace Pulumi.EsxiNative
+namespace Pulumiverse.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:VirtualMachine")]
     public partial class VirtualMachine : global::Pulumi.CustomResource
@@ -22,13 +23,13 @@ namespace Pulumi.EsxiNative
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
         [Output("bootDiskType")]
-        public Output<Pulumi.EsxiNative.DiskType?> BootDiskType { get; private set; } = null!;
+        public Output<Pulumiverse.EsxiNative.DiskType?> BootDiskType { get; private set; } = null!;
 
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
         /// </summary>
         [Output("bootFirmware")]
-        public Output<Pulumi.EsxiNative.BootFirmwareType?> BootFirmware { get; private set; } = null!;
+        public Output<Pulumiverse.EsxiNative.BootFirmwareType?> BootFirmware { get; private set; } = null!;
 
         /// <summary>
         /// esxi diskstore for boot disk.
@@ -143,6 +144,7 @@ namespace Pulumi.EsxiNative
             var defaultOptions = new CustomResourceOptions
             {
                 Version = Utilities.Version,
+                PluginDownloadURL = "github://api.github.com/pulumiverse",
             };
             var merged = CustomResourceOptions.Merge(defaultOptions, options);
             // Override the ID if one was specified for consistency with other language SDKs.
@@ -175,13 +177,13 @@ namespace Pulumi.EsxiNative
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
         [Input("bootDiskType")]
-        public Input<Pulumi.EsxiNative.DiskType>? BootDiskType { get; set; }
+        public Input<Pulumiverse.EsxiNative.DiskType>? BootDiskType { get; set; }
 
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
         /// </summary>
         [Input("bootFirmware")]
-        public Input<Pulumi.EsxiNative.BootFirmwareType>? BootFirmware { get; set; }
+        public Input<Pulumiverse.EsxiNative.BootFirmwareType>? BootFirmware { get; set; }
 
         /// <summary>
         /// Source vm path on esxi host to clone.
@@ -318,8 +320,8 @@ namespace Pulumi.EsxiNative
         public VirtualMachineArgs()
         {
             BootDiskSize = 16;
-            BootDiskType = Pulumi.EsxiNative.DiskType.Thin;
-            BootFirmware = Pulumi.EsxiNative.BootFirmwareType.BIOS;
+            BootDiskType = Pulumiverse.EsxiNative.DiskType.Thin;
+            BootFirmware = Pulumiverse.EsxiNative.BootFirmwareType.BIOS;
             MemSize = 512;
             NumVCpus = 1;
             Os = "centos";

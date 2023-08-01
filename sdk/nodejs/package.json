@@ -1,5 +1,5 @@
 {
-    "name": "@edmondshtogu/pulumi-esxi-native",
+    "name": "@pulumiverse/pulumi-esxi-native",
     "version": "${VERSION}",
     "keywords": [
         "esxi",
@@ -8,8 +8,8 @@
         "infrastructure",
         "on-prem"
     ],
-    "homepage": "https://github.com/edmondshtogu/pulumi-esxi-native",
-    "repository": "https://github.com/edmondshtogu/pulumi-esxi-native",
+    "homepage": "https://github.com/pulumiverse/pulumi-esxi-native",
+    "repository": "https://github.com/pulumiverse/pulumi-esxi-native",
     "license": "Apache-2.0",
     "scripts": {
         "build": "tsc",
@@ -24,6 +24,7 @@
     },
     "pulumi": {
         "resource": true,
-        "name": "esxi-native"
+        "name": "esxi-native",
+        "server": "github://api.github.com/pulumiverse"
     }
 }

@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
+using Pulumi;
 
-namespace Pulumi.EsxiNative
+namespace Pulumiverse.EsxiNative
 {
     public static class GetVirtualMachine
     {
@@ -58,11 +59,11 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// VM boot disk type. thin, zeroedthick, eagerzeroedthick
         /// </summary>
-        public readonly Pulumi.EsxiNative.DiskType? BootDiskType;
+        public readonly Pulumiverse.EsxiNative.DiskType? BootDiskType;
         /// <summary>
         /// Boot type('efi' is boot uefi mode)
         /// </summary>
-        public readonly Pulumi.EsxiNative.BootFirmwareType? BootFirmware;
+        public readonly Pulumiverse.EsxiNative.BootFirmwareType? BootFirmware;
         /// <summary>
         /// esxi diskstore for boot disk.
         /// </summary>
@@ -132,9 +133,9 @@ namespace Pulumi.EsxiNative
         private GetVirtualMachineResult(
             int? bootDiskSize,
 
-            Pulumi.EsxiNative.DiskType? bootDiskType,
+            Pulumiverse.EsxiNative.DiskType? bootDiskType,
 
-            Pulumi.EsxiNative.BootFirmwareType? bootFirmware,
+            Pulumiverse.EsxiNative.BootFirmwareType? bootFirmware,
 
             string? diskStore,
 

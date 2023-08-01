@@ -126,7 +126,7 @@ class VMVirtualDisk(dict):
                  virtual_disk_id: str,
                  slot: Optional[str] = None):
         """
-        :param str slot: SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+        :param str slot: SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
         """
         pulumi.set(__self__, "virtual_disk_id", virtual_disk_id)
         if slot is not None:
@@ -141,7 +141,7 @@ class VMVirtualDisk(dict):
     @pulumi.getter
     def slot(self) -> Optional[str]:
         """
-        SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+        SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
         """
         return pulumi.get(self, "slot")
 

@@ -22,13 +22,13 @@ import (
 	"os"
 	"path/filepath"
 
-	providerVersion "github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/version"
 	dotnetgen "github.com/pulumi/pulumi/pkg/v3/codegen/dotnet"
 	gogen "github.com/pulumi/pulumi/pkg/v3/codegen/go"
 	nodejsgen "github.com/pulumi/pulumi/pkg/v3/codegen/nodejs"
 	pythongen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
+	providerVersion "github.com/pulumiverse/pulumi-esxi-native/provider/pkg/version"
 )
 
 // TemplateDir is the path to the base directory for code generator templates.

@@ -1,5 +1,5 @@
-import {VirtualMachine, DiskType, VirtualDisk} from "@edmondshtogu/pulumi-esxi-native";
-import {VMVirtualDiskArgs} from "@edmondshtogu/pulumi-esxi-native/types/input";
+import {VirtualMachine, DiskType, VirtualDisk} from "@pulumiverse/pulumi-esxi-native";
+import {VMVirtualDiskArgs} from "@pulumiverse/pulumi-esxi-native/types/input";
 
 export interface VirtualMachineConfig {
     Index: number
@@ -14,10 +14,6 @@ export interface VirtualMachineConfig {
     Memory: number;
     Cpu: number;
     Disk: number;
-}
-
-interface VirtualMachineParams {
-    Config: VirtualMachineConfig;
 }
 
 export class VirtualMachineFactory {

@@ -1,4 +1,4 @@
-module github.com/edmondshtogu/pulumi-esxi-native/sdk/v3
+module github.com/pulumiverse/pulumi-esxi-native/sdk/v3
 
 go 1.17
 
