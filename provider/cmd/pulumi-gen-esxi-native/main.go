@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -46,6 +45,8 @@ const (
 	Go     Language = "go"
 	NodeJS Language = "nodejs"
 	Python Language = "python"
+
+	argsNumber = 3
 )
 
 func main() {
@@ -61,7 +62,7 @@ func main() {
 
 	flag.Parse()
 	args := flag.Args()
-	if len(args) < 3 {
+	if len(args) < argsNumber {
 		flag.Usage()
 		return
 	}
@@ -92,7 +93,7 @@ func main() {
 
 func readSchema(schemaPath string, version string) *schema.Package {
 	// Read in, decode, and import the schema.
-	schemaBytes, err := ioutil.ReadFile(schemaPath)
+	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		panic(err)
 	}
@@ -173,10 +174,15 @@ func mustWriteFiles(rootDir string, files map[string][]byte) {
 func mustWriteFile(rootDir, filename string, contents []byte) {
 	outPath := filepath.Join(rootDir, filename)
 
-	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
+	const (
+		dirPermissions  = 0o755
+		filePermissions = 0o644
+	)
+
+	if err := os.MkdirAll(filepath.Dir(outPath), dirPermissions); err != nil {
 		panic(err)
 	}
-	err := ioutil.WriteFile(outPath, contents, 0600)
+	err := os.WriteFile(outPath, contents, filePermissions)
 	if err != nil {
 		panic(err)
 	}
