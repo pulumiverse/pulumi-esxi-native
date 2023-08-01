@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
+using Pulumi;
 
-namespace Pulumi.EsxiNative
+namespace Pulumiverse.EsxiNative
 {
     [EsxiNativeResourceType("esxi-native:index:VirtualDisk")]
     public partial class VirtualDisk : global::Pulumi.CustomResource
@@ -28,7 +29,7 @@ namespace Pulumi.EsxiNative
         /// Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)
         /// </summary>
         [Output("diskType")]
-        public Output<Pulumi.EsxiNative.DiskType> DiskType { get; private set; } = null!;
+        public Output<Pulumiverse.EsxiNative.DiskType> DiskType { get; private set; } = null!;
 
         /// <summary>
         /// Virtual Disk Name.
@@ -65,6 +66,7 @@ namespace Pulumi.EsxiNative
             var defaultOptions = new CustomResourceOptions
             {
                 Version = Utilities.Version,
+                PluginDownloadURL = "github://api.github.com/pulumiverse",
             };
             var merged = CustomResourceOptions.Merge(defaultOptions, options);
             // Override the ID if one was specified for consistency with other language SDKs.
@@ -103,7 +105,7 @@ namespace Pulumi.EsxiNative
         /// Virtual Disk type. (thin, zeroedthick or eagerzeroedthick)
         /// </summary>
         [Input("diskType", required: true)]
-        public Input<Pulumi.EsxiNative.DiskType> DiskType { get; set; } = null!;
+        public Input<Pulumiverse.EsxiNative.DiskType> DiskType { get; set; } = null!;
 
         /// <summary>
         /// Virtual Disk Name.
@@ -119,7 +121,7 @@ namespace Pulumi.EsxiNative
 
         public VirtualDiskArgs()
         {
-            DiskType = Pulumi.EsxiNative.DiskType.Thin;
+            DiskType = Pulumiverse.EsxiNative.DiskType.Thin;
             Size = 1;
         }
         public static new VirtualDiskArgs Empty => new VirtualDiskArgs();

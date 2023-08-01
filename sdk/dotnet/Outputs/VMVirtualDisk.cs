@@ -6,15 +6,16 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
+using Pulumi;
 
-namespace Pulumi.EsxiNative.Outputs
+namespace Pulumiverse.EsxiNative.Outputs
 {
 
     [OutputType]
     public sealed class VMVirtualDisk
     {
         /// <summary>
-        /// SCSI_Ctrl:SCSI_id.    Range  '0:1' to '0:15'.   SCSI_id 7 is not allowed.
+        /// SCSI_Ctrl:SCSI_id. Range '0:1' to '0:15'. SCSI_id 7 is not allowed.
         /// </summary>
         public readonly string? Slot;
         public readonly string VirtualDiskId;

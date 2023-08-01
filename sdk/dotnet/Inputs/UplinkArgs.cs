@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
+using Pulumi;
 
-namespace Pulumi.EsxiNative.Inputs
+namespace Pulumiverse.EsxiNative.Inputs
 {
 
     public sealed class UplinkArgs : global::Pulumi.ResourceArgs

@@ -16,8 +16,8 @@
 package main
 
 import (
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/provider"
-	"github.com/edmondshtogu/pulumi-esxi-native/provider/pkg/version"
+	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/provider"
+	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/version"
 
 	_ "embed"
 )

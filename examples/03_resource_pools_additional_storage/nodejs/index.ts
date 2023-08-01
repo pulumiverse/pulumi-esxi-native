@@ -1,5 +1,5 @@
-import * as esxi from "@edmondshtogu/pulumi-esxi-native";
-import {DiskType, ResourcePool, VirtualDisk} from "@edmondshtogu/pulumi-esxi-native";
+import * as esxi from "@pulumiverse/pulumi-esxi-native";
+import {DiskType, ResourcePool, VirtualDisk} from "@pulumiverse/pulumi-esxi-native";
 import {concat} from "@pulumi/pulumi";
 
 // Resource Pools

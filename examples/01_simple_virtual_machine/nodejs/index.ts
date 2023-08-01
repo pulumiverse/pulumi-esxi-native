@@ -1,4 +1,4 @@
-import * as esxi from "@edmondshtogu/pulumi-esxi-native";
+import * as esxi from "@pulumiverse/pulumi-esxi-native";
 
 let vm: esxi.VirtualMachine;
 vm = new esxi.VirtualMachine("vm-test", {

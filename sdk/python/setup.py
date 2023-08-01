@@ -15,7 +15,7 @@ class InstallPluginCommand(install):
     def run(self):
         install.run(self)
         try:
-            check_call(['pulumi', 'plugin', 'install', 'resource', 'esxi-native', PLUGIN_VERSION])
+            check_call(['pulumi', 'plugin', 'install', 'resource', 'esxi-native', PLUGIN_VERSION, '--server', 'github://api.github.com/pulumiverse'])
         except OSError as error:
             if error.errno == errno.ENOENT:
                 print(f"""
@@ -37,7 +37,7 @@ def readme():
         return "esxi-native Pulumi Package - Development Version"
 
 
-setup(name='pulumi_esxi_native',
+setup(name='pulumiverse_pulumi-esxi-native',
       python_requires='>=3.7',
       version=VERSION,
       description="VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
@@ -47,14 +47,14 @@ setup(name='pulumi_esxi_native',
           'install': InstallPluginCommand,
       },
       keywords='esxi esxi-native vsphere infrastructure on-prem',
-      url='https://github.com/edmondshtogu/pulumi-esxi-native',
+      url='https://github.com/pulumiverse/pulumi-esxi-native',
       project_urls={
-          'Repository': 'https://github.com/edmondshtogu/pulumi-esxi-native'
+          'Repository': 'https://github.com/pulumiverse/pulumi-esxi-native'
       },
       license='Apache-2.0',
       packages=find_packages(),
       package_data={
-          'pulumi_esxi_native': [
+          'pulumiverse_pulumi-esxi-native': [
               'py.typed',
               'pulumi-plugin.json',
           ]

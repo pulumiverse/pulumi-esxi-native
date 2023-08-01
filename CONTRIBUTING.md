@@ -12,7 +12,7 @@ However, there's only one **REALLY** important rule: **use spaces for indenting*
 
 ## Development Process
 
-In order to help manage community contributions and avoid conflicts, create an [issue here](https://github.com/edmondshtogu/pulumi-esxi-native/issues), to track assignments to any significant development effort.
+In order to help manage community contributions and avoid conflicts, create an [issue here](https://github.com/pulumiverse/pulumi-esxi-native/issues), to track assignments to any significant development effort.
 
 Great but... **what's "significant"**?
 

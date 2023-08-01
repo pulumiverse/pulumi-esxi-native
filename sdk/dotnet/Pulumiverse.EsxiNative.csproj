@@ -6,8 +6,8 @@
     <Company>Edmond Shtogu</Company>
     <Description>VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/edmondshtogu/pulumi-esxi-native</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/edmondshtogu/pulumi-esxi-native</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/pulumiverse/pulumi-esxi-native</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pulumiverse/pulumi-esxi-native</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
 
     <TargetFramework>net6.0</TargetFramework>

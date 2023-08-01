@@ -5,7 +5,7 @@ using System;
 using System.ComponentModel;
 using Pulumi;
 
-namespace Pulumi.EsxiNative
+namespace Pulumiverse.EsxiNative
 {
     [EnumType]
     public readonly struct BootFirmwareType : IEquatable<BootFirmwareType>
