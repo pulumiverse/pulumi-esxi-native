@@ -2,6 +2,12 @@ package esxi
 
 const (
 	logLevel = 9
+
+	// Virtual Machine constants
+	vmTurnedOn                     = "on"
+	vmTurnedOff                    = "off"
+	vmTurnedSuspended              = "suspended"
+	vmSleepBetweenPowerStateChecks = 3
 )
 
 type KeyValuePair struct {

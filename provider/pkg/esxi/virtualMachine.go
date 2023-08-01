@@ -60,17 +60,17 @@ func VirtualMachineCreate(inputs resource.PropertyMap, esxi *Host) (string, reso
 	} else {
 		return "", nil, err
 	}
-	powerOn := vm.Power == "on" || vm.Power == ""
+	powerOn := vm.Power == vmTurnedOn || vm.Power == ""
 	vm, err := esxi.createVirtualMachine(vm)
 	if err != nil {
 		return "", nil, err
 	}
 	if powerOn {
-		_, err = esxi.powerOnVirtualMachine(vm.Id)
+		err = esxi.powerOnVirtualMachine(vm.Id)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to power on the virtual machine")
 		}
-		vm.Power = "on"
+		vm.Power = vmTurnedOn
 	}
 
 	result := vm.toMap()
@@ -86,11 +86,8 @@ func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (s
 	}
 
 	currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
-	if currentPowerState == "on" || currentPowerState == "suspended" {
-		_, err := esxi.powerOffVirtualMachine(vm.Id, vm.ShutdownTimeout)
-		if err != nil {
-			return id, nil, fmt.Errorf("failed to shutdown %s", err)
-		}
+	if currentPowerState == vmTurnedOn || currentPowerState == vmTurnedSuspended {
+		esxi.powerOffVirtualMachine(vm.Id, vm.ShutdownTimeout)
 	}
 
 	// make updates to vmx file
@@ -110,8 +107,8 @@ func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (s
 		err = esxi.reloadVirtualMachine(id)
 	}
 	//  power on
-	if vm.Power == "on" {
-		_, err = esxi.powerOnVirtualMachine(id)
+	if vm.Power == vmTurnedOn {
+		err = esxi.powerOnVirtualMachine(id)
 		if err != nil {
 			return id, nil, fmt.Errorf("failed to power on: %s", err)
 		}
@@ -125,10 +122,7 @@ func VirtualMachineDelete(id string, esxi *Host) error {
 	var command, stdout string
 	var err error
 
-	_, err = esxi.powerOffVirtualMachine(id, 30)
-	if err != nil {
-		return fmt.Errorf("failed to power off: %s", err)
-	}
+	esxi.powerOffVirtualMachine(id, 30)
 
 	// remove storage from vmx so it doesn't get deleted by the vim-cmd destroy
 	err = esxi.cleanStorageFromVmx(id)
@@ -483,7 +477,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	//
 	// Get IP address (need vmware tools installed)
 	//
-	if vm.Power == "on" {
+	if vm.Power == vmTurnedOn {
 		vm.IpAddress = esxi.getVirtualMachineIpAddress(vm.Id, vm.StartupTimeout)
 		logging.V(logLevel).Infof("readVirtualMachine: IpAddress found => %s", vm.IpAddress)
 	} else {
