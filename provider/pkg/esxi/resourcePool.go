@@ -248,7 +248,7 @@ func (esxi *Host) getResourcePoolId(name string) (string, error) {
 	command := fmt.Sprintf("grep -A1 '<name>%s</name>' /etc/vmware/hostd/pools.xml | grep -m 1 -o objID.*objID", name)
 	stdout, err := esxi.Execute(command, "get existing resource pool id")
 	if err != nil {
-		logging.V(9).Infof("getResourcePoolName: Failed get existing resource pool id => %s", stdout)
+		logging.V(logLevel).Infof("getResourcePoolName: Failed get existing resource pool id => %s", stdout)
 		return "", fmt.Errorf("failed to get existing resource pool id: %s", err)
 	} else {
 		stdout = r.Replace(stdout)
@@ -269,7 +269,7 @@ func (esxi *Host) getResourcePoolName(id string) (string, error) {
 	command := fmt.Sprintf("grep -A1 '<objID>%s</objID>' /etc/vmware/hostd/pools.xml | grep '<path>'", id)
 	stdout, err := esxi.Execute(command, "get resource pool path")
 	if err != nil {
-		logging.V(9).Infof("getResourcePoolName: Failed get resource pool PATH => %s", stdout)
+		logging.V(logLevel).Infof("getResourcePoolName: Failed get resource pool PATH => %s", stdout)
 		return "", fmt.Errorf("Failed to get pool path: %s\n", err)
 	}
 

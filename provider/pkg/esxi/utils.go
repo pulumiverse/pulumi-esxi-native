@@ -47,16 +47,28 @@ func structToMap(dataStruct interface{}) map[string]interface{} {
 			if field.Len() > 0 {
 				slice := make([]interface{}, field.Len())
 				for j := 0; j < field.Len(); j++ {
-					switch field.Index(j).Kind() {
-					case reflect.Struct:
-						slice[j] = structToMap(field.Index(j).Interface())
-					default:
-						slice[j] = field.Index(j).Interface()
-					}
+					slice[j] = structToMap(field.Index(j).Interface())
 				}
 				result[key] = slice
 			}
+		case reflect.Invalid:
+			// Handle reflect.Invalid case
+			result[key] = nil
+		case reflect.Bool:
+			result[key] = field.Bool()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			result[key] = field.Int()
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			result[key] = field.Uint()
+		case reflect.Float32, reflect.Float64:
+			result[key] = field.Float()
+		case reflect.Complex64, reflect.Complex128:
+			result[key] = field.Complex()
+		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.String, reflect.UnsafePointer:
+			// Handle other common cases
+			result[key] = field.Interface()
 		default:
+			// Handle the rest of the cases (unlikely to occur in practice)
 			result[key] = field.Interface()
 		}
 	}

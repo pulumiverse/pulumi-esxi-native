@@ -32,7 +32,7 @@ export class VirtualMachineFactory {
         const talosConfig = config.Type == "control-plane" ?
             this._talosCPConfig : this._talosWorkerConfig;
 
-        const disks: VMVirtualDiskArgs[] = [];
+        let disks: VMVirtualDiskArgs[] = [];
 
         if (config.StorageDisk) {
             const storageDisk = new VirtualDisk(`${name}-k8s-vdisk`, {

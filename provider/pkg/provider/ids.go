@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+
 	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/esxi"
 )
 

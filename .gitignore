@@ -17,3 +17,4 @@ examples/**/controlplane.yaml
 examples/**/worker.yaml
 examples/**/talosconfig
 examples/**/cp.patch.yaml
+examples/**/Pulumi.make.yaml

@@ -27,10 +27,15 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
-	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/esxi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/esxi"
+)
+
+const (
+	logLevel = 9
 )
 
 type cancellationContext struct {
@@ -106,7 +111,7 @@ func (p *esxiProvider) CheckConfig(_ context.Context, req *pulumirpc.CheckReques
 func (p *esxiProvider) DiffConfig(_ context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.DiffConfig(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
 		Label:        fmt.Sprintf("%s.olds", label),
@@ -129,11 +134,12 @@ func (p *esxiProvider) DiffConfig(_ context.Context, req *pulumirpc.DiffRequest)
 		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
 
-	var diffs, replaces []string
+	diffs := make([]string, 0, len(diff.Keys()))
 	for _, k := range diff.Keys() {
 		diffs = append(diffs, string(k))
 	}
 
+	var replaces []string
 	return &pulumirpc.DiffResponse{
 		Changes:  pulumirpc.DiffResponse_DIFF_SOME,
 		Diffs:    diffs,
@@ -232,7 +238,7 @@ func (p *esxiProvider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.Re
 func (p *esxiProvider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Check(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	resourceToken := string(urn.Type())
 	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
@@ -288,7 +294,7 @@ func (p *esxiProvider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*p
 func (p *esxiProvider) Diff(_ context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Diff(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	diff, err := p.diffState(req.GetOlds(), req.GetNews(), label)
 	if err != nil {
@@ -308,7 +314,7 @@ func (p *esxiProvider) Diff(_ context.Context, req *pulumirpc.DiffRequest) (*pul
 func (p *esxiProvider) Create(_ context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Create(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	// Deserialize RPC inputs.
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{
@@ -347,7 +353,7 @@ func (p *esxiProvider) Create(_ context.Context, req *pulumirpc.CreateRequest) (
 func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Read(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 	id := req.GetId()
 
 	// Retrieve the old state.
@@ -409,7 +415,7 @@ func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pul
 func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	id := req.GetId()
 	resourceToken := string(urn.Type())
@@ -426,7 +432,7 @@ func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (
 	}
 
 	// Process Update call.
-	id, outputs, err := p.resourceService.Update(id, resourceToken, make(resource.PropertyMap), p.esxi)
+	outputs, err := p.resourceService.Update(id, resourceToken, make(resource.PropertyMap), p.esxi)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +454,7 @@ func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (
 func (p *esxiProvider) Delete(_ context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Update(%s)", p.name, urn)
-	logging.V(9).Infof("%s executing", label)
+	logging.V(logLevel).Infof("%s executing", label)
 
 	resourceToken := string(urn.Type())
 	id := req.GetId()

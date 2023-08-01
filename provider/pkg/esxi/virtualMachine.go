@@ -133,14 +133,14 @@ func VirtualMachineDelete(id string, esxi *Host) error {
 	// remove storage from vmx so it doesn't get deleted by the vim-cmd destroy
 	err = esxi.cleanStorageFromVmx(id)
 	if err != nil {
-		logging.V(9).Infof("VirtualMachineDelete: failed clean storage from id: %s (to be deleted)", id)
+		logging.V(logLevel).Infof("VirtualMachineDelete: failed clean storage from id: %s (to be deleted)", id)
 	}
 
 	time.Sleep(5 * time.Second)
 	command = fmt.Sprintf("vim-cmd vmsvc/destroy %s", id)
 	stdout, err = esxi.Execute(command, "vmsvc/destroy")
 	if err != nil {
-		logging.V(9).Infof("VirtualMachineDelete: failed to destroy vm: %s", stdout)
+		logging.V(logLevel).Infof("VirtualMachineDelete: failed to destroy vm: %s", stdout)
 		return fmt.Errorf("failed to destroy vm: %s", err)
 	}
 
@@ -330,9 +330,9 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 	stdout, err = esxi.Execute(command, "check if guest is in resource pool")
 	nr := strings.NewReplacer("resourcePool>", "", "</resourcePool", "")
 	vmResourcePoolId := nr.Replace(stdout)
-	logging.V(9).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, stdout)
+	logging.V(logLevel).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, stdout)
 	vm.ResourcePoolName, err = esxi.getResourcePoolName(vmResourcePoolId)
-	logging.V(9).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, err)
+	logging.V(logLevel).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, err)
 
 	//
 	//  Read vmx file into memory to read settings
@@ -350,8 +350,8 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 
 	dstVmxFile := "/vmfs/volumes/" + dstVmxDs + "/" + dstVmx
 
-	logging.V(9).Infof("readVirtualMachine: dstVmxFile => %s", dstVmxFile)
-	logging.V(9).Infof("readVirtualMachine: vm.DiskStore => %s  dstVmxDs => %s", vm.DiskStore, dstVmxDs)
+	logging.V(logLevel).Infof("readVirtualMachine: dstVmxFile => %s", dstVmxFile)
+	logging.V(logLevel).Infof("readVirtualMachine: vm.DiskStore => %s  dstVmxDs => %s", vm.DiskStore, dstVmxDs)
 
 	command = fmt.Sprintf("cat \"%s\"", dstVmxFile)
 	vmxContents, err := esxi.Execute(command, "read guest_name.vmx file")
@@ -371,45 +371,45 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
 			vm.MemSize, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(9).Infof("readVirtualMachine: MemSize found => %s", vm.MemSize)
+			logging.V(logLevel).Infof("readVirtualMachine: MemSize found => %s", vm.MemSize)
 
 		case strings.Contains(scanner.Text(), "numvcpus = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
 			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(9).Infof("readVirtualMachine: NumVCpus found => %s", vm.NumVCpus)
+			logging.V(logLevel).Infof("readVirtualMachine: NumVCpus found => %s", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "numa.autosize.vcpu."):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			nr = strings.NewReplacer(`"`, "", `"`, "")
 			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(9).Infof("readVirtualMachine: numa.vcpu (NumVCpus) found => %s", vm.NumVCpus)
+			logging.V(logLevel).Infof("readVirtualMachine: numa.vcpu (NumVCpus) found => %s", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "virtualHW.version = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			vm.VirtualHWVer, _ = strconv.Atoi(strings.Replace(stdout, `"`, "", -1))
-			logging.V(9).Infof("readVirtualMachine: VirtualHWVer found => %s", vm.VirtualHWVer)
+			logging.V(logLevel).Infof("readVirtualMachine: VirtualHWVer found => %s", vm.VirtualHWVer)
 
 		case strings.Contains(scanner.Text(), "guestOS = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			vm.Os = strings.Replace(stdout, `"`, "", -1)
-			logging.V(9).Infof("readVirtualMachine: Os found => %s", vm.Os)
+			logging.V(logLevel).Infof("readVirtualMachine: Os found => %s", vm.Os)
 
 		case strings.Contains(scanner.Text(), "scsi"):
 			re := regexp.MustCompile("scsi([0-3]):([0-9]{1,2}).(.*) = \"(.*)\"")
 			results := re.FindStringSubmatch(scanner.Text())
 			if len(results) > 4 {
-				logging.V(9).Infof("readVirtualMachine: %s : %s . %s = %s", results[1], results[2], results[3], results[4])
+				logging.V(logLevel).Infof("readVirtualMachine: %s : %s . %s = %s", results[1], results[2], results[3], results[4])
 
 				if (results[1] == "0") && (results[2] == "0") {
 					// Skip boot disk
 				} else {
 					if strings.Contains(results[3], "fileName") {
-						logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[4])
+						logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[4])
 
 						vm.VirtualDisks = append(vm.VirtualDisks, VMVirtualDisk{
 							fmt.Sprintf("%s:%s", results[1], results[2]),
@@ -427,7 +427,7 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			switch results[2] {
 			case "networkName":
 				networkInterfaces[index].VirtualNetwork = results[3]
-				logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
+				logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[3])
 
 			case "addressType":
 				if results[3] == "generated" {
@@ -439,32 +439,32 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			//  case "generatedAddress":
 			//	  if isGeneratedMAC[index] == true {
 			//		networkInterfaces[index].MacAddress = results[3]
-			//	    logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
+			//	    logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[3])
 			//	  }
 
 			case "address":
 				if !isGeneratedMAC[index] {
 					networkInterfaces[index].MacAddress = results[3]
-					logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
+					logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[3])
 				}
 
 			case "virtualDev":
 				networkInterfaces[index].NicType = results[3]
-				logging.V(9).Infof("readVirtualMachine: %s => %s", results[0], results[3])
+				logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[3])
 			}
 
 		case strings.Contains(scanner.Text(), "firmware = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			vm.BootFirmware = strings.Replace(stdout, `"`, "", -1)
-			logging.V(9).Infof("readVirtualMachine: BootFirmware found => %s", vm.BootFirmware)
+			logging.V(logLevel).Infof("readVirtualMachine: BootFirmware found => %s", vm.BootFirmware)
 
 		case strings.Contains(scanner.Text(), "annotation = "):
 			r, _ = regexp.Compile("\".*\"")
 			stdout = r.FindString(scanner.Text())
 			vm.Notes = strings.Replace(stdout, `"`, "", -1)
 			vm.Notes = strings.Replace(vm.Notes, "|22", "\"", -1)
-			logging.V(9).Infof("readVirtualMachine: Notes found => %s", vm.Notes)
+			logging.V(logLevel).Infof("readVirtualMachine: Notes found => %s", vm.Notes)
 		}
 	}
 
@@ -478,14 +478,14 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 
 	//  Get power state
 	vm.Power = esxi.getVirtualMachinePowerState(vm.Id)
-	logging.V(9).Infof("readVirtualMachine: Power => %s", vm.Power)
+	logging.V(logLevel).Infof("readVirtualMachine: Power => %s", vm.Power)
 
 	//
 	// Get IP address (need vmware tools installed)
 	//
 	if vm.Power == "on" {
 		vm.IpAddress = esxi.getVirtualMachineIpAddress(vm.Id, vm.StartupTimeout)
-		logging.V(9).Infof("readVirtualMachine: IpAddress found => %s", vm.IpAddress)
+		logging.V(logLevel).Infof("readVirtualMachine: IpAddress found => %s", vm.IpAddress)
 	} else {
 		vm.IpAddress = ""
 	}

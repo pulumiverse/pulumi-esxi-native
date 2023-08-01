@@ -28,11 +28,12 @@ import (
 	pythongen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
+
 	providerVersion "github.com/pulumiverse/pulumi-esxi-native/provider/pkg/version"
 )
 
 // TemplateDir is the path to the base directory for code generator templates.
-var TemplateDir string
+// var TemplateDir string
 
 // BaseDir is the path to the base pulumi-esxi-native directory.
 var BaseDir string
@@ -68,22 +69,22 @@ func main() {
 	language, inputFile := Language(args[0]), args[1]
 
 	BaseDir = args[2]
-	TemplateDir = filepath.Join(BaseDir, "provider", "pkg", "gen")
+	// TemplateDir = filepath.Join(BaseDir, "provider", "pkg", "gen")
 	outDir := filepath.Join(BaseDir, "sdk", string(language))
 
 	switch language {
 	case NodeJS:
-		templateDir := filepath.Join(TemplateDir, "nodejs-templates")
-		writeNodeJSClient(readSchema(inputFile, version), outDir, templateDir)
+		// templateDir := filepath.Join(TemplateDir, "nodejs-templates")
+		writeNodeJSClient(readSchema(inputFile, version), outDir)
 	case Python:
-		templateDir := filepath.Join(TemplateDir, "python-templates")
-		writePythonClient(readSchema(inputFile, version), outDir, templateDir)
+		// templateDir := filepath.Join(TemplateDir, "python-templates")
+		writePythonClient(readSchema(inputFile, version), outDir)
 	case DotNet:
-		templateDir := filepath.Join(TemplateDir, "dotnet-templates")
-		writeDotnetClient(readSchema(inputFile, version), outDir, templateDir)
+		// templateDir := filepath.Join(TemplateDir, "dotnet-templates")
+		writeDotnetClient(readSchema(inputFile, version), outDir)
 	case Go:
-		templateDir := filepath.Join(TemplateDir, "_go-templates")
-		writeGoClient(readSchema(inputFile, version), outDir, templateDir)
+		// templateDir := filepath.Join(TemplateDir, "_go-templates")
+		writeGoClient(readSchema(inputFile, version), outDir)
 	default:
 		panic(fmt.Sprintf("Unrecognized language '%s'", language))
 	}
@@ -109,7 +110,7 @@ func readSchema(schemaPath string, version string) *schema.Package {
 	return pkg
 }
 
-func writeNodeJSClient(pkg *schema.Package, outdir, templateDir string) {
+func writeNodeJSClient(pkg *schema.Package, outDir string) {
 	_, err := nodejsgen.LanguageResources(pkg)
 	if err != nil {
 		panic(err)
@@ -121,58 +122,46 @@ func writeNodeJSClient(pkg *schema.Package, outdir, templateDir string) {
 		panic(err)
 	}
 
-	mustWriteFiles(outdir, files)
+	mustWriteFiles(outDir, files)
 }
 
-func writePythonClient(pkg *schema.Package, outdir string, templateDir string) {
+func writePythonClient(pkg *schema.Package, outDir string) {
 	_, err := pythongen.LanguageResources("pulumigen", pkg)
 	if err != nil {
 		panic(err)
 	}
 
 	overlays := map[string][]byte{}
-
 	files, err := pythongen.GeneratePackage("pulumigen", pkg, overlays)
 	if err != nil {
 		panic(err)
 	}
 
-	mustWriteFiles(outdir, files)
+	mustWriteFiles(outDir, files)
 }
 
-func writeDotnetClient(pkg *schema.Package, outdir, templateDir string) {
+func writeDotnetClient(pkg *schema.Package, outDir string) {
 	_, err := dotnetgen.LanguageResources("pulumigen", pkg)
 	if err != nil {
 		panic(err)
 	}
 
 	overlays := map[string][]byte{}
-
 	files, err := dotnetgen.GeneratePackage("pulumigen", pkg, overlays)
 	if err != nil {
 		panic(err)
 	}
 
-	for filename, contents := range files {
-		path := filepath.Join(outdir, filename)
-
-		if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			panic(err)
-		}
-		err := ioutil.WriteFile(path, contents, 0644)
-		if err != nil {
-			panic(err)
-		}
-	}
+	mustWriteFiles(outDir, files)
 }
 
-func writeGoClient(pkg *schema.Package, outdir string, templateDir string) {
+func writeGoClient(pkg *schema.Package, outDir string) {
 	files, err := gogen.GeneratePackage("pulumigen", pkg)
 	if err != nil {
 		panic(err)
 	}
 
-	mustWriteFiles(outdir, files)
+	mustWriteFiles(outDir, files)
 }
 
 func mustWriteFiles(rootDir string, files map[string][]byte) {
@@ -184,10 +173,10 @@ func mustWriteFiles(rootDir string, files map[string][]byte) {
 func mustWriteFile(rootDir, filename string, contents []byte) {
 	outPath := filepath.Join(rootDir, filename)
 
-	if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		panic(err)
 	}
-	err := ioutil.WriteFile(outPath, contents, 0644)
+	err := ioutil.WriteFile(outPath, contents, 0600)
 	if err != nil {
 		panic(err)
 	}

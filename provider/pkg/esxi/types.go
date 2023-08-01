@@ -1,5 +1,9 @@
 package esxi
 
+const (
+	logLevel = 9
+)
+
 type KeyValuePair struct {
 	Key   string
 	Value string

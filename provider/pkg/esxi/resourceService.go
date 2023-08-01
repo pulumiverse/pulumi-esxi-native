@@ -6,6 +6,7 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
+
 	"github.com/pulumiverse/pulumi-esxi-native/provider/pkg/schema"
 )
 
@@ -87,9 +88,10 @@ func (receiver *ResourceService) Create(token string, inputs resource.PropertyMa
 	return receiver.call(token, "", inputs, esxi)
 }
 
-func (receiver *ResourceService) Update(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
+func (receiver *ResourceService) Update(token string, id string, inputs resource.PropertyMap, esxi *Host) (resource.PropertyMap, error) {
 	token = fmt.Sprintf("%s:Update", token)
-	return receiver.call(token, id, inputs, esxi)
+	_, outputs, err := receiver.call(token, id, inputs, esxi)
+	return outputs, err
 }
 
 func (receiver *ResourceService) Read(token string, id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {

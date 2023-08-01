@@ -68,7 +68,7 @@ func (esxi *Host) validateCreds() error {
 	}
 
 	mkdir, err := esxi.Execute("mkdir -p ~", "Create home directory if missing")
-	logging.V(9).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
+	logging.V(logLevel).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
 
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	for attempt > 0 {
 		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
 		if err != nil {
-			logging.V(9).Infof("Connect: Retry attempt %d", attempt)
+			logging.V(logLevel).Infof("Connect: Retry attempt %d", attempt)
 			attempt -= 1
 			time.Sleep(1 * time.Second)
 		} else {
@@ -102,7 +102,7 @@ func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 }
 
 func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
-	logging.V(9).Infof("Execute: %s", shortCmdDesc)
+	logging.V(logLevel).Infof("Execute: %s", shortCmdDesc)
 
 	var attempt int
 
@@ -113,7 +113,7 @@ func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	}
 	client, session, err := esxi.connect(attempt)
 	if err != nil {
-		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		logging.V(logLevel).Infof("Execute: Failed connecting to host! %s", err)
 		return failedToConnect, err
 	}
 
@@ -131,16 +131,16 @@ func (esxi *Host) Execute(command string, shortCmdDesc string) (string, error) {
 	if err != nil {
 		logMessage = fmt.Sprintf("%s\tstderr => %s\n", logMessage, err)
 	}
-	logging.V(9).Infof(logMessage)
+	logging.V(logLevel).Infof(logMessage)
 	if closeErr := client.Close(); closeErr != nil {
-		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
+		logging.V(logLevel).Infof("Failed closing the client connection to host! %s", closeErr)
 	}
 
 	return stdout, err
 }
 
 func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (string, error) {
-	logging.V(9).Infof("WriteFile: %s", shortCmdDesc)
+	logging.V(logLevel).Infof("WriteFile: %s", shortCmdDesc)
 
 	f, _ := os.CreateTemp("", "")
 	_, err := fmt.Fprintln(f, content)
@@ -155,27 +155,27 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 
 	client, session, err := esxi.connect(10)
 	if err != nil {
-		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		logging.V(logLevel).Infof("Execute: Failed connecting to host! %s", err)
 		return failedToConnect, err
 	}
 	err = scp.CopyPath(f.Name(), path, session)
 	if err != nil {
-		logging.V(9).Infof("WriteFile: Failed copying the file! %s", err)
+		logging.V(logLevel).Infof("WriteFile: Failed copying the file! %s", err)
 		return failedToConnect, err
 	}
 	if closeErr := client.Close(); closeErr != nil {
-		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
+		logging.V(logLevel).Infof("Failed closing the client connection to host! %s", closeErr)
 	}
 
 	return content, err
 }
 
 func (esxi *Host) CopyFile(localPath string, hostPath string, shortCmdDesc string) (string, error) {
-	logging.V(9).Infof("CopyFile: %s", shortCmdDesc)
+	logging.V(logLevel).Infof("CopyFile: %s", shortCmdDesc)
 
 	client, session, err := esxi.connect(10)
 	if err != nil {
-		logging.V(9).Infof("Execute: Failed connecting to host! %s", err)
+		logging.V(logLevel).Infof("Execute: Failed connecting to host! %s", err)
 		return failedToConnect, err
 	}
 	err = scp.CopyPath(localPath, hostPath, session)
@@ -183,7 +183,7 @@ func (esxi *Host) CopyFile(localPath string, hostPath string, shortCmdDesc strin
 		return "Failed to copy file to esxi host!", err
 	}
 	if closeErr := client.Close(); closeErr != nil {
-		logging.V(9).Infof("Failed closing the client connection to host! %s", closeErr)
+		logging.V(logLevel).Infof("Failed closing the client connection to host! %s", closeErr)
 	}
 
 	return "", nil

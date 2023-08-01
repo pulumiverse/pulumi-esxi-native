@@ -1,0 +1,11 @@
+Except as otherwise noted below and/or in individual files, this
+project is licensed under the Apache License, Version 2.0 (see
+LICENSE or <http://www.apache.org/licenses/LICENSE-2.0>).
+
+This project is a larger work that combines with software written
+by third parties, licensed under their own terms.
+
+Notably, this larger work is based on the Terraform ESXi Provider ([terraform-provider-esxi](https://github.com/josenk/terraform-provider-esxi/tree/master)).,
+which is licensed under the GNU General Public License v3.0 (see
+<https://www.gnu.org/licenses/gpl-3.0.en.html> or the project itself at
+<https://github.com/josenk/terraform-provider-esxi/blob/master/LICENSE>).

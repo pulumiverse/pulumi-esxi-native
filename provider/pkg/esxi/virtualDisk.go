@@ -86,9 +86,9 @@ func VirtualDiskDelete(id string, esxi *Host) error {
 	stdout, err := esxi.Execute(command, "destroy virtual disk")
 	if err != nil {
 		if strings.Contains(err.Error(), "Process exited with status 255") {
-			logging.V(9).Infof("already deleted:%s", id)
+			logging.V(logLevel).Infof("already deleted:%s", id)
 		} else {
-			logging.V(9).Infof("failed destroy virtual disk id: %s", stdout)
+			logging.V(logLevel).Infof("failed destroy virtual disk id: %s", stdout)
 			return fmt.Errorf("failed to destroy virtual disk: %s", err)
 		}
 	}

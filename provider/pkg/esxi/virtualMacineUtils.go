@@ -159,9 +159,9 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 		if strings.HasPrefix(vm.SourcePath, httpSchema) || strings.HasPrefix(vm.SourcePath, httpsSchema) {
 			resp, err := http.Get(vm.SourcePath)
 			if (err != nil) || (resp.StatusCode != 200) {
-				logging.V(9).Infof("URL not accessible: %s", vm.SourcePath)
-				logging.V(9).Infof("URL StatusCode: %d", resp.StatusCode)
-				logging.V(9).Infof("URL Error: %s", err)
+				logging.V(logLevel).Infof("URL not accessible: %s", vm.SourcePath)
+				logging.V(logLevel).Infof("URL StatusCode: %d", resp.StatusCode)
+				logging.V(logLevel).Infof("URL Error: %s", err)
 				defer func(Body io.ReadCloser) {
 					_ = Body.Close()
 				}(resp.Body)
@@ -171,11 +171,11 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 				_ = Body.Close()
 			}(resp.Body)
 		} else if strings.HasPrefix(vm.SourcePath, "vi://") {
-			logging.V(9).Infof("Source is Guest VM (vi).\n")
+			logging.V(logLevel).Infof("Source is Guest VM (vi).\n")
 		} else {
-			logging.V(9).Infof("Source is local.\n")
+			logging.V(logLevel).Infof("Source is local.\n")
 			if _, err := os.Stat(vm.SourcePath); os.IsNotExist(err) {
-				logging.V(9).Infof("File not found, Error: %s\n", err)
+				logging.V(logLevel).Infof("File not found, Error: %s\n", err)
 				return VirtualMachine{}, fmt.Errorf("file not found locally: %s", vm.SourcePath)
 			}
 		}
@@ -323,9 +323,9 @@ func (esxi *Host) getVirtualMachineId(name string) (string, error) {
 		"grep -m 1 \"[0-9] * %s .*%s\" |awk '{print $1}' ", name, name)
 
 	id, err = esxi.Execute(command, "get vm Id")
-	logging.V(9).Infof("getVirtualMachineId: result => %s", id)
+	logging.V(logLevel).Infof("getVirtualMachineId: result => %s", id)
 	if err != nil {
-		logging.V(9).Infof("getVirtualMachineId: Failed get vm id => %s", err)
+		logging.V(logLevel).Infof("getVirtualMachineId: Failed get vm id => %s", err)
 		return "", fmt.Errorf("unable to find a virtual machine corresponding to the name '%s'", name)
 	}
 
@@ -340,9 +340,9 @@ func (esxi *Host) validateVirtualMachineId(id string) (string, error) {
 		"grep '^%s$'", id)
 
 	id, err = esxi.Execute(command, "validate vm id exists")
-	logging.V(9).Infof("validateVirtualMachineId: result => %s", id)
+	logging.V(logLevel).Infof("validateVirtualMachineId: result => %s", id)
 	if err != nil {
-		logging.V(9).Infof("validateVirtualMachineId: Failed get vm by id => %s", err)
+		logging.V(logLevel).Infof("validateVirtualMachineId: Failed get vm by id => %s", err)
 		return "", fmt.Errorf("Failed get vm id: %s\n", err)
 	}
 
@@ -356,7 +356,7 @@ func (esxi *Host) getBootDiskPath(id string) (string, error) {
 	command = fmt.Sprintf("vim-cmd vmsvc/device.getdevices %s | grep -A10 -e 'key = 2000' -e 'key = 3000' -e 'key = 16000'|grep -m 1 fileName", id)
 	stdout, err = esxi.Execute(command, "get boot disk")
 	if err != nil {
-		logging.V(9).Infof("getBootDiskPath: Failed get boot disk path => %s", stdout)
+		logging.V(logLevel).Infof("getBootDiskPath: Failed get boot disk path => %s", stdout)
 		return "Failed get boot disk path:", err
 	}
 	r := strings.NewReplacer("fileName = \"[", "/vmfs/volumes/", "] ", "/", "\",", "")
@@ -396,7 +396,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 
 	vmxContents, err := esxi.readVmxContents(vm.Id)
 	if err != nil {
-		logging.V(9).Infof("updateVmxContents: Failed get vmx contents => %s", err)
+		logging.V(logLevel).Infof("updateVmxContents: Failed get vmx contents => %s", err)
 		return fmt.Errorf("Failed to get vmx contents: %s\n", err)
 	}
 	if strings.Contains(vmxContents, "Unable to find a VM corresponding") {
@@ -415,7 +415,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 			regexReplacement = fmt.Sprintf("numvcpus = \"%d\"", vm.NumVCpus)
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
 		} else {
-			logging.V(9).Infof("updateVmxContents: Add numVCpu => %d", vm.NumVCpus)
+			logging.V(logLevel).Infof("updateVmxContents: Add numVCpu => %d", vm.NumVCpus)
 			vmxContents += fmt.Sprintf("\nnumvcpus = \"%d\"", vm.NumVCpus)
 		}
 	}
@@ -452,7 +452,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	if len(vm.Info) > 0 {
 		parsedVmx := ParseVMX(vmxContents)
 		for _, config := range vm.Info {
-			logging.V(9).Infof("SAVING %s => %s", config.Key, config.Value)
+			logging.V(logLevel).Infof("SAVING %s => %s", config.Key, config.Value)
 			parsedVmx["guestinfo."+config.Key] = config.Value
 		}
 		vmxContents = EncodeVMX(parsedVmx)
@@ -477,7 +477,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	// Add disks that are managed by pulumi
 	for _, vd := range vm.VirtualDisks {
 		if vd.VirtualDiskId != "" {
-			logging.V(9).Infof("updateVmxContents: Adding => %s", vd.Slot)
+			logging.V(logLevel).Infof("updateVmxContents: Adding => %s", vd.Slot)
 			tmpvar = fmt.Sprintf("scsi%s.deviceType = \"scsi-hardDisk\"\n", vd.Slot)
 			if !strings.Contains(vmxContents, tmpvar) {
 				vmxContents += "\n" + tmpvar
@@ -511,7 +511,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 
 	// If this is first time provisioning, delete all the old ethernet configuration.
 	if isNew {
-		logging.V(9).Infof("updateVmxContents:Delete old ethernet configuration => %d", i)
+		logging.V(logLevel).Infof("updateVmxContents:Delete old ethernet configuration => %d", i)
 		regexReplacement = fmt.Sprintf("")
 		for i = 0; i < 9; i++ {
 			re := regexp.MustCompile(fmt.Sprintf("ethernet%d.*\n", i))
@@ -522,11 +522,11 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	// Add/Modify virtual networks.
 	networkType = ""
 	for i, ni := range vm.NetworkInterfaces {
-		logging.V(9).Infof("updateVmxContents: ethernet%d", i)
+		logging.V(logLevel).Infof("updateVmxContents: ethernet%d", i)
 
 		if len(ni.VirtualNetwork) == 0 && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is Modify (Delete existing network configuration)
-			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Delete existing.", i)
+			logging.V(logLevel).Infof("updateVmxContents: Modify ethernet%d - Delete existing.", i)
 			regexReplacement = fmt.Sprintf("")
 			re := regexp.MustCompile(fmt.Sprintf("ethernet%d.*\n", i))
 			vmxContents = re.ReplaceAllString(vmxContents, regexReplacement)
@@ -534,7 +534,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 
 		if ni.VirtualNetwork != "" && strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is Modify
-			logging.V(9).Infof("updateVmxContents: Modify ethernet%d - Modify existing.", i)
+			logging.V(logLevel).Infof("updateVmxContents: Modify ethernet%d - Modify existing.", i)
 
 			// Modify Network Name
 			re := regexp.MustCompile("ethernet" + strconv.Itoa(i) + ".networkName = \".*\"")
@@ -548,7 +548,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 
 			// Modify MAC (dynamic to static only. static to dynamic is not implemented)
 			if ni.MacAddress != "" {
-				logging.V(9).Infof("updateVmxContents: ethernet%d Modify MAC: %s", i, ni.MacAddress)
+				logging.V(logLevel).Infof("updateVmxContents: ethernet%d Modify MAC: %s", i, ni.MacAddress)
 
 				re = regexp.MustCompile("ethernet" + strconv.Itoa(i) + ".[a-zA-Z]*ddress = \".*\"")
 				regexReplacement = fmt.Sprintf("ethernet"+strconv.Itoa(i)+".address = \"%s\"", ni.MacAddress)
@@ -567,7 +567,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		if ni.VirtualNetwork != "" && !strings.Contains(vmxContents, "ethernet"+strconv.Itoa(i)) {
 			// This is created
 			// Set virtual_network name
-			logging.V(9).Infof("updateVmxContents: ethernet%d Create New: %s", i, ni.VirtualNetwork)
+			logging.V(logLevel).Infof("updateVmxContents: ethernet%d Create New: %s", i, ni.VirtualNetwork)
 			tmpvar = fmt.Sprintf("\nethernet%d.networkName = \"%s\"\n", i, ni.VirtualNetwork)
 			vmxContentsNew = tmpvar
 
@@ -602,7 +602,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	}
 
 	// Write vmx file to esxi host
-	logging.V(9).Infof("updateVmxContents: New vm_name.vmx => %s", vmxContents)
+	logging.V(logLevel).Infof("updateVmxContents: New vm_name.vmx => %s", vmxContents)
 
 	dstVmxFile, err := esxi.getDstVmxFile(vm.Id)
 
@@ -615,7 +615,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 func (esxi *Host) cleanStorageFromVmx(id string) error {
 	vmxContents, err := esxi.readVmxContents(id)
 	if err != nil {
-		logging.V(9).Infof("cleanStorageFromVmx: Failed get vmx contents => %s", err)
+		logging.V(logLevel).Infof("cleanStorageFromVmx: Failed get vmx contents => %s", err)
 		return fmt.Errorf("Failed to get vmx contents: %s\n", err)
 	}
 
