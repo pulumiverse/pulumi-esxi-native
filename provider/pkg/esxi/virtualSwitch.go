@@ -253,7 +253,6 @@ func (esxi *Host) getVirtualSwitch(name string) (VirtualSwitch, error) {
 	re, _ = regexp.Compile(`Uplinks: (.*)`)
 	if len(re.FindStringSubmatch(stdout)) > 0 {
 		foundUplinks := strings.Fields(re.FindStringSubmatch(stdout)[1])
-		log.Printf("[vswitchRead] found foundUplinks: /%s/\n", foundUplinks)
 		for _, s := range foundUplinks {
 			vs.Uplinks = append(vs.Uplinks, Uplink{Name: strings.Replace(s, ",", "", -1)})
 		}

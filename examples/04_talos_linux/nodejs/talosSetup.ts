@@ -7,22 +7,21 @@ const talosConfigFilePath = './talosconfig';
 const talosCPPatchFilePath = './cp.patch.yaml';
 const talosCPFilePath = './controlplane.yaml';
 const talosWorkerFilePath = './worker.yaml';
-const talosctlCommand = 'talosctl';
+const talosctlCommand = '/usr/local/bin/talosctl';
 
-function downloadTalosConfigFile() {
+async function downloadTalosConfigFile() {
     if (fs.existsSync(talosCPPatchFilePath)) {
         console.log('Talos config file already exists locally.');
-        return Promise.resolve();
+        return;
     }
 
-    return axios.get(talosConfigFileUrl)
-        .then(response => {
-            fs.writeFileSync(talosCPPatchFilePath, response.data);
-            console.log('Talos config file downloaded successfully.');
-        })
-        .catch(error => {
-            console.error('Error downloading Talos config file:', error.message);
-        });
+    try {
+        const response = await axios.get(talosConfigFileUrl);
+        fs.writeFileSync(talosCPPatchFilePath, response.data);
+        console.log('Talos config file downloaded successfully.');
+    } catch (error) {
+        throw new Error(`Error downloading Talos config file: ${error.message}`);
+    }
 }
 
 function replaceVipInConfigFile() {
@@ -32,7 +31,7 @@ function replaceVipInConfigFile() {
         fs.writeFileSync(talosCPPatchFilePath, configFileContent);
         console.log('VIP replaced in the Talos config file.');
     } catch (error) {
-        console.error('Error replacing VIP in the Talos config file:', error.message);
+        throw new Error(`Error replacing VIP in the Talos config file: ${error.message}`);
     }
 }
 
@@ -41,24 +40,45 @@ function checkTalosctlExists() {
         fs.accessSync(`which ${talosctlCommand}`);
         console.log('talosctl exists.');
     } catch (error) {
-        console.error('talosctl not found. Please install talosctl and make sure it is in your system PATH.');
+        //throw new Error('talosctl not found. Please install talosctl and make sure it is in your system PATH.');
     }
 }
 
-export function setupTalos() {
-    checkTalosctlExists();
-    downloadTalosConfigFile();
-    replaceVipInConfigFile();
-
-    if (!fs.existsSync(talosConfigFilePath) || !fs.existsSync(talosCPFilePath) || !fs.existsSync(talosWorkerFilePath)) {
-        const { status, error } = require('child_process').execSync(
-            `${talosctlCommand} gen config vmware-test https://${controlPlaneIp}:6443 --config-patch-control-plane @${talosCPPatchFilePath}`,
-            { encoding: 'utf-8' }
-        );
-        if (status === 0) {
-            console.log('Talos config generated successfully.');
-        } else {
-            console.error('Error executing talosctl:', error);
-        }
+function readFileAsBase64Sync(filePath: string): string {
+    try {
+        const data = fs.readFileSync(filePath, { encoding: 'base64' });
+        return data;
+    } catch (err) {
+        throw new Error(`Error reading file: ${err}`);
     }
+}
+
+export async function setupTalos() {
+    try {
+        await downloadTalosConfigFile();
+        replaceVipInConfigFile();
+        checkTalosctlExists();
+
+        if (!fs.existsSync(talosConfigFilePath) || !fs.existsSync(talosCPFilePath) || !fs.existsSync(talosWorkerFilePath)) {
+            const { status, error } = require('child_process').execSync(
+                `${talosctlCommand} gen config vmware-test https://${controlPlaneIp}:6443 --config-patch-control-plane @${talosCPPatchFilePath}`,
+                { encoding: 'utf-8' }
+            );
+            if (status === 0) {
+                console.log('Talos config generated successfully.');
+            } else {
+                throw new Error(`Error executing talosctl: ${error}`);
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export function getTalosCpConfig() {
+    return readFileAsBase64Sync(talosCPFilePath);
+}
+
+export function getTalosWorkerConfig() {
+    return readFileAsBase64Sync(talosWorkerFilePath);
 }

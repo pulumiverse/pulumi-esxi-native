@@ -288,6 +288,7 @@ func validateVirtualMachineOsType(os string) bool {
 		"other24xlinux",
 		"other26xlinux",
 		"other3xlinux",
+		"other3xlinux-64",
 		"other",
 		"otherguest",
 		"otherlinux",
