@@ -126,8 +126,8 @@ namespace Pulumi.EsxiNative
         /// <summary>
         /// Port Group vlan id
         /// </summary>
-        [Input("vlan", required: true)]
-        public Input<int> Vlan { get; set; } = null!;
+        [Input("vlan")]
+        public Input<int>? Vlan { get; set; }
 
         public PortGroupArgs()
         {

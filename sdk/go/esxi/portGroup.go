@@ -8,7 +8,7 @@ import (
 	"reflect"
 
 	"errors"
-	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -38,9 +38,6 @@ func NewPortGroup(ctx *pulumi.Context,
 
 	if args.VSwitch == nil {
 		return nil, errors.New("invalid value for required argument 'VSwitch'")
-	}
-	if args.Vlan == nil {
-		return nil, errors.New("invalid value for required argument 'Vlan'")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource PortGroup
@@ -86,7 +83,7 @@ type portGroupArgs struct {
 	// Virtual Switch Name.
 	VSwitch string `pulumi:"vSwitch"`
 	// Port Group vlan id
-	Vlan int `pulumi:"vlan"`
+	Vlan *int `pulumi:"vlan"`
 }
 
 // The set of arguments for constructing a PortGroup resource.
@@ -102,7 +99,7 @@ type PortGroupArgs struct {
 	// Virtual Switch Name.
 	VSwitch pulumi.StringInput
 	// Port Group vlan id
-	Vlan pulumi.IntInput
+	Vlan pulumi.IntPtrInput
 }
 
 func (PortGroupArgs) ElementType() reflect.Type {

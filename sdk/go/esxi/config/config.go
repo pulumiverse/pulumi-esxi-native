@@ -4,7 +4,7 @@
 package config
 
 import (
-	"github.com/edmondshtogu/pulumi-esxi-native/sdk/v3/go/esxi/internal"
+	"github.com/edmondshtogu/pulumi-esxi-native/sdk/go/esxi/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )

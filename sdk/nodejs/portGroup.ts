@@ -70,9 +70,6 @@ export class PortGroup extends pulumi.CustomResource {
             if ((!args || args.vSwitch === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'vSwitch'");
             }
-            if ((!args || args.vlan === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'vlan'");
-            }
             resourceInputs["forgedTransmits"] = args ? args.forgedTransmits : undefined;
             resourceInputs["macChanges"] = args ? args.macChanges : undefined;
             resourceInputs["name"] = args ? args.name : undefined;
@@ -119,5 +116,5 @@ export interface PortGroupArgs {
     /**
      * Port Group vlan id
      */
-    vlan: pulumi.Input<number>;
+    vlan?: pulumi.Input<number>;
 }

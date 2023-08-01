@@ -213,7 +213,7 @@
                 }
             },
             "required": ["name", "vSwitch", "vlan"],
-            "requiredInputs": ["vSwitch", "vlan"],
+            "requiredInputs": ["vSwitch"],
             "inputProperties": {
                 "name": {
                     "type": "string",

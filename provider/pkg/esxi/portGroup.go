@@ -108,7 +108,11 @@ func parsePortGroup(id string, inputs resource.PropertyMap) (PortGroup, error) {
 
 	pg.Id = fmt.Sprintf("%s/%s", pg.VSwitch, pg.Name)
 
-	pg.Vlan = int(inputs["vlan"].NumberValue())
+	if property, has := inputs["vlan"]; has {
+		pg.Vlan = int(property.NumberValue())
+	} else {
+		pg.Vlan = 0
+	}
 
 	if property, has := inputs["promiscuousMode"]; has {
 		pg.PromiscuousMode = property.StringValue()
@@ -140,17 +144,18 @@ func (esxi *Host) updatePortGroup(pg PortGroup) error {
 		return fmt.Errorf("failed to set port group vlan: %s err:%s", stdout, err)
 	}
 
+	command = fmt.Sprintf("esxcli network vswitch standard portgroup policy security set --use-vswitch --portgroup-name=\"%s\"", pg.Name)
 	// set the security policies.
 	if len(pg.PromiscuousMode) > 0 {
-		command = fmt.Sprintf("--allow-promiscuous=%s ", pg.PromiscuousMode)
+		command = fmt.Sprintf("%s --allow-promiscuous=%s", command, pg.PromiscuousMode)
 	}
 	if len(pg.ForgedTransmits) > 0 {
-		command = fmt.Sprintf("%s--allow-forged-transmits=%s ", command, pg.ForgedTransmits)
+		command = fmt.Sprintf("%s --allow-forged-transmits=%s", command, pg.ForgedTransmits)
 	}
 	if len(pg.MacChanges) > 0 {
-		command = fmt.Sprintf("%s--allow-mac-change=%s ", command, pg.MacChanges)
+		command = fmt.Sprintf("%s --allow-mac-change=%s", command, pg.MacChanges)
 	}
-	command = fmt.Sprintf("esxcli network vswitch standard portgroup policy security set -p \"%s\" -u %s", pg.Name, command)
+
 	stdout, err = esxi.Execute(command, "port group set security policy")
 	if err != nil {
 		return fmt.Errorf("failed to set port group security policy: %s err:%s", stdout, err)

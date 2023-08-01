@@ -28,10 +28,10 @@ func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resou
 		return "", nil, fmt.Errorf("failed to create vswitch: %s err: %s", stdout, err)
 	}
 
-	var somthingWentWrong string
+	var somethingWentWrong string
 	err = esxi.updateVirtualSwitch(vs)
 	if err != nil {
-		somthingWentWrong = fmt.Sprintf("failed to update vswitch: %s", err)
+		somethingWentWrong = fmt.Sprintf("failed to update vswitch: %s", err)
 	}
 
 	// Refresh
@@ -40,8 +40,8 @@ func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resou
 		return "", nil, err
 	}
 
-	if somthingWentWrong != "" {
-		return "", nil, fmt.Errorf(somthingWentWrong)
+	if somethingWentWrong != "" {
+		return "", nil, fmt.Errorf(somethingWentWrong)
 	}
 
 	return id, result, nil
@@ -129,8 +129,7 @@ func parseVirtualSwitch(id string, inputs resource.PropertyMap) (VirtualSwitch, 
 			}
 		}
 	} else {
-		vs.Uplinks = make([]Uplink, 1)
-		vs.Uplinks[0] = Uplink{Name: ""}
+		vs.Uplinks = make([]Uplink, 0)
 	}
 
 	return vs, nil
@@ -218,7 +217,10 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 }
 
 func (esxi *Host) getVirtualSwitch(name string) (VirtualSwitch, error) {
-	vs := VirtualSwitch{}
+	vs := VirtualSwitch{
+		Id:   name,
+		Name: name,
+	}
 	var command, stdout string
 	var err error
 

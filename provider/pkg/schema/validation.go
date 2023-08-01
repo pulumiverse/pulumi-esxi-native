@@ -25,10 +25,6 @@ func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pul
 		failures["vSwitch"] = fmt.Sprintf(propertyRequired, "vSwitch")
 	}
 
-	if _, has := inputs["vlan"]; !has {
-		failures["vlan"] = fmt.Sprintf(propertyRequired, "vlan")
-	}
-
 	for propertyName, property := range inputs {
 		key := string(propertyName)
 		switch key {

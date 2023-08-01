@@ -15,22 +15,21 @@ __all__ = ['PortGroupArgs', 'PortGroup']
 class PortGroupArgs:
     def __init__(__self__, *,
                  v_switch: pulumi.Input[str],
-                 vlan: pulumi.Input[int],
                  forged_transmits: Optional[pulumi.Input[bool]] = None,
                  mac_changes: Optional[pulumi.Input[bool]] = None,
                  name: Optional[pulumi.Input[str]] = None,
-                 promiscuous_mode: Optional[pulumi.Input[bool]] = None):
+                 promiscuous_mode: Optional[pulumi.Input[bool]] = None,
+                 vlan: Optional[pulumi.Input[int]] = None):
         """
         The set of arguments for constructing a PortGroup resource.
         :param pulumi.Input[str] v_switch: Virtual Switch Name.
-        :param pulumi.Input[int] vlan: Port Group vlan id
         :param pulumi.Input[bool] forged_transmits: Forged transmits (true=Accept/false=Reject).
         :param pulumi.Input[bool] mac_changes: MAC address changes (true=Accept/false=Reject).
         :param pulumi.Input[str] name: Virtual Switch name.
         :param pulumi.Input[bool] promiscuous_mode: Promiscuous mode (true=Accept/false=Reject).
+        :param pulumi.Input[int] vlan: Port Group vlan id
         """
         pulumi.set(__self__, "v_switch", v_switch)
-        pulumi.set(__self__, "vlan", vlan)
         if forged_transmits is not None:
             pulumi.set(__self__, "forged_transmits", forged_transmits)
         if mac_changes is not None:
@@ -39,6 +38,8 @@ class PortGroupArgs:
             pulumi.set(__self__, "name", name)
         if promiscuous_mode is not None:
             pulumi.set(__self__, "promiscuous_mode", promiscuous_mode)
+        if vlan is not None:
+            pulumi.set(__self__, "vlan", vlan)
 
     @property
     @pulumi.getter(name="vSwitch")
@@ -51,18 +52,6 @@ class PortGroupArgs:
     @v_switch.setter
     def v_switch(self, value: pulumi.Input[str]):
         pulumi.set(self, "v_switch", value)
-
-    @property
-    @pulumi.getter
-    def vlan(self) -> pulumi.Input[int]:
-        """
-        Port Group vlan id
-        """
-        return pulumi.get(self, "vlan")
-
-    @vlan.setter
-    def vlan(self, value: pulumi.Input[int]):
-        pulumi.set(self, "vlan", value)
 
     @property
     @pulumi.getter(name="forgedTransmits")
@@ -111,6 +100,18 @@ class PortGroupArgs:
     @promiscuous_mode.setter
     def promiscuous_mode(self, value: Optional[pulumi.Input[bool]]):
         pulumi.set(self, "promiscuous_mode", value)
+
+    @property
+    @pulumi.getter
+    def vlan(self) -> Optional[pulumi.Input[int]]:
+        """
+        Port Group vlan id
+        """
+        return pulumi.get(self, "vlan")
+
+    @vlan.setter
+    def vlan(self, value: Optional[pulumi.Input[int]]):
+        pulumi.set(self, "vlan", value)
 
 
 class PortGroup(pulumi.CustomResource):
@@ -181,8 +182,6 @@ class PortGroup(pulumi.CustomResource):
             if v_switch is None and not opts.urn:
                 raise TypeError("Missing required property 'v_switch'")
             __props__.__dict__["v_switch"] = v_switch
-            if vlan is None and not opts.urn:
-                raise TypeError("Missing required property 'vlan'")
             __props__.__dict__["vlan"] = vlan
         super(PortGroup, __self__).__init__(
             'esxi-native:index:PortGroup',
