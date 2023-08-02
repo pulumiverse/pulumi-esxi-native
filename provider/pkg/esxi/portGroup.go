@@ -23,7 +23,7 @@ func PortGroupCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.
 
 	stdout, err := esxi.Execute(command, "create port group")
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create port group: %s err:%s", stdout, err)
+		return "", nil, fmt.Errorf("failed to create port group: %s err:%w", stdout, err)
 	}
 
 	err = esxi.updatePortGroup(pg)
@@ -62,7 +62,7 @@ func PortGroupDelete(id string, esxi *Host) error {
 
 	stdout, err := esxi.Execute(command, "delete port group")
 	if err != nil {
-		return fmt.Errorf("failed to delete port group: %s err:%s", stdout, err)
+		return fmt.Errorf("failed to delete port group: %s err:%w", stdout, err)
 	}
 
 	return nil
@@ -141,7 +141,7 @@ func (esxi *Host) updatePortGroup(pg PortGroup) error {
 
 	stdout, err := esxi.Execute(command, "port group set vlan")
 	if err != nil {
-		return fmt.Errorf("failed to set port group vlan: %s err:%s", stdout, err)
+		return fmt.Errorf("failed to set port group vlan: %s err:%w", stdout, err)
 	}
 
 	command = fmt.Sprintf("esxcli network vswitch standard portgroup policy security set --use-vswitch --portgroup-name=\"%s\"", pg.Name)
@@ -158,7 +158,7 @@ func (esxi *Host) updatePortGroup(pg PortGroup) error {
 
 	stdout, err = esxi.Execute(command, "port group set security policy")
 	if err != nil {
-		return fmt.Errorf("failed to set port group security policy: %s err:%s", stdout, err)
+		return fmt.Errorf("failed to set port group security policy: %s err:%w", stdout, err)
 	}
 
 	return nil
@@ -170,19 +170,21 @@ func (esxi *Host) readPortGroup(pg PortGroup) (string, resource.PropertyMap, err
 
 	stdout, err := esxi.Execute(command, "port group list")
 	if stdout == "" {
-		return "", nil, fmt.Errorf("failed to list port group: %s err: %s", stdout, err)
+		return "", nil, fmt.Errorf("failed to list port group: %s err: %w", stdout, err)
 	}
 
-	re, _ := regexp.Compile("( {2}.* {2})  +[0-9]+  +[0-9]+$")
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		pg.VSwitch = strings.Trim(re.FindStringSubmatch(stdout)[1], " ")
+	re := regexp.MustCompile("( {2}.* {2})  +[0-9]+  +[0-9]+$")
+	matches := re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		pg.VSwitch = strings.Trim(matches[1], " ")
 	} else {
 		pg.VSwitch = ""
 	}
 
-	re, _ = regexp.Compile("  +([0-9]+)$")
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		pg.Vlan, _ = strconv.Atoi(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile("  +([0-9]+)$")
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		pg.Vlan, _ = strconv.Atoi(matches[1])
 	} else {
 		pg.Vlan = 0
 	}
@@ -204,12 +206,12 @@ func (esxi *Host) readPortGroupSecurityPolicy(name string) (*PortGroupSecurityPo
 	command := fmt.Sprintf("esxcli --formatter=csv network vswitch standard portgroup policy security get -p \"%s\"", name)
 	stdout, err := esxi.Execute(command, "port group security policy")
 	if stdout == "" {
-		return nil, fmt.Errorf("failed to get the port group security policy: %s\n%s\n", stdout, err)
+		return nil, fmt.Errorf("failed to get the port group security policy: %s err: %w", stdout, err)
 	}
 
 	var policies []PortGroupSecurityPolicy
 	if err = csvutil.Unmarshal([]byte(stdout), &policies); err != nil || len(policies) != 1 {
-		return nil, fmt.Errorf("failed to parse the port group security policy: %s\n%s\n", stdout, err)
+		return nil, fmt.Errorf("failed to parse the port group security policy: %s err: %w", stdout, err)
 	}
 
 	return &policies[0], nil

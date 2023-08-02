@@ -11,12 +11,7 @@ import (
 )
 
 func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vs VirtualSwitch
-	if parsed, err := parseVirtualSwitch("", inputs); err == nil {
-		vs = parsed
-	} else {
-		return "", nil, err
-	}
+	vs := parseVirtualSwitch("", inputs)
 
 	//  Create vswitch
 	command := fmt.Sprintf("esxcli network vswitch standard add -P %d -v \"%s\"", vs.Ports, vs.Name)
@@ -48,12 +43,7 @@ func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resou
 }
 
 func VirtualSwitchUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vs VirtualSwitch
-	if parsed, err := parseVirtualSwitch(id, inputs); err == nil {
-		vs = parsed
-	} else {
-		return "", nil, err
-	}
+	vs := parseVirtualSwitch(id, inputs)
 
 	err := esxi.updateVirtualSwitch(vs)
 	if err != nil {
@@ -78,7 +68,7 @@ func VirtualSwitchRead(id string, _ resource.PropertyMap, esxi *Host) (string, r
 	return esxi.readVirtualSwitch(id)
 }
 
-func parseVirtualSwitch(id string, inputs resource.PropertyMap) (VirtualSwitch, error) {
+func parseVirtualSwitch(id string, inputs resource.PropertyMap) VirtualSwitch {
 	vs := VirtualSwitch{}
 
 	if len(id) > 0 {
@@ -132,7 +122,7 @@ func parseVirtualSwitch(id string, inputs resource.PropertyMap) (VirtualSwitch, 
 		vs.Uplinks = make([]Uplink, 0)
 	}
 
-	return vs, nil
+	return vs
 }
 
 func (esxi *Host) readVirtualSwitch(name string) (string, resource.PropertyMap, error) {
@@ -146,7 +136,6 @@ func (esxi *Host) readVirtualSwitch(name string) (string, resource.PropertyMap, 
 }
 
 func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
-	var foundUplinks []string
 	var command, stdout string
 	var err error
 
@@ -178,8 +167,9 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 
 	re := regexp.MustCompile(`Uplinks: (.*)`)
 	foundUplinksRaw := strings.Fields(re.FindStringSubmatch(stdout)[1])
+	foundUplinks := make([]string, 0, len(foundUplinksRaw))
 	for _, s := range foundUplinksRaw {
-		foundUplinks = append(foundUplinks, strings.Replace(s, ",", "", -1))
+		foundUplinks = append(foundUplinks, strings.ReplaceAll(s, ",", ""))
 	}
 
 	//  Add uplink if needed
@@ -231,32 +221,36 @@ func (esxi *Host) getVirtualSwitch(name string) (VirtualSwitch, error) {
 		return VirtualSwitch{}, fmt.Errorf(stdout)
 	}
 
-	re, _ := regexp.Compile(`Configured Ports: ([0-9]*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.Ports, _ = strconv.Atoi(re.FindStringSubmatch(stdout)[1])
+	re := regexp.MustCompile(`Configured Ports: ([0-9]*)`)
+	matches := re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.Ports, _ = strconv.Atoi(matches[1])
 	} else {
 		vs.Ports = 128
 	}
 
-	re, _ = regexp.Compile(`MTU: ([0-9]*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.Mtu, _ = strconv.Atoi(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile(`MTU: ([0-9]*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.Mtu, _ = strconv.Atoi(matches[1])
 	} else {
 		vs.Mtu = 1500
 	}
 
-	re, _ = regexp.Compile(`CDP Status: ([a-z]*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.LinkDiscoveryMode = re.FindStringSubmatch(stdout)[1]
+	re = regexp.MustCompile(`CDP Status: ([a-z]*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.LinkDiscoveryMode = matches[1]
 	} else {
 		vs.LinkDiscoveryMode = "listen"
 	}
 
-	re, _ = regexp.Compile(`Uplinks: (.*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		foundUplinks := strings.Fields(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile(`Uplinks: (.*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		foundUplinks := strings.Fields(matches[1])
 		for _, s := range foundUplinks {
-			vs.Uplinks = append(vs.Uplinks, Uplink{Name: strings.Replace(s, ",", "", -1)})
+			vs.Uplinks = append(vs.Uplinks, Uplink{Name: strings.ReplaceAll(s, ",", "")})
 		}
 	} else {
 		vs.Uplinks = vs.Uplinks[:0]
@@ -270,23 +264,26 @@ func (esxi *Host) getVirtualSwitch(name string) (VirtualSwitch, error) {
 		return VirtualSwitch{}, fmt.Errorf(stdout)
 	}
 
-	re, _ = regexp.Compile(`Allow Promiscuous: (.*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.PromiscuousMode, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile(`Allow Promiscuous: (.*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.PromiscuousMode, _ = strconv.ParseBool(matches[1])
 	} else {
 		vs.PromiscuousMode = false
 	}
 
-	re, _ = regexp.Compile(`Allow MAC Address Change: (.*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.MacChanges, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile(`Allow MAC Address Change: (.*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.MacChanges, _ = strconv.ParseBool(matches[1])
 	} else {
 		vs.MacChanges = false
 	}
 
-	re, _ = regexp.Compile(`Allow Forged Transmits: (.*)`)
-	if len(re.FindStringSubmatch(stdout)) > 0 {
-		vs.ForgedTransmits, _ = strconv.ParseBool(re.FindStringSubmatch(stdout)[1])
+	re = regexp.MustCompile(`Allow Forged Transmits: (.*)`)
+	matches = re.FindStringSubmatch(stdout)
+	if len(matches) > 0 {
+		vs.ForgedTransmits, _ = strconv.ParseBool(matches[1])
 	} else {
 		vs.ForgedTransmits = false
 	}

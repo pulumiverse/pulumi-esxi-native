@@ -661,7 +661,7 @@ func (esxi *Host) getVirtualMachinePowerState(id string) string {
 	command := fmt.Sprintf("vim-cmd vmsvc/power.getstate %s", id)
 	stdout, _ := esxi.Execute(command, "vmsvc/power.getstate")
 	if strings.Contains(stdout, "Unable to find a VM corresponding") {
-		return "Unknown"
+		return esxiUnknown
 	}
 
 	switch {
@@ -672,7 +672,7 @@ func (esxi *Host) getVirtualMachinePowerState(id string) string {
 	case strings.Contains(stdout, "Suspended"):
 		return vmTurnedSuspended
 	default:
-		return "Unknown"
+		return esxiUnknown
 	}
 }
 
@@ -727,7 +727,7 @@ func (vm *VirtualMachine) toMap(keepId ...bool) map[string]interface{} {
 	delete(outputs, "ovfProperties")
 	delete(outputs, "ovfPropertiesTimer")
 
-	if vm.BootDiskType == "Unknown" || len(vm.BootDiskType) == 0 {
+	if vm.BootDiskType == esxiUnknown || len(vm.BootDiskType) == 0 {
 		delete(outputs, "bootDiskType")
 	}
 

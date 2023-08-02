@@ -6,10 +6,6 @@ type AutoNamingSpec struct {
 	MaxLength    int
 }
 
-type nameSpec struct {
-	minLength int
-	maxLength int
-}
 type AutoNamingService struct {
 	rules map[string]AutoNamingSpec
 }

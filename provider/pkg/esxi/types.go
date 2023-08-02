@@ -8,6 +8,8 @@ const (
 	vmTurnedOff                    = "off"
 	vmTurnedSuspended              = "suspended"
 	vmSleepBetweenPowerStateChecks = 3
+
+	esxiUnknown = "Unknown"
 )
 
 type KeyValuePair struct {

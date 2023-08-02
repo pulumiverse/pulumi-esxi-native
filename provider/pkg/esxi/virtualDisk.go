@@ -10,12 +10,7 @@ import (
 )
 
 func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vd VirtualDisk
-	if parsed, err := parseVirtualDisk("", inputs); err == nil {
-		vd = parsed
-	} else {
-		return "", nil, err
-	}
+	vd := parseVirtualDisk("", inputs)
 	// create vd
 	var id, command string
 	var err error
@@ -60,12 +55,7 @@ func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resourc
 }
 
 func VirtualDiskUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vd VirtualDisk
-	if parsed, err := parseVirtualDisk(id, inputs); err == nil {
-		vd = parsed
-	} else {
-		return "", nil, err
-	}
+	vd := parseVirtualDisk(id, inputs)
 
 	changed, err := esxi.growVirtualDisk(vd.Id, vd.Size)
 	if err != nil && !changed {
@@ -95,7 +85,7 @@ func VirtualDiskDelete(id string, esxi *Host) error {
 
 	command = fmt.Sprintf("ls -al \"/vmfs/volumes/%s/%s/\" |wc -l", vd.DiskStore, vd.Directory)
 
-	stdout, err = esxi.Execute(command, "check if storage dir is empty")
+	stdout, _ = esxi.Execute(command, "check if storage dir is empty")
 	if stdout == "3" {
 		{
 			//  Delete empty dir.  Ignore stdout and errors.
@@ -111,7 +101,7 @@ func VirtualDiskRead(id string, _ resource.PropertyMap, esxi *Host) (string, res
 	return esxi.readVirtualDisk(id)
 }
 
-func parseVirtualDisk(id string, inputs resource.PropertyMap) (VirtualDisk, error) {
+func parseVirtualDisk(id string, inputs resource.PropertyMap) VirtualDisk {
 	vd := VirtualDisk{}
 	if len(id) > 0 {
 		vd.Id = id
@@ -132,7 +122,7 @@ func parseVirtualDisk(id string, inputs resource.PropertyMap) (VirtualDisk, erro
 		vd.Size = 1
 	}
 
-	return vd, nil
+	return vd
 }
 
 func (esxi *Host) readVirtualDisk(id string) (string, resource.PropertyMap, error) {
@@ -202,17 +192,18 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	var flatSizeI64 int64
 	var s []string
 
-	path := strings.TrimLeft(id, "/vmfs/volumes/")
+	const pathParts = 3
+	path := strings.TrimPrefix(id, "/vmfs/volumes/")
 	// Extract the values from the id string
 	parts := strings.Split(path, "/")
-	if len(parts) < 3 {
+	if len(parts) < pathParts {
 		return VirtualDisk{}, fmt.Errorf("invalid virtual disk id: '%s'", id)
 	}
 
 	// Access the individual parts
 	diskStore = parts[0]
 	diskName = parts[len(parts)-1]
-	if len(parts) == 3 {
+	if len(parts) == pathParts {
 		diskDir = parts[1]
 	} else {
 		diskDir = strings.TrimLeft(path, fmt.Sprintf("%s/", diskStore))
@@ -227,8 +218,9 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	}
 
 	//  Get virtual disk flat size
+	const diskNameParts = 2
 	s = strings.Split(diskName, ".")
-	if len(s) < 2 {
+	if len(s) < diskNameParts {
 		return VirtualDisk{}, fmt.Errorf("virtual disk name %s is not valid", diskName)
 	}
 	diskNameFlat := fmt.Sprintf("%s-flat.%s", s[0], s[1])
@@ -240,7 +232,8 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 		return VirtualDisk{}, fmt.Errorf("failed to read virtual disk %s size, err: %s %s", id, flatSize, err)
 	}
 	flatSizeI64, _ = strconv.ParseInt(flatSize, 10, 64)
-	diskSize = int(flatSizeI64 / 1024 / 1024 / 1024)
+	const bytesSize = 1024
+	diskSize = int(flatSizeI64 / bytesSize / bytesSize / bytesSize)
 
 	// Determine virtual disk type  (only works if Guest is powered off)
 	command = fmt.Sprintf("vmkfstools -t0 \"%s\" |grep -q 'VMFS Z- LVID:' && echo true", id)
@@ -252,14 +245,15 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	command = fmt.Sprintf("vmkfstools -t0 \"%s\" |grep -q 'NOMP -- :' && echo true", id)
 	isThin, _ := esxi.Execute(command, "Get disk type.  Is thin.")
 
-	if isThin == "true" {
+	switch {
+	case isThin == "true":
 		diskType = "thin"
-	} else if isZeroedThick == "true" {
+	case isZeroedThick == "true":
 		diskType = "zeroedthick"
-	} else if isEagerZeroedThick == "true" {
+	case isEagerZeroedThick == "true":
 		diskType = "eagerzeroedthick"
-	} else {
-		diskType = "Unknown"
+	default:
+		diskType = esxiUnknown
 	}
 
 	return VirtualDisk{
@@ -272,7 +266,7 @@ func (vd *VirtualDisk) toMap(keepId ...bool) map[string]interface{} {
 	if len(keepId) != 0 && !keepId[0] {
 		delete(outputs, "id")
 	}
-	if vd.DiskType == "Unknown" {
+	if vd.DiskType == esxiUnknown {
 		delete(outputs, "diskType")
 	}
 	return outputs

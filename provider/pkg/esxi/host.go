@@ -2,6 +2,7 @@ package esxi
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ import (
 
 const (
 	failedToConnect = "failed to connect to esxi host"
+
+	attempts = 10
 )
 
 type Host struct {
@@ -23,7 +26,7 @@ type Host struct {
 func NewHost(host, sshPort, sslPort, user, pass string) (*Host, error) {
 	connection := ConnectionInfo{
 		Host:     host,
-		SshPort:  sshPort,
+		SSHPort:  sshPort,
 		SslPort:  sslPort,
 		UserName: user,
 		Password: pass,
@@ -42,7 +45,9 @@ func NewHost(host, sshPort, sslPort, user, pass string) (*Host, error) {
 			}),
 		},
 	}
-	clientConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+	clientConfig.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		return nil
+	}
 
 	instance := &Host{
 		Connection:   &connection,
@@ -64,11 +69,11 @@ func (esxi *Host) validateCreds() error {
 	remoteCmd = "vmware --version"
 	_, err = esxi.Execute(remoteCmd, "Connectivity test, get vmware version")
 	if err != nil {
-		return fmt.Errorf("failed to connect to esxi host: %s", err)
+		return fmt.Errorf("failed to connect to esxi host: %w", err)
 	}
 
 	mkdir, err := esxi.Execute("mkdir -p ~", "Create home directory if missing")
-	logging.V(logLevel).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
+	logging.V(logLevel).Infof("ValidateCreds: Create home! %s %s", mkdir, err.Error())
 
 	if err != nil {
 		return err
@@ -80,7 +85,7 @@ func (esxi *Host) validateCreds() error {
 // Connect to esxi host using ssh
 func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 	for attempt > 0 {
-		client, err := ssh.Dial("tcp", esxi.Connection.getSshConnection(), esxi.ClientConfig)
+		client, err := ssh.Dial("tcp", esxi.Connection.getSSHConnection(), esxi.ClientConfig)
 		if err != nil {
 			logging.V(logLevel).Infof("Connect: Retry attempt %d", attempt)
 			attempt -= 1
@@ -90,7 +95,7 @@ func (esxi *Host) connect(attempt int) (*ssh.Client, *ssh.Session, error) {
 			if err != nil {
 				closeErr := client.Close()
 				if closeErr != nil {
-					return nil, nil, fmt.Errorf("session connection error. (closing client error: %s)", closeErr)
+					return nil, nil, fmt.Errorf("session connection error. (closing client error: %w)", closeErr)
 				}
 				return nil, nil, fmt.Errorf("session connection error")
 			}
@@ -153,7 +158,7 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 	}
 	defer os.Remove(f.Name())
 
-	client, session, err := esxi.connect(10)
+	client, session, err := esxi.connect(attempts)
 	if err != nil {
 		logging.V(logLevel).Infof("Execute: Failed connecting to host! %s", err)
 		return failedToConnect, err
@@ -173,7 +178,7 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 func (esxi *Host) CopyFile(localPath string, hostPath string, shortCmdDesc string) (string, error) {
 	logging.V(logLevel).Infof("CopyFile: %s", shortCmdDesc)
 
-	client, session, err := esxi.connect(10)
+	client, session, err := esxi.connect(attempts)
 	if err != nil {
 		logging.V(logLevel).Infof("Execute: Failed connecting to host! %s", err)
 		return failedToConnect, err

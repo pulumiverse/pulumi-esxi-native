@@ -38,7 +38,8 @@ func structToMap(dataStruct interface{}) map[string]interface{} {
 		fieldType := typeOfStruct.Field(i)
 
 		// Convert the first letter of the field name to lowercase
-		key := string(fieldType.Name[0]+32) + fieldType.Name[1:]
+		const lowercaseBits = 32
+		key := string(fieldType.Name[0]+lowercaseBits) + fieldType.Name[1:]
 
 		switch field.Kind() {
 		case reflect.Struct:
