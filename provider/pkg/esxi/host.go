@@ -156,7 +156,7 @@ func (esxi *Host) WriteFile(content string, path string, shortCmdDesc string) (s
 	if fCloseErr != nil {
 		return "", fCloseErr
 	}
-	defer os.Remove(f.Name())
+	defer RemoveFile(f)
 
 	client, session, err := esxi.connect(attempts)
 	if err != nil {

@@ -1,6 +1,22 @@
 package esxi
 
-import "reflect"
+import (
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"os"
+	"reflect"
+)
+
+func CloseFile(file *os.File) {
+	if e := file.Close(); e != nil {
+		logging.V(logLevel).Info(e)
+	}
+}
+
+func RemoveFile(file *os.File) {
+	if e := os.Remove(file.Name()); e != nil {
+		logging.V(logLevel).Info(e)
+	}
+}
 
 // Contains checks if an item is present in a collection
 func Contains[T comparable](collection []T, value T) bool {

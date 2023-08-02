@@ -3,6 +3,7 @@ package esxi
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -228,7 +229,11 @@ func (esxi *Host) buildVirtualMachineFromSource(vm VirtualMachine) error {
 		if err != nil || resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("URL not accessible: %s", vm.SourcePath)
 		}
-		defer resp.Body.Close()
+		defer func(Body io.ReadCloser) {
+			if e := Body.Close(); e != nil {
+				logging.V(logLevel).Info(e)
+			}
+		}(resp.Body)
 	case strings.HasPrefix(vm.SourcePath, "vi://"):
 		logging.V(logLevel).Infof("Source is Guest VM (vi).\n")
 	default:
@@ -281,14 +286,14 @@ func (esxi *Host) buildVirtualMachineFromSource(vm VirtualMachine) error {
 		if err != nil {
 			return fmt.Errorf("unable to create temporary batch file: %w", err)
 		}
-		defer os.Remove(ovfBat.Name())
+		defer RemoveFile(ovfBat)
 
 		// Write the ovftool command to the batch file
 		file, err := os.Create(ovfBat.Name())
 		if err != nil {
 			return fmt.Errorf("unable to create batch file: %w", err)
 		}
-		defer file.Close()
+		defer CloseFile(file)
 
 		_, err = file.WriteString(strings.ReplaceAll(ovfCmd, "%", "%%"))
 		if err != nil {
