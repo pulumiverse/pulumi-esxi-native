@@ -167,12 +167,20 @@ func validateVirtualMachineOs(inputs resource.PropertyMap, failures *map[string]
 
 func validateNetworkInterfaces(inputs resource.PropertyMap, failures *map[string]string) {
 	key := "networkInterfaces"
-	items := inputs[resource.PropertyKey(key)].ArrayValue()
+	property, hasProperty := inputs[resource.PropertyKey(key)]
+	if !hasProperty {
+		return
+	}
+	items := property.ArrayValue()
 	if len(items) > maxNetworkInterfaces {
 		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must contain max %d network interfaces, currently '%d'", maxNetworkInterfaces, len(items)))
 	}
 	if len(items) > 0 {
 		for i, item := range items {
+			if _, has := item.ObjectValue()["virtualNetwork"]; !has {
+				itemKey := fmt.Sprintf("%s[%d].key", key, i)
+				(*failures)[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
+			}
 			if nicType, has := item.ObjectValue()["nicType"]; has && !validateNicType(nicType.StringValue()) {
 				itemKey := fmt.Sprintf("%s[%d].nicType", key, i)
 				(*failures)[itemKey] = fmt.Sprintf("The property '%s' must be vlance, flexible, e1000, e1000e, vmxnet, vmxnet2, or vmxnet3!", itemKey)
@@ -183,9 +191,9 @@ func validateNetworkInterfaces(inputs resource.PropertyMap, failures *map[string
 
 func validateOvfProperties(inputs resource.PropertyMap, failures *map[string]string) {
 	key := "ovfProperties"
-	items := inputs[resource.PropertyKey(key)].ArrayValue()
-	if len(items) > 0 {
-		for i, ovfProperty := range items {
+	property, hasProperty := inputs[resource.PropertyKey(key)]
+	if hasProperty && len(property.ArrayValue()) > 0 {
+		for i, ovfProperty := range property.ArrayValue() {
 			if _, has := ovfProperty.ObjectValue()["key"]; !has {
 				itemKey := fmt.Sprintf("%s[%d].key", key, i)
 				(*failures)[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
@@ -200,12 +208,15 @@ func validateOvfProperties(inputs resource.PropertyMap, failures *map[string]str
 
 func validateVirtualDisks(inputs resource.PropertyMap, failures *map[string]string) {
 	key := "virtualDisks"
-	items := inputs[resource.PropertyKey(key)].ArrayValue()
-	if length := len(items); length > maxVirtualDisks {
+	property, hasProperty := inputs[resource.PropertyKey(key)]
+	if !hasProperty {
+		return
+	}
+	if length := len(property.ArrayValue()); length > maxVirtualDisks {
 		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must contain max %d virtual disks, currently '%d'", maxVirtualDisks, length))
 	}
-	if len(items) > 0 {
-		for i, ovfProperty := range items {
+	if len(property.ArrayValue()) > 0 {
+		for i, ovfProperty := range property.ArrayValue() {
 			itemErrorFormat := "The property '%s' is required!"
 			if _, has := ovfProperty.ObjectValue()["virtualDiskId"]; !has {
 				itemKey := fmt.Sprintf("%s[%d].virtualDiskId", key, i)

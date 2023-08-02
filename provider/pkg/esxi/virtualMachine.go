@@ -198,9 +198,9 @@ func parseNetworkInterfaces(inputs resource.PropertyMap) []NetworkInterface {
 			interfaces := make([]NetworkInterface, len(items))
 			for i, item := range items {
 				interfaces[i] = NetworkInterface{
-					VirtualNetwork: item.ObjectValue()["virtualNetwork"].StringValue(),
-					MacAddress:     item.ObjectValue()["macAddress"].StringValue(),
-					NicType:        item.ObjectValue()["nicType"].StringValue(),
+					VirtualNetwork: parseStringProperty(item.ObjectValue(), "virtualNetwork", ""),
+					MacAddress:     parseStringProperty(item.ObjectValue(), "macAddress", ""),
+					NicType:        parseStringProperty(item.ObjectValue(), "nicType", ""),
 				}
 			}
 			return interfaces
@@ -215,8 +215,8 @@ func parseVirtualDisks(inputs resource.PropertyMap) []VMVirtualDisk {
 			virtualDisks := make([]VMVirtualDisk, len(items))
 			for i, item := range items {
 				virtualDisks[i] = VMVirtualDisk{
-					VirtualDiskId: item.ObjectValue()["virtualDiskId"].StringValue(),
-					Slot:          item.ObjectValue()["slot"].StringValue(),
+					VirtualDiskId: parseStringProperty(item.ObjectValue(), "virtualDiskId", ""),
+					Slot:          parseStringProperty(item.ObjectValue(), "slot", ""),
 				}
 			}
 			return virtualDisks
@@ -231,8 +231,8 @@ func parseKeyValuePairsProperty(inputs resource.PropertyMap, key string) []KeyVa
 			properties := make([]KeyValuePair, len(items))
 			for i, item := range items {
 				properties[i] = KeyValuePair{
-					Key:   item.ObjectValue()["key"].StringValue(),
-					Value: item.ObjectValue()["value"].StringValue(),
+					Key:   parseStringProperty(item.ObjectValue(), "key", ""),
+					Value: parseStringProperty(item.ObjectValue(), "value", ""),
 				}
 			}
 			return properties

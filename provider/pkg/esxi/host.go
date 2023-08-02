@@ -73,7 +73,7 @@ func (esxi *Host) validateCreds() error {
 	}
 
 	mkdir, err := esxi.Execute("mkdir -p ~", "Create home directory if missing")
-	logging.V(logLevel).Infof("ValidateCreds: Create home! %s %s", mkdir, err.Error())
+	logging.V(logLevel).Infof("ValidateCreds: Create home! %s %s", mkdir, err)
 
 	if err != nil {
 		return err
