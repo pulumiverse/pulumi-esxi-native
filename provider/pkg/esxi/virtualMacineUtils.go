@@ -105,7 +105,7 @@ ide1:0.clientDevice = "TRUE"`
 	if err != nil {
 		command = fmt.Sprintf("rm -fr \"%s\"", fullPATH)
 		_, _ = esxi.Execute(command, "cleanup guest path because of failed events")
-		return VirtualMachine{}, fmt.Errorf("Failed to vmkfstools (make boot disk):%s\n", err)
+		return VirtualMachine{}, fmt.Errorf("failed to vmkfstools (make boot disk) err:%w", err)
 	}
 
 	poolID, err := esxi.getResourcePoolId(vm.ResourcePoolName)
@@ -117,7 +117,7 @@ ide1:0.clientDevice = "TRUE"`
 	if err != nil {
 		command = fmt.Sprintf("rm -fr \"%s\"", fullPATH)
 		_, _ = esxi.Execute(command, "cleanup guest path because of failed events")
-		return VirtualMachine{}, fmt.Errorf("failed to register guest:%s", err)
+		return VirtualMachine{}, fmt.Errorf("failed to register guest err:%w", err)
 	}
 
 	return vm, nil
@@ -127,7 +127,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 	// Step 1: Check if Disk Store already exists
 	err := esxi.validateDiskStore(vm.DiskStore)
 	if err != nil {
-		return VirtualMachine{}, fmt.Errorf("failed to validate disk store: %s", err)
+		return VirtualMachine{}, fmt.Errorf("failed to validate disk store: %w", err)
 	}
 
 	// Step 2: Check if guest already exists
@@ -151,7 +151,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 	// Step 5: Make updates to the vmx file
 	err = esxi.updateVmxContents(true, vm)
 	if err != nil {
-		return VirtualMachine{}, fmt.Errorf("failed to update vmx contents: %s", err)
+		return VirtualMachine{}, fmt.Errorf("failed to update vmx contents: %w", err)
 	}
 
 	return vm, nil
@@ -161,7 +161,7 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 func (esxi *Host) getOrCreateVirtualMachine(vm VirtualMachine) (string, error) {
 	id, err := esxi.getVirtualMachineId(vm.Name)
 	if err != nil {
-		return "", fmt.Errorf("failed to get VM ID: %s", err)
+		return "", fmt.Errorf("failed to get VM ID: %w", err)
 	}
 
 	switch {
@@ -187,7 +187,7 @@ func (esxi *Host) getOrCreateVirtualMachine(vm VirtualMachine) (string, error) {
 		// Retrieve the VM ID after building the virtual machine
 		id, err = esxi.getVirtualMachineId(vm.Name)
 		if err != nil {
-			return "", fmt.Errorf("failed to get VM ID: %s", err)
+			return "", fmt.Errorf("failed to get VM ID: %w", err)
 		}
 	}
 
@@ -215,7 +215,7 @@ func (esxi *Host) growBootDisk(id string, bootDiskSize int) error {
 	bootDiskVmdkPath, _ := esxi.getBootDiskPath(id)
 	_, err := esxi.growVirtualDisk(bootDiskVmdkPath, bootDiskSize)
 	if err != nil {
-		return fmt.Errorf("failed to grow boot disk: %s", err)
+		return fmt.Errorf("failed to grow boot disk: %w", err)
 	}
 	return nil
 }
@@ -244,7 +244,7 @@ func (esxi *Host) buildVirtualMachineFromSource(vm VirtualMachine) error {
 	}
 
 	// Set params for packer
-	if vm.BootDiskType == "zeroedthick" {
+	if vm.BootDiskType == vdZeroedThick {
 		vm.BootDiskType = "thick"
 	}
 
@@ -359,7 +359,7 @@ func (esxi *Host) validateVirtualMachineId(id string) (string, error) {
 	logging.V(logLevel).Infof("validateVirtualMachineId: result => %s", id)
 	if err != nil {
 		logging.V(logLevel).Infof("validateVirtualMachineId: Failed get vm by id => %s", err)
-		return "", fmt.Errorf("Failed get vm id: %s\n", err)
+		return "", fmt.Errorf("failed get vm id: %w", err)
 	}
 
 	return id, nil
@@ -381,29 +381,23 @@ func (esxi *Host) getBootDiskPath(id string) (string, error) {
 }
 
 func (esxi *Host) getDstVmxFile(id string) (string, error) {
-	var dstVmxDs, dstVmx, dstVmxFile string
-
 	// Get location of vmx file on esxi host
 	command := fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|grep -oE \"\\[.*\\]\"", id)
-	stdout, err := esxi.Execute(command, "get dstVmxDs")
-	dstVmxDs = stdout
+	dstVmxDs, _ := esxi.Execute(command, "get dstVmxDs")
 	dstVmxDs = strings.Trim(dstVmxDs, "[")
 	dstVmxDs = strings.Trim(dstVmxDs, "]")
 
 	command = fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|awk '{print $NF}'|sed 's/[\"|,]//g'", id)
-	stdout, err = esxi.Execute(command, "get dstVmx")
-	dstVmx = stdout
+	dstVmx, err := esxi.Execute(command, "get dstVmx")
 
-	dstVmxFile = "/vmfs/volumes/" + dstVmxDs + "/" + dstVmx
+	dstVmxFile := fmt.Sprintf("/vmfs/volumes/%s/%s", dstVmxDs, dstVmx)
 	return dstVmxFile, err
 }
 
 func (esxi *Host) readVmxContents(id string) (string, error) {
-	var command, vmxContents string
-
-	dstVmxFile, err := esxi.getDstVmxFile(id)
-	command = fmt.Sprintf("cat \"%s\"", dstVmxFile)
-	vmxContents, err = esxi.Execute(command, "read vmx file")
+	dstVmxFile, _ := esxi.getDstVmxFile(id)
+	command := fmt.Sprintf("cat \"%s\"", dstVmxFile)
+	vmxContents, err := esxi.Execute(command, "read vmx file")
 
 	return vmxContents, err
 }
@@ -412,7 +406,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 	// Read existing vmxContents
 	vmxContents, err := esxi.readVmxContents(vm.Id)
 	if err != nil {
-		return fmt.Errorf("Failed to get vmx contents: %s\n", err)
+		return fmt.Errorf("failed to get vmx contents: %w", err)
 	}
 	if strings.Contains(vmxContents, "Unable to find a VM corresponding") {
 		// VM is not found, return without any updates.
@@ -571,7 +565,7 @@ func (esxi *Host) cleanStorageFromVmx(id string) error {
 	vmxContents, err := esxi.readVmxContents(id)
 	if err != nil {
 		logging.V(logLevel).Infof("cleanStorageFromVmx: Failed get vmx contents => %s", err)
-		return fmt.Errorf("Failed to get vmx contents: %s\n", err)
+		return fmt.Errorf("failed to get vmx contents: %w", err)
 	}
 
 	for x := 0; x < 4; x++ {
@@ -585,7 +579,7 @@ func (esxi *Host) cleanStorageFromVmx(id string) error {
 	}
 
 	// Write vmx file to esxi host
-	dstVmxFile, err := esxi.getDstVmxFile(id)
+	dstVmxFile, _ := esxi.getDstVmxFile(id)
 	_, err = esxi.CopyFile(strings.ReplaceAll(vmxContents, "\\\"", "\""), dstVmxFile, "write vmx file")
 	if err != nil {
 		return fmt.Errorf("failed to write vmx file %w", err)

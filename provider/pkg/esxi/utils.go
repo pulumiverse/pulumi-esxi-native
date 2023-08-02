@@ -1,9 +1,10 @@
 package esxi
 
 import (
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	"os"
 	"reflect"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 func CloseFile(file *os.File) {

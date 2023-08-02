@@ -17,7 +17,7 @@ func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resourc
 
 	err = esxi.validateDiskStore(vd.DiskStore)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to validate disk store: %s", err)
+		return "", nil, fmt.Errorf("failed to validate disk store: %w", err)
 	}
 
 	// Create dir if required
@@ -27,7 +27,7 @@ func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resourc
 	command = fmt.Sprintf("ls -d \"/vmfs/volumes/%s/%s\"", vd.DiskStore, vd.Directory)
 	_, err = esxi.Execute(command, "validate dir exists")
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create virtual disk directory: %s", err)
+		return "", nil, fmt.Errorf("failed to create virtual disk directory: %w", err)
 	}
 
 	// id is just the full path name
@@ -50,7 +50,7 @@ func VirtualDiskCreate(inputs resource.PropertyMap, esxi *Host) (string, resourc
 	if err == nil {
 		return esxi.readVirtualDisk(id)
 	} else {
-		return "", nil, fmt.Errorf("failed to create virtual disk: %s err: %s", vd.Name, err)
+		return "", nil, fmt.Errorf("failed to create virtual disk: %s err: %w", vd.Name, err)
 	}
 }
 
@@ -59,7 +59,7 @@ func VirtualDiskUpdate(id string, inputs resource.PropertyMap, esxi *Host) (stri
 
 	changed, err := esxi.growVirtualDisk(vd.Id, vd.Size)
 	if err != nil && !changed {
-		return "", nil, fmt.Errorf("failed to grow virtual disk: %s", err)
+		return "", nil, fmt.Errorf("failed to grow virtual disk: %w", err)
 	}
 
 	return id, inputs, nil
@@ -79,7 +79,7 @@ func VirtualDiskDelete(id string, esxi *Host) error {
 			logging.V(logLevel).Infof("already deleted:%s", id)
 		} else {
 			logging.V(logLevel).Infof("failed destroy virtual disk id: %s", stdout)
-			return fmt.Errorf("failed to destroy virtual disk: %s", err)
+			return fmt.Errorf("failed to destroy virtual disk: %w", err)
 		}
 	}
 
@@ -142,7 +142,7 @@ func (esxi *Host) validateDiskStore(diskStore string) error {
 	command = "esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'"
 	stdout, err = esxi.Execute(command, "get list of disk stores")
 	if err != nil {
-		return fmt.Errorf("unable to get list of disk stores: %s", err)
+		return fmt.Errorf("unable to get list of disk stores: %w", err)
 	}
 
 	if !strings.Contains(stdout, diskStore) {
@@ -152,7 +152,7 @@ func (esxi *Host) validateDiskStore(diskStore string) error {
 		command = "esxcli storage filesystem list | grep '/vmfs/volumes/.*[VMFS|NFS]' |awk '{for(i=2;i<=NF-5;++i)printf $i\" \" ; printf \"\\n\"}'"
 		stdout, err = esxi.Execute(command, "get list of disk stores")
 		if err != nil {
-			return fmt.Errorf("unable to get list of disk stores: %s", err)
+			return fmt.Errorf("unable to get list of disk stores: %w", err)
 		}
 		if !strings.Contains(stdout, diskStore) {
 			return fmt.Errorf("disk store %s does not exist; available disk stores: %s", diskStore, stdout)
@@ -178,7 +178,7 @@ func (esxi *Host) growVirtualDisk(id string, size int) (bool, error) {
 		command := fmt.Sprintf("/bin/vmkfstools -X %dG \"%s\"", size, id)
 		stdout, err := esxi.Execute(command, "grow disk")
 		if err != nil {
-			return false, fmt.Errorf("%s err: %s", stdout, err)
+			return false, fmt.Errorf("%s err: %w", stdout, err)
 		}
 		didGrowDisk = true
 	}
@@ -214,7 +214,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	command := fmt.Sprintf("test -s \"%s\"", id)
 	stdout, err := esxi.Execute(command, "test if virtual disk exists")
 	if err != nil {
-		return VirtualDisk{}, fmt.Errorf("virtual disk %s doesn't exist, err: %s %s", id, stdout, err)
+		return VirtualDisk{}, fmt.Errorf("virtual disk %s doesn't exist, err: %s %w", id, stdout, err)
 	}
 
 	//  Get virtual disk flat size
@@ -229,7 +229,7 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 		diskStore, diskDir, diskNameFlat)
 	flatSize, err = esxi.Execute(command, "Get size")
 	if err != nil {
-		return VirtualDisk{}, fmt.Errorf("failed to read virtual disk %s size, err: %s %s", id, flatSize, err)
+		return VirtualDisk{}, fmt.Errorf("failed to read virtual disk %s size, err: %s %w", id, flatSize, err)
 	}
 	flatSizeI64, _ = strconv.ParseInt(flatSize, 10, 64)
 	const bytesSize = 1024
@@ -246,12 +246,12 @@ func (esxi *Host) getVirtualDisk(id string) (VirtualDisk, error) {
 	isThin, _ := esxi.Execute(command, "Get disk type.  Is thin.")
 
 	switch {
-	case isThin == "true":
-		diskType = "thin"
-	case isZeroedThick == "true":
-		diskType = "zeroedthick"
-	case isEagerZeroedThick == "true":
-		diskType = "eagerzeroedthick"
+	case isThin == trueValue:
+		diskType = vdThin
+	case isZeroedThick == trueValue:
+		diskType = vdZeroedThick
+	case isEagerZeroedThick == trueValue:
+		diskType = vdEagerZeroedThick
 	default:
 		diskType = esxiUnknown
 	}

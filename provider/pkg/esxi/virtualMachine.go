@@ -54,12 +54,8 @@ func VirtualMachineRead(id string, _ resource.PropertyMap, esxi *Host) (string, 
 }
 
 func VirtualMachineCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vm VirtualMachine
-	if parsed, err := parseVirtualMachine("", inputs, esxi.Connection); err == nil {
-		vm = parsed
-	} else {
-		return "", nil, err
-	}
+	vm := parseVirtualMachine("", inputs, esxi.Connection)
+
 	powerOn := vm.Power == vmTurnedOn || vm.Power == ""
 	vm, err := esxi.createVirtualMachine(vm)
 	if err != nil {
@@ -78,12 +74,7 @@ func VirtualMachineCreate(inputs resource.PropertyMap, esxi *Host) (string, reso
 }
 
 func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var vm VirtualMachine
-	if parsed, err := parseVirtualMachine(id, inputs, esxi.Connection); err == nil {
-		vm = parsed
-	} else {
-		return id, nil, err
-	}
+	vm := parseVirtualMachine(id, inputs, esxi.Connection)
 
 	currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
 	if currentPowerState == vmTurnedOn || currentPowerState == vmTurnedSuspended {
@@ -93,7 +84,7 @@ func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (s
 	// make updates to vmx file
 	err := esxi.updateVmxContents(true, vm)
 	if err != nil {
-		return id, nil, fmt.Errorf("failed to update vmx contents: %s", err)
+		return id, nil, fmt.Errorf("failed to update vmx contents: %w", err)
 	}
 
 	// Grow boot disk
@@ -101,16 +92,16 @@ func VirtualMachineUpdate(id string, inputs resource.PropertyMap, esxi *Host) (s
 
 	didGrow, err := esxi.growVirtualDisk(bootDiskVmdkPath, vm.BootDiskSize)
 	if err != nil {
-		return id, nil, fmt.Errorf("failed to grow boot disk: %s", err)
+		return id, nil, fmt.Errorf("failed to grow boot disk: %w", err)
 	}
 	if didGrow {
-		err = esxi.reloadVirtualMachine(id)
+		_ = esxi.reloadVirtualMachine(id)
 	}
 	//  power on
 	if vm.Power == vmTurnedOn {
 		err = esxi.powerOnVirtualMachine(id)
 		if err != nil {
-			return id, nil, fmt.Errorf("failed to power on: %s", err)
+			return id, nil, fmt.Errorf("failed to power on: %w", err)
 		}
 	}
 
@@ -122,7 +113,7 @@ func VirtualMachineDelete(id string, esxi *Host) error {
 	var command, stdout string
 	var err error
 
-	esxi.powerOffVirtualMachine(id, 30)
+	esxi.powerOffVirtualMachine(id, vmDefaultShutdownTimeout)
 
 	// remove storage from vmx so it doesn't get deleted by the vim-cmd destroy
 	err = esxi.cleanStorageFromVmx(id)
@@ -130,18 +121,19 @@ func VirtualMachineDelete(id string, esxi *Host) error {
 		logging.V(logLevel).Infof("VirtualMachineDelete: failed clean storage from id: %s (to be deleted)", id)
 	}
 
-	time.Sleep(5 * time.Second)
+	const waitTime = 5
+	time.Sleep(waitTime * time.Second)
 	command = fmt.Sprintf("vim-cmd vmsvc/destroy %s", id)
 	stdout, err = esxi.Execute(command, "vmsvc/destroy")
 	if err != nil {
 		logging.V(logLevel).Infof("VirtualMachineDelete: failed to destroy vm: %s", stdout)
-		return fmt.Errorf("failed to destroy vm: %s", err)
+		return fmt.Errorf("failed to destroy vm: %w", err)
 	}
 
 	return nil
 }
 
-func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *ConnectionInfo) (VirtualMachine, error) {
+func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *ConnectionInfo) VirtualMachine {
 	vm := VirtualMachine{}
 
 	if len(id) > 0 {
@@ -149,267 +141,258 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 	}
 
 	vm.Name = inputs["name"].StringValue()
-
-	if property, has := inputs["cloneFromVirtualMachine"]; has {
-		password := url.QueryEscape(connection.Password)
-		vm.SourcePath = fmt.Sprintf("vi://%s:%s@%s:%s/%s", connection.UserName, password, connection.Host, connection.SslPort, property.StringValue())
-	} else if property, has = inputs["ovfSource"]; has {
-		vm.SourcePath = property.StringValue()
-	} else {
-		vm.SourcePath = "none"
-	}
-	if property, has := inputs["bootFirmware"]; has {
-		vm.BootFirmware = property.StringValue()
-	} else {
-		vm.BootFirmware = ""
-	}
+	vm.SourcePath = parseSourcePath(inputs, connection)
+	vm.BootFirmware = parseStringProperty(inputs, "bootFirmware", "")
 	vm.DiskStore = inputs["diskStore"].StringValue()
-	if property, has := inputs["resourcePoolName"]; has {
-		vm.ResourcePoolName = property.StringValue()
-		if vm.ResourcePoolName == "ha-root-pool" {
-			vm.ResourcePoolName = "/"
-		}
-	} else {
+	vm.ResourcePoolName = parseStringProperty(inputs, "resourcePoolName", "/")
+	if vm.ResourcePoolName == rootPool {
 		vm.ResourcePoolName = "/"
 	}
-	if property, has := inputs["bootDiskSize"]; has {
-		vm.BootDiskSize = int(property.NumberValue())
-	} else {
-		vm.BootDiskSize = 16
+
+	vm.BootDiskSize = parseIntProperty(inputs, "bootDiskSize", vmDefaultBootDiskSize)
+	vm.BootDiskType = parseStringProperty(inputs, "bootDiskType", vdThin)
+	vm.MemSize = parseIntProperty(inputs, "memSize", vmDefaultMemSize)
+	vm.NumVCpus = parseIntProperty(inputs, "numVCpus", vmDefaultNumVCpus)
+	vm.VirtualHWVer = parseIntProperty(inputs, "virtualHWVer", vmDefaultVirtualHWVer)
+	vm.NetworkInterfaces = parseNetworkInterfaces(inputs)
+	vm.Os = parseStringProperty(inputs, "os", vmDefaultOs)
+	vm.Power = parseStringProperty(inputs, "power", vmTurnedOn)
+	vm.StartupTimeout = parseIntProperty(inputs, "startupTimeout", vmDefaultStartupTimeout)
+	vm.ShutdownTimeout = parseIntProperty(inputs, "shutdownTimeout", vmDefaultShutdownTimeout)
+	vm.VirtualDisks = parseVirtualDisks(inputs)
+	vm.OvfProperties = parseKeyValuePairsProperty(inputs, "ovfProperties")
+	vm.Notes = parseStringProperty(inputs, "notes", "")
+	vm.Info = parseKeyValuePairsProperty(inputs, "info")
+
+	return vm
+}
+
+func parseSourcePath(inputs resource.PropertyMap, connection *ConnectionInfo) string {
+	if property, has := inputs["cloneFromVirtualMachine"]; has {
+		password := url.QueryEscape(connection.Password)
+		return fmt.Sprintf("vi://%s:%s@%s:%s/%s", connection.UserName, password, connection.Host, connection.SslPort, property.StringValue())
 	}
-	if property, has := inputs["bootDiskType"]; has {
-		vm.BootDiskType = property.StringValue()
-	} else {
-		vm.BootDiskType = "thin"
+	if property, has := inputs["ovfSource"]; has {
+		return property.StringValue()
 	}
-	if property, has := inputs["memSize"]; has {
-		vm.MemSize = int(property.NumberValue())
-	} else {
-		vm.MemSize = 512
+	return "none"
+}
+
+func parseStringProperty(inputs resource.PropertyMap, key string, defaultValue string) string {
+	if property, has := inputs[resource.PropertyKey(key)]; has {
+		return property.StringValue()
 	}
-	if property, has := inputs["numVCpus"]; has {
-		vm.NumVCpus = int(property.NumberValue())
-	} else {
-		vm.NumVCpus = 1
+	return defaultValue
+}
+
+func parseIntProperty(inputs resource.PropertyMap, key string, defaultValue int) int {
+	if property, has := inputs[resource.PropertyKey(key)]; has {
+		return int(property.NumberValue())
 	}
-	if property, has := inputs["virtualHWVer"]; has {
-		vm.VirtualHWVer = int(property.NumberValue())
-	} else {
-		vm.VirtualHWVer = 13
-	}
+	return defaultValue
+}
+
+func parseNetworkInterfaces(inputs resource.PropertyMap) []NetworkInterface {
 	if property, has := inputs["networkInterfaces"]; has {
 		if items := property.ArrayValue(); len(items) > 0 {
-			vm.NetworkInterfaces = make([]NetworkInterface, len(items))
+			interfaces := make([]NetworkInterface, len(items))
 			for i, item := range items {
-				vm.NetworkInterfaces[i] = NetworkInterface{
+				interfaces[i] = NetworkInterface{
 					VirtualNetwork: item.ObjectValue()["virtualNetwork"].StringValue(),
-					MacAddress:     "",
-					NicType:        "",
-				}
-				if macAddress, hasProp := item.ObjectValue()["macAddress"]; hasProp {
-					vm.NetworkInterfaces[i].MacAddress = macAddress.StringValue()
-				}
-				if nicType, hasProp := item.ObjectValue()["nicType"]; hasProp {
-					vm.NetworkInterfaces[i].MacAddress = nicType.StringValue()
+					MacAddress:     item.ObjectValue()["macAddress"].StringValue(),
+					NicType:        item.ObjectValue()["nicType"].StringValue(),
 				}
 			}
+			return interfaces
 		}
-	} else {
-		vm.NetworkInterfaces = make([]NetworkInterface, 0)
 	}
-	if property, has := inputs["os"]; has {
-		vm.Os = property.StringValue()
-	} else {
-		vm.Os = "centos"
-	}
-	if property, has := inputs["power"]; has {
-		vm.Power = property.StringValue()
-	} else {
-		vm.Power = ""
-	}
-	if property, has := inputs["startupTimeout"]; has && property.NumberValue() > 0 {
-		vm.StartupTimeout = int(property.NumberValue())
-	} else {
-		vm.StartupTimeout = 120
-	}
-	if property, has := inputs["shutdownTimeout"]; has && property.NumberValue() > 0 {
-		vm.ShutdownTimeout = int(property.NumberValue())
-	} else {
-		vm.ShutdownTimeout = 20
-	}
+	return []NetworkInterface{}
+}
+
+func parseVirtualDisks(inputs resource.PropertyMap) []VMVirtualDisk {
 	if property, has := inputs["virtualDisks"]; has {
 		if items := property.ArrayValue(); len(items) > 0 {
-			vm.VirtualDisks = make([]VMVirtualDisk, len(items))
+			virtualDisks := make([]VMVirtualDisk, len(items))
 			for i, item := range items {
-				vm.VirtualDisks[i] = VMVirtualDisk{
+				virtualDisks[i] = VMVirtualDisk{
 					VirtualDiskId: item.ObjectValue()["virtualDiskId"].StringValue(),
-					Slot:          "",
-				}
-				if slot, hasSlot := item.ObjectValue()["slot"]; hasSlot {
-					vm.VirtualDisks[i].Slot = slot.StringValue()
+					Slot:          item.ObjectValue()["slot"].StringValue(),
 				}
 			}
+			return virtualDisks
 		}
-	} else {
-		vm.VirtualDisks = make([]VMVirtualDisk, 0)
 	}
-	if property, has := inputs["ovfProperties"]; has {
-		if items := property.ArrayValue(); len(items) > 0 {
-			vm.OvfProperties = make([]KeyValuePair, len(items))
-			for i, item := range items {
-				vm.OvfProperties[i] = KeyValuePair{
-					Key:   item.ObjectValue()["key"].StringValue(),
-					Value: item.ObjectValue()["value"].StringValue(),
-				}
-			}
-		}
-	} else {
-		vm.OvfProperties = make([]KeyValuePair, 0)
-	}
-	if property, has := inputs["ovfPropertiesTimer"]; has && property.NumberValue() > 0 {
-		vm.ShutdownTimeout = int(property.NumberValue())
-	} else {
-		vm.ShutdownTimeout = 90
-	}
-	if property, has := inputs["notes"]; has {
-		vm.Notes = strings.Replace(property.StringValue(), "\"", "|22", -1)
-	} else {
-		vm.Notes = ""
-	}
-	if property, has := inputs["info"]; has {
-		if items := property.ArrayValue(); len(items) > 0 {
-			vm.Info = make([]KeyValuePair, len(items))
-			for i, item := range items {
-				vm.Info[i] = KeyValuePair{
-					Key:   item.ObjectValue()["key"].StringValue(),
-					Value: item.ObjectValue()["value"].StringValue(),
-				}
-			}
-		}
-	} else {
-		vm.Info = make([]KeyValuePair, 0)
-	}
+	return []VMVirtualDisk{}
+}
 
-	return vm, nil
+func parseKeyValuePairsProperty(inputs resource.PropertyMap, key string) []KeyValuePair {
+	if property, has := inputs[resource.PropertyKey(key)]; has {
+		if items := property.ArrayValue(); len(items) > 0 {
+			properties := make([]KeyValuePair, len(items))
+			for i, item := range items {
+				properties[i] = KeyValuePair{
+					Key:   item.ObjectValue()["key"].StringValue(),
+					Value: item.ObjectValue()["value"].StringValue(),
+				}
+			}
+			return properties
+		}
+	}
+	return []KeyValuePair{}
 }
 
 func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
+	var err error
 	command := fmt.Sprintf("vim-cmd  vmsvc/get.summary %s", vm.Id)
-	stdout, err := esxi.Execute(command, "Get Guest summary")
+	stdout, _ := esxi.Execute(command, "Get Guest summary")
 
 	if strings.Contains(stdout, "Unable to find a VM corresponding") {
 		vm = VirtualMachine{Name: ""}
 		return vm
 	}
 
-	r, _ := regexp.Compile("")
-	scanner := bufio.NewScanner(strings.NewReader(stdout))
-	for scanner.Scan() {
-		switch {
-		case strings.Contains(scanner.Text(), "name = "):
-			r, _ = regexp.Compile("\".*\"")
-			vm.Name = r.FindString(scanner.Text())
-			nr := strings.NewReplacer("\"", "", "\"", "")
-			vm.Name = nr.Replace(vm.Name)
-		case strings.Contains(scanner.Text(), "vmPathName = "):
-			r, _ = regexp.Compile("\\[.*]")
-			vm.DiskStore = r.FindString(scanner.Text())
-			nr := strings.NewReplacer("[", "", "]", "")
-			vm.DiskStore = nr.Replace(vm.DiskStore)
-		}
-	}
+	vm.patchWithSummary(stdout)
 
 	//  Get resource pool that this VM is located
-	command = fmt.Sprintf(`grep -A2 'objID>%s</objID' /etc/vmware/hostd/pools.xml | grep -o resourcePool.*resourcePool`, vm.Id)
-	stdout, err = esxi.Execute(command, "check if guest is in resource pool")
-	nr := strings.NewReplacer("resourcePool>", "", "</resourcePool", "")
-	vmResourcePoolId := nr.Replace(stdout)
-	logging.V(logLevel).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, stdout)
+	vmResourcePoolId := esxi.getVMResourcePoolId(vm)
 	vm.ResourcePoolName, err = esxi.getResourcePoolName(vmResourcePoolId)
 	logging.V(logLevel).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, err)
 
-	//
-	//  Read vmx file into memory to read settings
-	//
-	//      -Get location of vmx file on esxi host
-	command = fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|grep -oE \"\\[.*\\]\"", vm.Id)
-	stdout, err = esxi.Execute(command, "get dst_vmx_ds")
+	vmxContents := esxi.readVMXContents(vm)
+
+	vm.patchWithVMXContents(vmxContents)
+
+	//  Get power state
+	vm.Power = esxi.getVirtualMachinePowerState(vm.Id)
+	logging.V(logLevel).Infof("readVirtualMachine: Power => %s", vm.Power)
+
+	// Get IP address (need vmware tools installed)
+	if vm.Power == vmTurnedOn {
+		vm.IpAddress = esxi.getVirtualMachineIpAddress(vm.Id, vm.StartupTimeout)
+		logging.V(logLevel).Infof("readVirtualMachine: IpAddress found => %s", vm.IpAddress)
+	} else {
+		vm.IpAddress = ""
+	}
+
+	// Get boot disk size
+	bootDiskPath, _ := esxi.getBootDiskPath(vm.Id)
+	vd, _ := esxi.getVirtualDisk(bootDiskPath)
+	vm.BootDiskSize = vd.Size
+	vm.BootDiskType = vd.DiskType
+
+	// Get Info
+	vm.Info = extractGuestInfo(vmxContents)
+
+	return vm
+}
+
+func (esxi *Host) getVMResourcePoolId(vm VirtualMachine) string {
+	command := fmt.Sprintf(`grep -A2 'objID>%s</objID' /etc/vmware/hostd/pools.xml | grep -o resourcePool.*resourcePool`, vm.Id)
+	stdout, _ := esxi.Execute(command, "check if guest is in resource pool")
+	nr := strings.NewReplacer("resourcePool>", "", "</resourcePool", "")
+	vmResourcePoolId := nr.Replace(stdout)
+	logging.V(logLevel).Infof("readVirtualMachine: resource_pool_name|%s| scanner.Text() => |%s|", vmResourcePoolId, stdout)
+	return vmResourcePoolId
+}
+
+func (esxi *Host) readVMXContents(vm VirtualMachine) string {
+	// Implement reading VMX contents from the ESXi host
+	command := fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|grep -oE \"\\[.*\\]\"", vm.Id)
+	stdout, _ := esxi.Execute(command, "get dst_vmx_ds")
 	dstVmxDs := stdout
 	dstVmxDs = strings.Trim(dstVmxDs, "[")
 	dstVmxDs = strings.Trim(dstVmxDs, "]")
 
 	command = fmt.Sprintf("vim-cmd vmsvc/get.config %s | grep vmPathName|awk '{print $NF}'|sed 's/[\"|,]//g'", vm.Id)
-	stdout, err = esxi.Execute(command, "get dst_vmx")
+	stdout, _ = esxi.Execute(command, "get dst_vmx")
 	dstVmx := stdout
 
-	dstVmxFile := "/vmfs/volumes/" + dstVmxDs + "/" + dstVmx
+	dstVmxFile := fmt.Sprintf("/vmfs/volumes/%s/%s", dstVmxDs, dstVmx)
 
 	logging.V(logLevel).Infof("readVirtualMachine: dstVmxFile => %s", dstVmxFile)
 	logging.V(logLevel).Infof("readVirtualMachine: vm.DiskStore => %s  dstVmxDs => %s", vm.DiskStore, dstVmxDs)
 
 	command = fmt.Sprintf("cat \"%s\"", dstVmxFile)
-	vmxContents, err := esxi.Execute(command, "read guest_name.vmx file")
+	vmxContents, _ := esxi.Execute(command, "read guest_name.vmx file")
+	return vmxContents
+}
 
+func (vm *VirtualMachine) patchWithSummary(summary string) {
+	// Implement parsing VM info from summary
+	scanner := bufio.NewScanner(strings.NewReader(summary))
+	for scanner.Scan() {
+		switch {
+		case strings.Contains(scanner.Text(), "name = "):
+			r := regexp.MustCompile("\".*\"")
+			vm.Name = r.FindString(scanner.Text())
+			nr := strings.NewReplacer("\"", "", "\"", "")
+			vm.Name = nr.Replace(vm.Name)
+		case strings.Contains(scanner.Text(), "vmPathName = "):
+			r := regexp.MustCompile(`\[.*]`)
+			vm.DiskStore = r.FindString(scanner.Text())
+			nr := strings.NewReplacer("[", "", "]", "")
+			vm.DiskStore = nr.Replace(vm.DiskStore)
+		}
+	}
+}
+
+func (vm *VirtualMachine) patchWithVMXContents(vmxContents string) {
 	vm.VirtualDisks = []VMVirtualDisk{}
 
 	// Used to keep track if a network interface is using static or generated macs.
-	var isGeneratedMAC [10]bool
-	networkInterfaces := make([]NetworkInterface, 10)
+	const interfacesCount = 10
+	var isGeneratedMAC [interfacesCount]bool
+	networkInterfaces := make([]NetworkInterface, interfacesCount)
 
+	r := regexp.MustCompile("\".*\"")
 	//  Read vmxContents line-by-line to get current settings.
-	scanner = bufio.NewScanner(strings.NewReader(vmxContents))
+	scanner := bufio.NewScanner(strings.NewReader(vmxContents))
 	for scanner.Scan() {
 		switch {
 		case strings.Contains(scanner.Text(), "memSize = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			nr = strings.NewReplacer(`"`, "", `"`, "")
+			stdout := r.FindString(scanner.Text())
+			nr := strings.NewReplacer(`"`, "", `"`, "")
 			vm.MemSize, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(logLevel).Infof("readVirtualMachine: MemSize found => %s", vm.MemSize)
+			logging.V(logLevel).Infof("readVirtualMachine: MemSize found => %d", vm.MemSize)
 
 		case strings.Contains(scanner.Text(), "numvcpus = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			nr = strings.NewReplacer(`"`, "", `"`, "")
+			stdout := r.FindString(scanner.Text())
+			nr := strings.NewReplacer(`"`, "", `"`, "")
 			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(logLevel).Infof("readVirtualMachine: NumVCpus found => %s", vm.NumVCpus)
+			logging.V(logLevel).Infof("readVirtualMachine: NumVCpus found => %d", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "numa.autosize.vcpu."):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			nr = strings.NewReplacer(`"`, "", `"`, "")
+			stdout := r.FindString(scanner.Text())
+			nr := strings.NewReplacer(`"`, "", `"`, "")
 			vm.NumVCpus, _ = strconv.Atoi(nr.Replace(stdout))
-			logging.V(logLevel).Infof("readVirtualMachine: numa.vcpu (NumVCpus) found => %s", vm.NumVCpus)
+			logging.V(logLevel).Infof("readVirtualMachine: numa.vcpu (NumVCpus) found => %d", vm.NumVCpus)
 
 		case strings.Contains(scanner.Text(), "virtualHW.version = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			vm.VirtualHWVer, _ = strconv.Atoi(strings.Replace(stdout, `"`, "", -1))
-			logging.V(logLevel).Infof("readVirtualMachine: VirtualHWVer found => %s", vm.VirtualHWVer)
+			stdout := r.FindString(scanner.Text())
+			vm.VirtualHWVer, _ = strconv.Atoi(strings.ReplaceAll(stdout, `"`, ""))
+			logging.V(logLevel).Infof("readVirtualMachine: VirtualHWVer found => %d", vm.VirtualHWVer)
 
 		case strings.Contains(scanner.Text(), "guestOS = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			vm.Os = strings.Replace(stdout, `"`, "", -1)
+			stdout := r.FindString(scanner.Text())
+			vm.Os = strings.ReplaceAll(stdout, `"`, "")
 			logging.V(logLevel).Infof("readVirtualMachine: Os found => %s", vm.Os)
 
 		case strings.Contains(scanner.Text(), "scsi"):
 			re := regexp.MustCompile("scsi([0-3]):([0-9]{1,2}).(.*) = \"(.*)\"")
 			results := re.FindStringSubmatch(scanner.Text())
-			if len(results) > 4 {
+			const scsiParts = 4
+			if len(results) > scsiParts {
 				logging.V(logLevel).Infof("readVirtualMachine: %s : %s . %s = %s", results[1], results[2], results[3], results[4])
 
 				if (results[1] == "0") && (results[2] == "0") {
 					// Skip boot disk
-				} else {
-					if strings.Contains(results[3], "fileName") {
-						logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[4])
+				} else if strings.Contains(results[3], "fileName") {
+					logging.V(logLevel).Infof("readVirtualMachine: %s => %s", results[0], results[4])
 
-						vm.VirtualDisks = append(vm.VirtualDisks, VMVirtualDisk{
-							fmt.Sprintf("%s:%s", results[1], results[2]),
-							results[4],
-						})
-					}
+					vm.VirtualDisks = append(vm.VirtualDisks, VMVirtualDisk{
+						fmt.Sprintf("%s:%s", results[1], results[2]),
+						results[4],
+					})
 				}
 			}
 
@@ -448,16 +431,14 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			}
 
 		case strings.Contains(scanner.Text(), "firmware = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			vm.BootFirmware = strings.Replace(stdout, `"`, "", -1)
+			stdout := r.FindString(scanner.Text())
+			vm.BootFirmware = strings.ReplaceAll(stdout, `"`, "")
 			logging.V(logLevel).Infof("readVirtualMachine: BootFirmware found => %s", vm.BootFirmware)
 
 		case strings.Contains(scanner.Text(), "annotation = "):
-			r, _ = regexp.Compile("\".*\"")
-			stdout = r.FindString(scanner.Text())
-			vm.Notes = strings.Replace(stdout, `"`, "", -1)
-			vm.Notes = strings.Replace(vm.Notes, "|22", "\"", -1)
+			stdout := r.FindString(scanner.Text())
+			vm.Notes = strings.ReplaceAll(stdout, `"`, "")
+			vm.Notes = strings.ReplaceAll(vm.Notes, "|22", "\"")
 			logging.V(logLevel).Infof("readVirtualMachine: Notes found => %s", vm.Notes)
 		}
 	}
@@ -467,43 +448,23 @@ func (esxi *Host) readVirtualMachine(vm VirtualMachine) VirtualMachine {
 			vm.NetworkInterfaces = append(vm.NetworkInterfaces, ni)
 		}
 	}
+}
 
+func extractGuestInfo(vmxContents string) []KeyValuePair {
 	parsedVmx := ParseVMX(vmxContents)
-
-	//  Get power state
-	vm.Power = esxi.getVirtualMachinePowerState(vm.Id)
-	logging.V(logLevel).Infof("readVirtualMachine: Power => %s", vm.Power)
-
-	//
-	// Get IP address (need vmware tools installed)
-	//
-	if vm.Power == vmTurnedOn {
-		vm.IpAddress = esxi.getVirtualMachineIpAddress(vm.Id, vm.StartupTimeout)
-		logging.V(logLevel).Infof("readVirtualMachine: IpAddress found => %s", vm.IpAddress)
-	} else {
-		vm.IpAddress = ""
-	}
-
-	// Get boot disk size
-	bootDiskPath, _ := esxi.getBootDiskPath(vm.Id)
-	vd, err := esxi.getVirtualDisk(bootDiskPath)
-	vm.BootDiskSize = vd.Size
-	vm.BootDiskType = vd.DiskType
-
 	// Get guestinfo value
 	info := make(map[string]string)
 	for key, value := range parsedVmx {
 		if strings.Contains(key, "guestinfo") {
-			shortKey := strings.Replace(key, "guestinfo.", "", -1)
+			shortKey := strings.ReplaceAll(key, "guestinfo.", "")
 			info[shortKey] = value
 		}
 	}
 	i := 0
-	vm.Info = make([]KeyValuePair, len(info))
+	infoProperties := make([]KeyValuePair, len(info))
 	for key, value := range info {
-		vm.Info[i] = KeyValuePair{key, value}
+		infoProperties[i] = KeyValuePair{key, value}
 		i++
 	}
-
-	return vm
+	return infoProperties
 }

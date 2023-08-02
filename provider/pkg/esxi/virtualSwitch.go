@@ -20,7 +20,7 @@ func VirtualSwitchCreate(inputs resource.PropertyMap, esxi *Host) (string, resou
 		return "", nil, fmt.Errorf("failed to create vswitch: %s, it already exists", vs.Name)
 	}
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create vswitch: %s err: %s", stdout, err)
+		return "", nil, fmt.Errorf("failed to create vswitch: %s err: %w", stdout, err)
 	}
 
 	var somethingWentWrong string
@@ -47,7 +47,7 @@ func VirtualSwitchUpdate(id string, inputs resource.PropertyMap, esxi *Host) (st
 
 	err := esxi.updateVirtualSwitch(vs)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to update vswitch: %s", err)
+		return "", nil, fmt.Errorf("failed to update vswitch: %w", err)
 	}
 
 	return esxi.readVirtualSwitch(vs.Name)
@@ -58,7 +58,7 @@ func VirtualSwitchDelete(id string, esxi *Host) error {
 
 	stdout, err := esxi.Execute(command, "delete vswitch")
 	if err != nil {
-		return fmt.Errorf("failed to delete vswitch: %s err: %s", stdout, err)
+		return fmt.Errorf("failed to delete vswitch: %s err: %w", stdout, err)
 	}
 
 	return nil
@@ -145,7 +145,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 
 	stdout, err = esxi.Execute(command, "set vswitch mtu, link_discovery_mode")
 	if err != nil {
-		return fmt.Errorf("failed to set vswitch mtu: %s err: %s", stdout, err)
+		return fmt.Errorf("failed to set vswitch mtu: %s err: %w", stdout, err)
 	}
 
 	//  Set security
@@ -154,7 +154,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 
 	stdout, err = esxi.Execute(command, "set vswitch security")
 	if err != nil {
-		return fmt.Errorf("failed to set vswitch security: %s err: %s", stdout, err)
+		return fmt.Errorf("failed to set vswitch security: %s err: %w", stdout, err)
 	}
 
 	//  Update uplinks
@@ -162,7 +162,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 	stdout, err = esxi.Execute(command, "vswitch list")
 
 	if err != nil {
-		return fmt.Errorf("failed to list vswitch: %s err: %s", stdout, err)
+		return fmt.Errorf("failed to list vswitch: %s err: %w", stdout, err)
 	}
 
 	re := regexp.MustCompile(`Uplinks: (.*)`)
@@ -183,7 +183,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 				return fmt.Errorf("uplink not found: %s", vs.Uplinks[i].Name)
 			}
 			if err != nil {
-				return fmt.Errorf("failed to add vswitch uplink: %s err: %s", stdout, err)
+				return fmt.Errorf("failed to add vswitch uplink: %s err: %w", stdout, err)
 			}
 		}
 	}
@@ -198,7 +198,7 @@ func (esxi *Host) updateVirtualSwitch(vs VirtualSwitch) error {
 
 			stdout, err = esxi.Execute(command, "vswitch remove uplink")
 			if err != nil {
-				return fmt.Errorf("failed to remove vswitch uplink: %s err: %s", stdout, err)
+				return fmt.Errorf("failed to remove vswitch uplink: %s err: %w", stdout, err)
 			}
 		}
 	}

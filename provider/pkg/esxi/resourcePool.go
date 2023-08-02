@@ -12,20 +12,19 @@ import (
 )
 
 const (
-	rootPool = "ha-root-pool"
+	rootPool       = "ha-root-pool"
+	basePool       = "Resources"
+	digitsPattern  = "-?[0-9]+"
+	uDigitsPattern = "[0-9]+"
 )
 
 func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var rp ResourcePool
 	var command string
-	if parsed, err := parseResourcePool("", inputs); err == nil {
-		rp = parsed
-	} else {
-		return "", nil, err
-	}
-	parentPool := "Resources"
+	rp := parseResourcePool("", inputs)
+	parentPool := basePool
 	i := strings.LastIndex(rp.Name, "/")
-	if i > 2 {
+	const lastSlashIndex = 2
+	if i > lastSlashIndex {
 		parentPool = rp.Name[:i]
 		rp.Name = rp.Name[i+1:]
 	}
@@ -37,7 +36,6 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 		return esxi.readResourcePool(rp)
 	}
 
-	command = ""
 	command = fmt.Sprintf("--cpu-min=%d", rp.CpuMin)
 	command = fmt.Sprintf("%s --cpu-min-expandable=%s", command, rp.CpuMinExpandable)
 	if rp.CpuMax > 0 {
@@ -63,7 +61,7 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 
 	parentPoolId, err := esxi.getResourcePoolId(parentPool)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to get parent pool id: %s", err)
+		return "", nil, fmt.Errorf("failed to get parent pool id: %w", err)
 	}
 
 	command = fmt.Sprintf("%s %s %s", command, parentPoolId, rp.Name)
@@ -71,12 +69,12 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 
 	stdout, err = esxi.Execute(command, "create resource pool")
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create resource pool %s: %s", stdout, err)
+		return "", nil, fmt.Errorf("failed to create resource pool %s: %w", stdout, err)
 	}
 
 	id, err := esxi.getResourcePoolId(rp.Name)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to get resource pool %s: %s", id, err)
+		return "", nil, fmt.Errorf("failed to get resource pool %s: %w", id, err)
 	}
 
 	rp.Id = id
@@ -84,23 +82,18 @@ func ResourcePoolCreate(inputs resource.PropertyMap, esxi *Host) (string, resour
 }
 
 func ResourcePoolUpdate(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var rp ResourcePool
 	var command string
-	if parsed, err := parseResourcePool(id, inputs); err == nil {
-		rp = parsed
-	} else {
-		return "", nil, err
-	}
+	rp := parseResourcePool(id, inputs)
 
 	stdout, err := esxi.getResourcePoolName(rp.Id)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to get resource pool name: %s", err)
+		return "", nil, fmt.Errorf("failed to get resource pool name: %w", err)
 	}
 	if stdout != rp.Name {
 		command = fmt.Sprintf("vim-cmd hostsvc/rsrc/rename %s %s", rp.Id, rp.Name)
-		stdout, err = esxi.Execute(command, "update resource pool")
+		_, err = esxi.Execute(command, "update resource pool")
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to update resource pool: %s", err)
+			return "", nil, fmt.Errorf("failed to update resource pool: %w", err)
 		}
 	}
 
@@ -139,7 +132,7 @@ func ResourcePoolUpdate(id string, inputs resource.PropertyMap, esxi *Host) (str
 	r := strings.NewReplacer("'vim.ResourcePool:", "", "'", "")
 	stdout = r.Replace(stdout)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to update resource pool %s: %s", stdout, err)
+		return "", nil, fmt.Errorf("failed to update resource pool %s: %w", stdout, err)
 	}
 
 	return esxi.readResourcePool(rp)
@@ -150,24 +143,18 @@ func ResourcePoolDelete(id string, esxi *Host) error {
 
 	stdout, err := esxi.Execute(command, "delete resource pool")
 	if err != nil {
-		return fmt.Errorf("failed to delete resource pool: %s err: %s", stdout, err)
+		return fmt.Errorf("failed to delete resource pool: %s err: %w", stdout, err)
 	}
 
 	return nil
 }
 
 func ResourcePoolRead(id string, inputs resource.PropertyMap, esxi *Host) (string, resource.PropertyMap, error) {
-	var rp ResourcePool
-	if parsed, err := parseResourcePool(id, inputs); err == nil {
-		rp = parsed
-	} else {
-		return "", nil, err
-	}
-
+	rp := parseResourcePool(id, inputs)
 	return esxi.readResourcePool(rp)
 }
 
-func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, error) {
+func parseResourcePool(id string, inputs resource.PropertyMap) ResourcePool {
 	rp := ResourcePool{}
 
 	if len(id) > 0 {
@@ -176,7 +163,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 
 	rp.Name = inputs["name"].StringValue()
 	if rp.Name == string('/') {
-		rp.Name = "Resources"
+		rp.Name = basePool
 	}
 	if rp.Name[0] == '/' {
 		rp.Name = rp.Name[1:]
@@ -190,7 +177,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 	if property, has := inputs["cpuMinExpandable"]; has {
 		rp.CpuMinExpandable = property.StringValue()
 	} else {
-		rp.CpuMinExpandable = "true"
+		rp.CpuMinExpandable = trueValue
 	}
 	if property, has := inputs["cpuMax"]; has {
 		rp.CpuMax = int(property.NumberValue())
@@ -210,7 +197,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 	if property, has := inputs["memMinExpandable"]; has {
 		rp.MemMinExpandable = property.StringValue()
 	} else {
-		rp.MemMinExpandable = "true"
+		rp.MemMinExpandable = trueValue
 	}
 	if property, has := inputs["memMax"]; has {
 		rp.MemMax = int(property.NumberValue())
@@ -223,7 +210,7 @@ func parseResourcePool(id string, inputs resource.PropertyMap) (ResourcePool, er
 		rp.MemShares = "normal"
 	}
 
-	return rp, nil
+	return rp
 }
 
 func (esxi *Host) readResourcePool(rp ResourcePool) (string, resource.PropertyMap, error) {
@@ -237,7 +224,7 @@ func (esxi *Host) readResourcePool(rp ResourcePool) (string, resource.PropertyMa
 }
 
 func (esxi *Host) getResourcePoolId(name string) (string, error) {
-	if name == "/" || name == "Resources" {
+	if name == "/" || name == basePool {
 		return rootPool, nil
 	}
 
@@ -249,7 +236,7 @@ func (esxi *Host) getResourcePoolId(name string) (string, error) {
 	stdout, err := esxi.Execute(command, "get existing resource pool id")
 	if err != nil {
 		logging.V(logLevel).Infof("getResourcePoolName: Failed get existing resource pool id => %s", stdout)
-		return "", fmt.Errorf("failed to get existing resource pool id: %s", err)
+		return "", fmt.Errorf("failed to get existing resource pool id: %w", err)
 	} else {
 		stdout = r.Replace(stdout)
 		return stdout, nil
@@ -270,14 +257,13 @@ func (esxi *Host) getResourcePoolName(id string) (string, error) {
 	stdout, err := esxi.Execute(command, "get resource pool path")
 	if err != nil {
 		logging.V(logLevel).Infof("getResourcePoolName: Failed get resource pool PATH => %s", stdout)
-		return "", fmt.Errorf("Failed to get pool path: %s\n", err)
+		return "", fmt.Errorf("failed to get pool path: %w", err)
 	}
 
 	re := regexp.MustCompile(`[/<>\n]`)
 	result := re.Split(stdout, -1)
 
 	for i := range result {
-		resourcePoolName = ""
 		if result[i] != "path" && result[i] != "host" && result[i] != "user" && result[i] != "" {
 			r := strings.NewReplacer("name>", "", "</name", "")
 			command = fmt.Sprintf("grep -B1 '<objID>%s</objID>' /etc/vmware/hostd/pools.xml | grep -o name.*name", result[i])
@@ -286,7 +272,7 @@ func (esxi *Host) getResourcePoolName(id string) (string, error) {
 
 			if resourcePoolName != "" {
 				if result[i] == id {
-					fullResourcePoolName = fullResourcePoolName + resourcePoolName
+					fullResourcePoolName += resourcePoolName
 				} else {
 					fullResourcePoolName = fullResourcePoolName + resourcePoolName + "/"
 				}
@@ -305,7 +291,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 		return rp, err
 	}
 	if err != nil {
-		return rp, fmt.Errorf("failed to get resource pool config: %s", err)
+		return rp, fmt.Errorf("failed to get resource pool config: %w", err)
 	}
 
 	isCpuFlag := true
@@ -317,7 +303,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 			isCpuFlag = false
 
 		case strings.Contains(scanner.Text(), "reservation = "):
-			r, _ := regexp.Compile("[0-9]+")
+			r := regexp.MustCompile(uDigitsPattern)
 			if isCpuFlag {
 				rp.CpuMin, _ = strconv.Atoi(r.FindString(scanner.Text()))
 			} else {
@@ -325,7 +311,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 			}
 
 		case strings.Contains(scanner.Text(), "expandableReservation = "):
-			r, _ := regexp.Compile("(true|false)")
+			r := regexp.MustCompile("(true|false)")
 			if isCpuFlag {
 				rp.CpuMinExpandable = r.FindString(scanner.Text())
 			} else {
@@ -333,19 +319,19 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 			}
 
 		case strings.Contains(scanner.Text(), "limit = "):
-			r, _ := regexp.Compile("-?[0-9]+")
-			tmpvar, _ := strconv.Atoi(r.FindString(scanner.Text()))
-			if tmpvar < 0 {
-				tmpvar = 0
+			r := regexp.MustCompile(digitsPattern)
+			tmpVar, _ := strconv.Atoi(r.FindString(scanner.Text()))
+			if tmpVar < 0 {
+				tmpVar = 0
 			}
 			if isCpuFlag {
-				rp.CpuMax = tmpvar
+				rp.CpuMax = tmpVar
 			} else {
-				rp.MemMax = tmpvar
+				rp.MemMax = tmpVar
 			}
 
 		case strings.Contains(scanner.Text(), "shares = "):
-			r, _ := regexp.Compile("[0-9]+")
+			r := regexp.MustCompile(uDigitsPattern)
 			if isCpuFlag {
 				rp.CpuShares = r.FindString(scanner.Text())
 			} else {
@@ -353,12 +339,13 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 			}
 
 		case strings.Contains(scanner.Text(), "level = "):
-			r, _ := regexp.Compile("(low|high|normal)")
-			if r.FindString(scanner.Text()) != "" {
+			r := regexp.MustCompile("(low|high|normal)")
+			match := r.FindString(scanner.Text())
+			if match != "" {
 				if isCpuFlag {
-					rp.CpuShares = r.FindString(scanner.Text())
+					rp.CpuShares = match
 				} else {
-					rp.MemShares = r.FindString(scanner.Text())
+					rp.MemShares = match
 				}
 			}
 		}
@@ -366,7 +353,7 @@ func (esxi *Host) getResourcePoolDetails(rp ResourcePool) (ResourcePool, error) 
 
 	rp.Name, err = esxi.getResourcePoolName(rp.Id)
 	if err != nil {
-		return rp, fmt.Errorf("failed to get pool name: %s", err)
+		return rp, fmt.Errorf("failed to get pool name: %w", err)
 	}
 
 	return rp, nil

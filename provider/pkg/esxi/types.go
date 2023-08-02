@@ -3,13 +3,28 @@ package esxi
 const (
 	logLevel = 9
 
+	// Virtual Disks
+	vdThin             = "thin"
+	vdZeroedThick      = "zeroedthick"
+	vdEagerZeroedThick = "eagerzeroedthick"
+
 	// Virtual Machine constants
 	vmTurnedOn                     = "on"
 	vmTurnedOff                    = "off"
 	vmTurnedSuspended              = "suspended"
 	vmSleepBetweenPowerStateChecks = 3
+	vmDefaultShutdownTimeout       = 30
+	vmDefaultBootDiskSize          = 16
+	vmDefaultMemSize               = 512
+	vmDefaultNumVCpus              = 1
+	vmDefaultVirtualHWVer          = 13
+	vmDefaultOs                    = "centos"
+	vmDefaultStartupTimeout        = 120
 
 	esxiUnknown = "Unknown"
+
+	// Constants
+	trueValue = "true"
 )
 
 type KeyValuePair struct {

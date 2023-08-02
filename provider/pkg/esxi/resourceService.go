@@ -133,8 +133,7 @@ func (receiver *ResourceService) call(token string, id string, inputs resource.P
 	}
 
 	functionHandler := reflect.ValueOf(handler)
-	var functionResult []reflect.Value
-	functionResult = functionHandler.Call(params)
+	functionResult := functionHandler.Call(params)
 	resourceId := functionResult[0].Interface().(string)
 	resourceData := functionResult[1].Interface().(resource.PropertyMap)
 	err := functionResult[2].Interface()
