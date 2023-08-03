@@ -18,22 +18,22 @@ __all__ = ['VirtualMachineArgs', 'VirtualMachine']
 class VirtualMachineArgs:
     def __init__(__self__, *,
                  disk_store: pulumi.Input[str],
-                 mem_size: pulumi.Input[int],
-                 num_v_cpus: pulumi.Input[int],
-                 os: pulumi.Input[str],
-                 resource_pool_name: pulumi.Input[str],
                  boot_disk_size: Optional[pulumi.Input[int]] = None,
                  boot_disk_type: Optional[pulumi.Input['DiskType']] = None,
                  boot_firmware: Optional[pulumi.Input['BootFirmwareType']] = None,
                  clone_from_virtual_machine: Optional[pulumi.Input[str]] = None,
                  info: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]] = None,
+                 mem_size: Optional[pulumi.Input[int]] = None,
                  name: Optional[pulumi.Input[str]] = None,
                  network_interfaces: Optional[pulumi.Input[Sequence[pulumi.Input['NetworkInterfaceArgs']]]] = None,
                  notes: Optional[pulumi.Input[str]] = None,
+                 num_v_cpus: Optional[pulumi.Input[int]] = None,
+                 os: Optional[pulumi.Input[str]] = None,
                  ovf_properties: Optional[pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]]] = None,
                  ovf_properties_timer: Optional[pulumi.Input[int]] = None,
                  ovf_source: Optional[pulumi.Input[str]] = None,
                  power: Optional[pulumi.Input[str]] = None,
+                 resource_pool_name: Optional[pulumi.Input[str]] = None,
                  shutdown_timeout: Optional[pulumi.Input[int]] = None,
                  startup_timeout: Optional[pulumi.Input[int]] = None,
                  virtual_disks: Optional[pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]]] = None,
@@ -41,40 +41,28 @@ class VirtualMachineArgs:
         """
         The set of arguments for constructing a VirtualMachine resource.
         :param pulumi.Input[str] disk_store: esxi diskstore for boot disk.
-        :param pulumi.Input[int] mem_size: VM memory size.
-        :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
-        :param pulumi.Input[str] os: VM OS type.
-        :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input[int] boot_disk_size: VM boot disk size. Will expand boot disk to this size.
         :param pulumi.Input['DiskType'] boot_disk_type: VM boot disk type. thin, zeroedthick, eagerzeroedthick
         :param pulumi.Input['BootFirmwareType'] boot_firmware: Boot type('efi' is boot uefi mode)
         :param pulumi.Input[str] clone_from_virtual_machine: Source vm path on esxi host to clone.
         :param pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]] info: pass data to VM
+        :param pulumi.Input[int] mem_size: VM memory size.
         :param pulumi.Input[str] name: esxi vm name.
         :param pulumi.Input[Sequence[pulumi.Input['NetworkInterfaceArgs']]] network_interfaces: VM network interfaces.
         :param pulumi.Input[str] notes: VM memory size.
+        :param pulumi.Input[int] num_v_cpus: VM number of virtual cpus.
+        :param pulumi.Input[str] os: VM OS type.
         :param pulumi.Input[Sequence[pulumi.Input['KeyValuePairArgs']]] ovf_properties: VM OVF properties.
         :param pulumi.Input[int] ovf_properties_timer: The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
         :param pulumi.Input[str] ovf_source: Path or URL of ovf file source.
         :param pulumi.Input[str] power: VM power state.
+        :param pulumi.Input[str] resource_pool_name: Resource pool name to place vm.
         :param pulumi.Input[int] shutdown_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
         :param pulumi.Input[int] startup_timeout: The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
         :param pulumi.Input[Sequence[pulumi.Input['VMVirtualDiskArgs']]] virtual_disks: VM virtual disks.
         :param pulumi.Input[int] virtual_hw_ver: VM Virtual HW version.
         """
         pulumi.set(__self__, "disk_store", disk_store)
-        if mem_size is None:
-            mem_size = 512
-        pulumi.set(__self__, "mem_size", mem_size)
-        if num_v_cpus is None:
-            num_v_cpus = 1
-        pulumi.set(__self__, "num_v_cpus", num_v_cpus)
-        if os is None:
-            os = 'centos'
-        pulumi.set(__self__, "os", os)
-        if resource_pool_name is None:
-            resource_pool_name = '/'
-        pulumi.set(__self__, "resource_pool_name", resource_pool_name)
         if boot_disk_size is None:
             boot_disk_size = 16
         if boot_disk_size is not None:
@@ -91,12 +79,24 @@ class VirtualMachineArgs:
             pulumi.set(__self__, "clone_from_virtual_machine", clone_from_virtual_machine)
         if info is not None:
             pulumi.set(__self__, "info", info)
+        if mem_size is None:
+            mem_size = 512
+        if mem_size is not None:
+            pulumi.set(__self__, "mem_size", mem_size)
         if name is not None:
             pulumi.set(__self__, "name", name)
         if network_interfaces is not None:
             pulumi.set(__self__, "network_interfaces", network_interfaces)
         if notes is not None:
             pulumi.set(__self__, "notes", notes)
+        if num_v_cpus is None:
+            num_v_cpus = 1
+        if num_v_cpus is not None:
+            pulumi.set(__self__, "num_v_cpus", num_v_cpus)
+        if os is None:
+            os = 'centos'
+        if os is not None:
+            pulumi.set(__self__, "os", os)
         if ovf_properties is not None:
             pulumi.set(__self__, "ovf_properties", ovf_properties)
         if ovf_properties_timer is None:
@@ -107,6 +107,10 @@ class VirtualMachineArgs:
             pulumi.set(__self__, "ovf_source", ovf_source)
         if power is not None:
             pulumi.set(__self__, "power", power)
+        if resource_pool_name is None:
+            resource_pool_name = '/'
+        if resource_pool_name is not None:
+            pulumi.set(__self__, "resource_pool_name", resource_pool_name)
         if shutdown_timeout is None:
             shutdown_timeout = 600
         if shutdown_timeout is not None:
@@ -133,54 +137,6 @@ class VirtualMachineArgs:
     @disk_store.setter
     def disk_store(self, value: pulumi.Input[str]):
         pulumi.set(self, "disk_store", value)
-
-    @property
-    @pulumi.getter(name="memSize")
-    def mem_size(self) -> pulumi.Input[int]:
-        """
-        VM memory size.
-        """
-        return pulumi.get(self, "mem_size")
-
-    @mem_size.setter
-    def mem_size(self, value: pulumi.Input[int]):
-        pulumi.set(self, "mem_size", value)
-
-    @property
-    @pulumi.getter(name="numVCpus")
-    def num_v_cpus(self) -> pulumi.Input[int]:
-        """
-        VM number of virtual cpus.
-        """
-        return pulumi.get(self, "num_v_cpus")
-
-    @num_v_cpus.setter
-    def num_v_cpus(self, value: pulumi.Input[int]):
-        pulumi.set(self, "num_v_cpus", value)
-
-    @property
-    @pulumi.getter
-    def os(self) -> pulumi.Input[str]:
-        """
-        VM OS type.
-        """
-        return pulumi.get(self, "os")
-
-    @os.setter
-    def os(self, value: pulumi.Input[str]):
-        pulumi.set(self, "os", value)
-
-    @property
-    @pulumi.getter(name="resourcePoolName")
-    def resource_pool_name(self) -> pulumi.Input[str]:
-        """
-        Resource pool name to place vm.
-        """
-        return pulumi.get(self, "resource_pool_name")
-
-    @resource_pool_name.setter
-    def resource_pool_name(self, value: pulumi.Input[str]):
-        pulumi.set(self, "resource_pool_name", value)
 
     @property
     @pulumi.getter(name="bootDiskSize")
@@ -243,6 +199,18 @@ class VirtualMachineArgs:
         pulumi.set(self, "info", value)
 
     @property
+    @pulumi.getter(name="memSize")
+    def mem_size(self) -> Optional[pulumi.Input[int]]:
+        """
+        VM memory size.
+        """
+        return pulumi.get(self, "mem_size")
+
+    @mem_size.setter
+    def mem_size(self, value: Optional[pulumi.Input[int]]):
+        pulumi.set(self, "mem_size", value)
+
+    @property
     @pulumi.getter
     def name(self) -> Optional[pulumi.Input[str]]:
         """
@@ -277,6 +245,30 @@ class VirtualMachineArgs:
     @notes.setter
     def notes(self, value: Optional[pulumi.Input[str]]):
         pulumi.set(self, "notes", value)
+
+    @property
+    @pulumi.getter(name="numVCpus")
+    def num_v_cpus(self) -> Optional[pulumi.Input[int]]:
+        """
+        VM number of virtual cpus.
+        """
+        return pulumi.get(self, "num_v_cpus")
+
+    @num_v_cpus.setter
+    def num_v_cpus(self, value: Optional[pulumi.Input[int]]):
+        pulumi.set(self, "num_v_cpus", value)
+
+    @property
+    @pulumi.getter
+    def os(self) -> Optional[pulumi.Input[str]]:
+        """
+        VM OS type.
+        """
+        return pulumi.get(self, "os")
+
+    @os.setter
+    def os(self, value: Optional[pulumi.Input[str]]):
+        pulumi.set(self, "os", value)
 
     @property
     @pulumi.getter(name="ovfProperties")
@@ -325,6 +317,18 @@ class VirtualMachineArgs:
     @power.setter
     def power(self, value: Optional[pulumi.Input[str]]):
         pulumi.set(self, "power", value)
+
+    @property
+    @pulumi.getter(name="resourcePoolName")
+    def resource_pool_name(self) -> Optional[pulumi.Input[str]]:
+        """
+        Resource pool name to place vm.
+        """
+        return pulumi.get(self, "resource_pool_name")
+
+    @resource_pool_name.setter
+    def resource_pool_name(self, value: Optional[pulumi.Input[str]]):
+        pulumi.set(self, "resource_pool_name", value)
 
     @property
     @pulumi.getter(name="shutdownTimeout")
@@ -497,21 +501,15 @@ class VirtualMachine(pulumi.CustomResource):
             __props__.__dict__["info"] = info
             if mem_size is None:
                 mem_size = 512
-            if mem_size is None and not opts.urn:
-                raise TypeError("Missing required property 'mem_size'")
             __props__.__dict__["mem_size"] = mem_size
             __props__.__dict__["name"] = name
             __props__.__dict__["network_interfaces"] = network_interfaces
             __props__.__dict__["notes"] = notes
             if num_v_cpus is None:
                 num_v_cpus = 1
-            if num_v_cpus is None and not opts.urn:
-                raise TypeError("Missing required property 'num_v_cpus'")
             __props__.__dict__["num_v_cpus"] = num_v_cpus
             if os is None:
                 os = 'centos'
-            if os is None and not opts.urn:
-                raise TypeError("Missing required property 'os'")
             __props__.__dict__["os"] = os
             __props__.__dict__["ovf_properties"] = ovf_properties
             if ovf_properties_timer is None:
@@ -521,8 +519,6 @@ class VirtualMachine(pulumi.CustomResource):
             __props__.__dict__["power"] = power
             if resource_pool_name is None:
                 resource_pool_name = '/'
-            if resource_pool_name is None and not opts.urn:
-                raise TypeError("Missing required property 'resource_pool_name'")
             __props__.__dict__["resource_pool_name"] = resource_pool_name
             if shutdown_timeout is None:
                 shutdown_timeout = 600

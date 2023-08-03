@@ -497,11 +497,7 @@
                 }
             },
             "requiredInputs": [
-                "diskStore",
-                "resourcePoolName",
-                "memSize",
-                "numVCpus",
-                "os"
+                "diskStore"
             ],
             "inputProperties": {
                 "name": {

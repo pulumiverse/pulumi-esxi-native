@@ -1,7 +1,6 @@
 import * as esxi from "@pulumiverse/pulumi-esxi-native";
 
-let vm: esxi.VirtualMachine;
-vm = new esxi.VirtualMachine("vm-test", {
+const vm = new esxi.VirtualMachine("vm-test", {
     diskStore: "nvme-ssd-datastore",
     networkInterfaces: [
         {

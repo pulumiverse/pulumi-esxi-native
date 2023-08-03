@@ -73,19 +73,19 @@ func NewVirtualMachine(ctx *pulumi.Context,
 		args.BootFirmware = BootFirmwareType("bios")
 	}
 	if args.MemSize == nil {
-		args.MemSize = pulumi.Int(512)
+		args.MemSize = pulumi.IntPtr(512)
 	}
 	if args.NumVCpus == nil {
-		args.NumVCpus = pulumi.Int(1)
+		args.NumVCpus = pulumi.IntPtr(1)
 	}
 	if args.Os == nil {
-		args.Os = pulumi.String("centos")
+		args.Os = pulumi.StringPtr("centos")
 	}
 	if args.OvfPropertiesTimer == nil {
 		args.OvfPropertiesTimer = pulumi.IntPtr(6000)
 	}
 	if args.ResourcePoolName == nil {
-		args.ResourcePoolName = pulumi.String("/")
+		args.ResourcePoolName = pulumi.StringPtr("/")
 	}
 	if args.ShutdownTimeout == nil {
 		args.ShutdownTimeout = pulumi.IntPtr(600)
@@ -142,7 +142,7 @@ type virtualMachineArgs struct {
 	// pass data to VM
 	Info []KeyValuePair `pulumi:"info"`
 	// VM memory size.
-	MemSize int `pulumi:"memSize"`
+	MemSize *int `pulumi:"memSize"`
 	// esxi vm name.
 	Name *string `pulumi:"name"`
 	// VM network interfaces.
@@ -150,9 +150,9 @@ type virtualMachineArgs struct {
 	// VM memory size.
 	Notes *string `pulumi:"notes"`
 	// VM number of virtual cpus.
-	NumVCpus int `pulumi:"numVCpus"`
+	NumVCpus *int `pulumi:"numVCpus"`
 	// VM OS type.
-	Os string `pulumi:"os"`
+	Os *string `pulumi:"os"`
 	// VM OVF properties.
 	OvfProperties []KeyValuePair `pulumi:"ovfProperties"`
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
@@ -162,7 +162,7 @@ type virtualMachineArgs struct {
 	// VM power state.
 	Power *string `pulumi:"power"`
 	// Resource pool name to place vm.
-	ResourcePoolName string `pulumi:"resourcePoolName"`
+	ResourcePoolName *string `pulumi:"resourcePoolName"`
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
 	ShutdownTimeout *int `pulumi:"shutdownTimeout"`
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
@@ -188,7 +188,7 @@ type VirtualMachineArgs struct {
 	// pass data to VM
 	Info KeyValuePairArrayInput
 	// VM memory size.
-	MemSize pulumi.IntInput
+	MemSize pulumi.IntPtrInput
 	// esxi vm name.
 	Name pulumi.StringPtrInput
 	// VM network interfaces.
@@ -196,9 +196,9 @@ type VirtualMachineArgs struct {
 	// VM memory size.
 	Notes pulumi.StringPtrInput
 	// VM number of virtual cpus.
-	NumVCpus pulumi.IntInput
+	NumVCpus pulumi.IntPtrInput
 	// VM OS type.
-	Os pulumi.StringInput
+	Os pulumi.StringPtrInput
 	// VM OVF properties.
 	OvfProperties KeyValuePairArrayInput
 	// The amount of time, in seconds, to wait for the guest to boot and run ovfProperties. (0-6000)
@@ -208,7 +208,7 @@ type VirtualMachineArgs struct {
 	// VM power state.
 	Power pulumi.StringPtrInput
 	// Resource pool name to place vm.
-	ResourcePoolName pulumi.StringInput
+	ResourcePoolName pulumi.StringPtrInput
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
 	ShutdownTimeout pulumi.IntPtrInput
 	// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)
