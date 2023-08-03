@@ -18,6 +18,9 @@ const (
 	maxStartupTimeout  = 600
 	maxOvfProperties   = 6000
 
+	maxVlanId   = 4095
+	maxDiskSize = 62000
+
 	// Maximum values for VirtualMachine properties.
 	maxNetworkInterfaces = 10
 	maxVirtualDisks      = 59
@@ -29,12 +32,8 @@ func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pul
 	failures := make(map[string]string)
 
 	// Validate required properties.
-	if _, has := inputs["name"]; !has {
-		failures["name"] = fmt.Sprintf(propertyRequired, "name")
-	}
-	if _, has := inputs["vSwitch"]; !has {
-		failures["vSwitch"] = fmt.Sprintf(propertyRequired, "vSwitch")
-	}
+	checkRequiredProperty("name", inputs, &failures)
+	checkRequiredProperty("vSwitch", inputs, &failures)
 
 	// Validate boolean properties.
 	booleanProps := []string{"forgedTransmits", "promiscuousMode", "macChanges"}
@@ -46,6 +45,8 @@ func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pul
 			}
 		}
 	}
+
+	validatePropertyValueInBetween("vlan", 0, maxVlanId, inputs, &failures)
 
 	return validateResource(resourceToken, failures)
 }
@@ -61,6 +62,10 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 		failures["name"] = "The property 'name' cannot start with '/'!"
 	}
 
+	// Validate "cpuShares" and "memShares".
+	validateCPUShares("cpuShares", inputs, &failures)
+	validateCPUShares("memShares", inputs, &failures)
+
 	// Validate boolean properties.
 	booleanProps := []string{"cpuMinExpandable", "memMinExpandable"}
 	for _, key := range booleanProps {
@@ -72,30 +77,58 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 		}
 	}
 
-	// Validate "cpuShares" and "memShares".
-	validateShares := func(key string) {
-		if value, has := inputs[resource.PropertyKey(key)]; has {
-			strVal := value.StringValue()
-			if _, err := strconv.Atoi(strVal); err != nil {
-				failures[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
-			}
-		}
-	}
-	validateShares("cpuShares")
-	validateShares("memShares")
-
 	return validateResource(resourceToken, failures)
 }
 
 func ValidateVirtualDisk(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
 	failures := map[string]string{}
 
-	checkRequiredProperty("name", inputs, &failures)
-	checkRequiredProperty("diskStore", inputs, &failures)
-	checkRequiredProperty("directory", inputs, &failures)
-	checkRequiredProperty("diskType", inputs, &failures)
+	requiredProps := []string{"name", "diskStore", "directory", "diskType"}
+	for _, key := range requiredProps {
+		checkRequiredProperty(key, inputs, &failures)
+	}
 
-	validateDiskType(inputs, &failures)
+	validateDiskType("diskType", inputs, &failures)
+
+	return validateResource(resourceToken, failures)
+}
+
+// ValidateVirtualMachine validates a virtual machine resource.
+func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
+	failures := map[string]string{}
+
+	// Validate required properties.
+	requiredProps := []string{"name", "diskStore", "resourcePoolName", "memSize", "numVCpus", "os"}
+	for _, key := range requiredProps {
+		checkRequiredProperty(key, inputs, &failures)
+	}
+
+	validateDiskType("bootDiskType", inputs, &failures)
+	validatePropertyValueInBetween("bootDiskSize", 0, maxDiskSize, inputs, &failures)
+	validatePropertyValueInBetween("shutdownTimeout", 0, maxShutdownTimeout, inputs, &failures)
+	validatePropertyValueInBetween("startupTimeout", 0, maxStartupTimeout, inputs, &failures)
+	validatePropertyValueInBetween("ovfPropertiesTimer", 0, maxOvfProperties, inputs, &failures)
+	validateKeyValuePairsProperty("ovfProperties", inputs, &failures)
+	validateKeyValuePairsProperty("info", inputs, &failures)
+	validateVirtualMachineOs(inputs, &failures)
+	validateNetworkInterfaces(inputs, &failures)
+	validateVirtualDisks(inputs, &failures)
+
+	// TODO: recheck if it is okay
+	// "virtualHWVer":
+	//	if contains([]string{"0","4","7","8","9","10","11","12","13","14"}, property.StringValue()) {
+	//		failures[key] = fmt.Sprintf(invalidFormat, key, "4,7,8,9,10,11,12,13 or 14")
+	//	}
+
+	return validateResource(resourceToken, failures)
+}
+
+func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
+	failures := map[string]string{}
+
+	checkRequiredProperty("name", inputs, &failures)
+	validateLinkDiscoveryMode(inputs, &failures)
+	validateUplinks(inputs, &failures)
 
 	return validateResource(resourceToken, failures)
 }
@@ -106,55 +139,27 @@ func checkRequiredProperty(property string, inputs resource.PropertyMap, failure
 	}
 }
 
-func validateDiskType(inputs resource.PropertyMap, failures *map[string]string) {
-	key := "diskType"
+func validatePropertyValueInBetween(key string, min, max float64, inputs resource.PropertyMap, failures *map[string]string) {
+	if val, has := inputs[resource.PropertyKey(key)]; has && val.NumberValue() < min || val.NumberValue() > max {
+		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("expected to be in the range (%f - %f), got %f", min, max, val.NumberValue()))
+	}
+}
+
+func validateCPUShares(key string, inputs resource.PropertyMap, failures *map[string]string) {
+	if value, has := inputs[resource.PropertyKey(key)]; has {
+		strVal := value.StringValue()
+		if _, err := strconv.Atoi(strVal); !contains([]string{"low", "normal", "high"}, strVal) || err != nil {
+			(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
+		}
+	}
+}
+
+func validateDiskType(key string, inputs resource.PropertyMap, failures *map[string]string) {
 	if prop, has := inputs[resource.PropertyKey(key)]; has {
 		value := prop.StringValue()
 		if _, err := strconv.Atoi(value); !contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
 			(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of the thin, zeroedthick, or eagerzeroedthick (%s)", err))
 		}
-	}
-}
-
-// ValidateVirtualMachine validates a virtual machine resource.
-func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
-	failures := map[string]string{}
-
-	validateBootDiskType(inputs, &failures)
-	validateBootDiskSize(inputs, &failures)
-	validateTimeoutProperty("shutdownTimeout", 0, maxShutdownTimeout, inputs, &failures)
-	validateTimeoutProperty("startupTimeout", 0, maxStartupTimeout, inputs, &failures)
-	validateTimeoutProperty("ovfPropertiesTimer", 0, maxOvfProperties, inputs, &failures)
-	validateVirtualMachineOs(inputs, &failures)
-	validateNetworkInterfaces(inputs, &failures)
-	validateOvfProperties(inputs, &failures)
-	validateVirtualDisks(inputs, &failures)
-
-	// Validate required properties.
-	checkRequiredProperty("name", inputs, &failures)
-	checkRequiredProperty("diskStore", inputs, &failures)
-
-	return validateResource(resourceToken, failures)
-}
-
-func validateBootDiskType(inputs resource.PropertyMap, failures *map[string]string) {
-	key := "bootDiskType"
-	value := inputs[resource.PropertyKey(key)].StringValue()
-	if _, err := strconv.Atoi(value); !contains([]string{"thin", "zeroedthick", "eagerzeroedthick"}, value) && err != nil {
-		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be one of the thin, zeroedthick, or eagerzeroedthick (%s)", err))
-	}
-}
-
-func validateBootDiskSize(inputs resource.PropertyMap, failures *map[string]string) {
-	key := "bootDiskSize"
-	if val := inputs[resource.PropertyKey(key)].NumberValue(); val < 1 || val > 62000 {
-		(*failures)[key] = fmt.Sprintf(invalidFormat, key, "should be between 1 and 62000")
-	}
-}
-
-func validateTimeoutProperty(key string, min, max float64, inputs resource.PropertyMap, failures *map[string]string) {
-	if val := inputs[resource.PropertyKey(key)].NumberValue(); val < min || val > max {
-		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("should be between %f and %f", min, max))
 	}
 }
 
@@ -189,16 +194,15 @@ func validateNetworkInterfaces(inputs resource.PropertyMap, failures *map[string
 	}
 }
 
-func validateOvfProperties(inputs resource.PropertyMap, failures *map[string]string) {
-	key := "ovfProperties"
+func validateKeyValuePairsProperty(key string, inputs resource.PropertyMap, failures *map[string]string) {
 	property, hasProperty := inputs[resource.PropertyKey(key)]
 	if hasProperty && len(property.ArrayValue()) > 0 {
-		for i, ovfProperty := range property.ArrayValue() {
-			if _, has := ovfProperty.ObjectValue()["key"]; !has {
+		for i, item := range property.ArrayValue() {
+			if _, has := item.ObjectValue()["key"]; !has {
 				itemKey := fmt.Sprintf("%s[%d].key", key, i)
 				(*failures)[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
 			}
-			if _, has := ovfProperty.ObjectValue()["value"]; !has {
+			if _, has := item.ObjectValue()["value"]; !has {
 				itemKey := fmt.Sprintf("%s[%d].value", key, i)
 				(*failures)[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
 			}
@@ -217,10 +221,9 @@ func validateVirtualDisks(inputs resource.PropertyMap, failures *map[string]stri
 	}
 	if len(property.ArrayValue()) > 0 {
 		for i, ovfProperty := range property.ArrayValue() {
-			itemErrorFormat := "The property '%s' is required!"
 			if _, has := ovfProperty.ObjectValue()["virtualDiskId"]; !has {
 				itemKey := fmt.Sprintf("%s[%d].virtualDiskId", key, i)
-				(*failures)[itemKey] = fmt.Sprintf(itemErrorFormat, itemKey)
+				(*failures)[itemKey] = fmt.Sprintf(propertyRequired, itemKey)
 			}
 			if slot, has := ovfProperty.ObjectValue()["slot"]; has {
 				check := validateVirtualDiskSlot(slot.StringValue())
@@ -231,16 +234,6 @@ func validateVirtualDisks(inputs resource.PropertyMap, failures *map[string]stri
 			}
 		}
 	}
-}
-
-func ValidateVirtualSwitch(resourceToken string, inputs resource.PropertyMap) []*pulumirpc.CheckFailure {
-	failures := map[string]string{}
-
-	checkRequiredProperty("name", inputs, &failures)
-	validateLinkDiscoveryMode(inputs, &failures)
-	validateUplinks(inputs, &failures)
-
-	return validateResource(resourceToken, failures)
 }
 
 func validateLinkDiscoveryMode(inputs resource.PropertyMap, failures *map[string]string) {
@@ -267,26 +260,6 @@ func validateUplinks(inputs resource.PropertyMap, failures *map[string]string) {
 			}
 		}
 	}
-}
-
-// validateResource checks for failures and generates CheckFailure messages.
-func validateResource(resourceToken string, failures map[string]string) []*pulumirpc.CheckFailure {
-	checkFailures := make([]*pulumirpc.CheckFailure, 0, len(failures))
-	for property, reason := range failures {
-		path := fmt.Sprintf("%s.%s", resourceToken, property)
-		checkFailures = append(checkFailures, &pulumirpc.CheckFailure{Property: path, Reason: reason})
-	}
-	return checkFailures
-}
-
-// contains checks if an item is present in a collection.
-func contains[T comparable](collection []T, value T) bool {
-	for _, item := range collection {
-		if item == value {
-			return true
-		}
-	}
-	return false
 }
 
 // validateVirtualMachineOsType checks if the OS type is valid.
@@ -409,4 +382,24 @@ func validateVirtualDiskSlot(slot string) string {
 	}
 
 	return result
+}
+
+// validateResource checks for failures and generates CheckFailure messages.
+func validateResource(resourceToken string, failures map[string]string) []*pulumirpc.CheckFailure {
+	checkFailures := make([]*pulumirpc.CheckFailure, 0, len(failures))
+	for property, reason := range failures {
+		path := fmt.Sprintf("%s.%s", resourceToken, property)
+		checkFailures = append(checkFailures, &pulumirpc.CheckFailure{Property: path, Reason: reason})
+	}
+	return checkFailures
+}
+
+// contains checks if an item is present in a collection.
+func contains[T comparable](collection []T, value T) bool {
+	for _, item := range collection {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

@@ -41,6 +41,24 @@ func NewResourcePool(ctx *pulumi.Context,
 		args = &ResourcePoolArgs{}
 	}
 
+	if args.CpuMin == nil {
+		args.CpuMin = pulumi.IntPtr(100)
+	}
+	if args.CpuMinExpandable == nil {
+		args.CpuMinExpandable = pulumi.StringPtr("true")
+	}
+	if args.CpuShares == nil {
+		args.CpuShares = pulumi.StringPtr("normal")
+	}
+	if args.MemMin == nil {
+		args.MemMin = pulumi.IntPtr(200)
+	}
+	if args.MemMinExpandable == nil {
+		args.MemMinExpandable = pulumi.StringPtr("true")
+	}
+	if args.MemShares == nil {
+		args.MemShares = pulumi.StringPtr("normal")
+	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource ResourcePool
 	err := ctx.RegisterResource("esxi-native:index:ResourcePool", name, args, &resource, opts...)

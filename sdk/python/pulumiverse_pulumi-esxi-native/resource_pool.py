@@ -37,18 +37,30 @@ class ResourcePoolArgs:
         """
         if cpu_max is not None:
             pulumi.set(__self__, "cpu_max", cpu_max)
+        if cpu_min is None:
+            cpu_min = 100
         if cpu_min is not None:
             pulumi.set(__self__, "cpu_min", cpu_min)
+        if cpu_min_expandable is None:
+            cpu_min_expandable = 'true'
         if cpu_min_expandable is not None:
             pulumi.set(__self__, "cpu_min_expandable", cpu_min_expandable)
+        if cpu_shares is None:
+            cpu_shares = 'normal'
         if cpu_shares is not None:
             pulumi.set(__self__, "cpu_shares", cpu_shares)
         if mem_max is not None:
             pulumi.set(__self__, "mem_max", mem_max)
+        if mem_min is None:
+            mem_min = 200
         if mem_min is not None:
             pulumi.set(__self__, "mem_min", mem_min)
+        if mem_min_expandable is None:
+            mem_min_expandable = 'true'
         if mem_min_expandable is not None:
             pulumi.set(__self__, "mem_min_expandable", mem_min_expandable)
+        if mem_shares is None:
+            mem_shares = 'normal'
         if mem_shares is not None:
             pulumi.set(__self__, "mem_shares", mem_shares)
         if name is not None:
@@ -234,12 +246,24 @@ class ResourcePool(pulumi.CustomResource):
             __props__ = ResourcePoolArgs.__new__(ResourcePoolArgs)
 
             __props__.__dict__["cpu_max"] = cpu_max
+            if cpu_min is None:
+                cpu_min = 100
             __props__.__dict__["cpu_min"] = cpu_min
+            if cpu_min_expandable is None:
+                cpu_min_expandable = 'true'
             __props__.__dict__["cpu_min_expandable"] = cpu_min_expandable
+            if cpu_shares is None:
+                cpu_shares = 'normal'
             __props__.__dict__["cpu_shares"] = cpu_shares
             __props__.__dict__["mem_max"] = mem_max
+            if mem_min is None:
+                mem_min = 200
             __props__.__dict__["mem_min"] = mem_min
+            if mem_min_expandable is None:
+                mem_min_expandable = 'true'
             __props__.__dict__["mem_min_expandable"] = mem_min_expandable
+            if mem_shares is None:
+                mem_shares = 'normal'
             __props__.__dict__["mem_shares"] = mem_shares
             __props__.__dict__["name"] = name
         super(ResourcePool, __self__).__init__(

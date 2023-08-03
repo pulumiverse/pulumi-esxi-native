@@ -80,13 +80,13 @@ export class ResourcePool extends pulumi.CustomResource {
         opts = opts || {};
         if (!opts.id) {
             resourceInputs["cpuMax"] = args ? args.cpuMax : undefined;
-            resourceInputs["cpuMin"] = args ? args.cpuMin : undefined;
-            resourceInputs["cpuMinExpandable"] = args ? args.cpuMinExpandable : undefined;
-            resourceInputs["cpuShares"] = args ? args.cpuShares : undefined;
+            resourceInputs["cpuMin"] = (args ? args.cpuMin : undefined) ?? 100;
+            resourceInputs["cpuMinExpandable"] = (args ? args.cpuMinExpandable : undefined) ?? "true";
+            resourceInputs["cpuShares"] = (args ? args.cpuShares : undefined) ?? "normal";
             resourceInputs["memMax"] = args ? args.memMax : undefined;
-            resourceInputs["memMin"] = args ? args.memMin : undefined;
-            resourceInputs["memMinExpandable"] = args ? args.memMinExpandable : undefined;
-            resourceInputs["memShares"] = args ? args.memShares : undefined;
+            resourceInputs["memMin"] = (args ? args.memMin : undefined) ?? 200;
+            resourceInputs["memMinExpandable"] = (args ? args.memMinExpandable : undefined) ?? "true";
+            resourceInputs["memShares"] = (args ? args.memShares : undefined) ?? "normal";
             resourceInputs["name"] = args ? args.name : undefined;
         } else {
             resourceInputs["cpuMax"] = undefined /*out*/;

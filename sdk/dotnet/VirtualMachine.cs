@@ -212,8 +212,8 @@ namespace Pulumiverse.EsxiNative
         /// <summary>
         /// VM memory size.
         /// </summary>
-        [Input("memSize")]
-        public Input<int>? MemSize { get; set; }
+        [Input("memSize", required: true)]
+        public Input<int> MemSize { get; set; } = null!;
 
         /// <summary>
         /// esxi vm name.
@@ -242,14 +242,14 @@ namespace Pulumiverse.EsxiNative
         /// <summary>
         /// VM number of virtual cpus.
         /// </summary>
-        [Input("numVCpus")]
-        public Input<int>? NumVCpus { get; set; }
+        [Input("numVCpus", required: true)]
+        public Input<int> NumVCpus { get; set; } = null!;
 
         /// <summary>
         /// VM OS type.
         /// </summary>
-        [Input("os")]
-        public Input<string>? Os { get; set; }
+        [Input("os", required: true)]
+        public Input<string> Os { get; set; } = null!;
 
         [Input("ovfProperties")]
         private InputList<Inputs.KeyValuePairArgs>? _ovfProperties;
@@ -284,8 +284,8 @@ namespace Pulumiverse.EsxiNative
         /// <summary>
         /// Resource pool name to place vm.
         /// </summary>
-        [Input("resourcePoolName")]
-        public Input<string>? ResourcePoolName { get; set; }
+        [Input("resourcePoolName", required: true)]
+        public Input<string> ResourcePoolName { get; set; } = null!;
 
         /// <summary>
         /// The amount of vm uptime, in seconds, to wait for an available IP address on this virtual machine. (0-600)

@@ -219,7 +219,8 @@
                 },
                 "vSwitch": {
                     "type": "string",
-                    "description": "Virtual Switch Name."
+                    "description": "Virtual Switch Name.",
+                    "willReplaceOnChanges": true
                 },
                 "vlan": {
                     "type": "integer",
@@ -291,15 +292,18 @@
             "inputProperties": {
                 "name": {
                     "type": "string",
-                    "description": "Resource Pool Name"
+                    "description": "Resource Pool Name",
+                    "willReplaceOnChanges": true
                 },
                 "cpuMin": {
                     "type": "integer",
-                    "description": "CPU minimum (in MHz)."
+                    "description": "CPU minimum (in MHz).",
+                    "default": 100
                 },
                 "cpuMinExpandable": {
                     "type": "string",
-                    "description": "Can pool borrow CPU resources from parent?"
+                    "description": "Can pool borrow CPU resources from parent?",
+                    "default": "true"
                 },
                 "cpuMax": {
                     "type": "integer",
@@ -307,15 +311,18 @@
                 },
                 "cpuShares": {
                     "type": "string",
-                    "description": "CPU shares (low/normal/high/<custom>)."
+                    "description": "CPU shares (low/normal/high/<custom>).",
+                    "default": "normal"
                 },
                 "memMin": {
                     "type": "integer",
-                    "description": "Memory minimum (in MB)."
+                    "description": "Memory minimum (in MB).",
+                    "default": 200
                 },
                 "memMinExpandable": {
                     "type": "string",
-                    "description": "Can pool borrow memory resources from parent?"
+                    "description": "Can pool borrow memory resources from parent?",
+                    "default": "true"
                 },
                 "memMax": {
                     "type": "integer",
@@ -323,7 +330,8 @@
                 },
                 "memShares": {
                     "type": "string",
-                    "description": "Memory shares (low/normal/high/<custom>)."
+                    "description": "Memory shares (low/normal/high/<custom>).",
+                    "default": "normal"
                 }
             }
         },
@@ -489,7 +497,11 @@
                 }
             },
             "requiredInputs": [
-                "diskStore"
+                "diskStore",
+                "resourcePoolName",
+                "memSize",
+                "numVCpus",
+                "os"
             ],
             "inputProperties": {
                 "name": {

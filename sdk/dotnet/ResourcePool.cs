@@ -169,6 +169,12 @@ namespace Pulumiverse.EsxiNative
 
         public ResourcePoolArgs()
         {
+            CpuMin = 100;
+            CpuMinExpandable = "true";
+            CpuShares = "normal";
+            MemMin = 200;
+            MemMinExpandable = "true";
+            MemShares = "normal";
         }
         public static new ResourcePoolArgs Empty => new ResourcePoolArgs();
     }
