@@ -48,7 +48,8 @@ func main() {
 		log.Fatalf("cannot reserialize schema: %v", err)
 	}
 
-	err = ioutil.WriteFile("./schema-embed.json", versionedContents, 0o600)
+	const filePermissions = 0o644
+	err = ioutil.WriteFile("./schema-embed.json", versionedContents, filePermissions)
 	if err != nil {
 		log.Fatal(err)
 	}
