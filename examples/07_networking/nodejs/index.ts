@@ -4,7 +4,7 @@ import {PortGroup, VirtualMachine, VirtualSwitch} from "@pulumiverse/pulumi-esxi
 // Example vSwitch with defaults.
 // Uncomment the uplink block to connect this vSwitch to your nic.
 const vSwitch = new VirtualSwitch("my-v-switch", {
-    name: "My vSwitch",
+    //name: "My vSwitch",
     // uplinks: [
     //     {
     //         name: "vmnic0"
@@ -15,7 +15,7 @@ const vSwitch = new VirtualSwitch("my-v-switch", {
 // ESXI Port Group resource
 // Example port group with default, connecting to the above vSwitch.
 const portGroup = new PortGroup("my-port-group", {
-    name: "My Port Group",
+    //name: "My Port Group",
     vSwitch: vSwitch.name,
 });
 

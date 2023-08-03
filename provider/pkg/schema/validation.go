@@ -140,8 +140,11 @@ func checkRequiredProperty(property string, inputs resource.PropertyMap, failure
 }
 
 func validatePropertyValueInBetween0Max(key string, max float64, inputs resource.PropertyMap, failures *map[string]string) {
-	if val, has := inputs[resource.PropertyKey(key)]; has && val.NumberValue() < 0 || val.NumberValue() > max {
-		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("expected to be in the range (0 - %f), got %f", max, val.NumberValue()))
+	if val, has := inputs[resource.PropertyKey(key)]; has {
+		canCheck := val.IsNumber()
+		if canCheck && val.NumberValue() < 0 || val.NumberValue() > max {
+			(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("expected to be in the range (0 - %f), got %f", max, val.NumberValue()))
+		}
 	}
 }
 
