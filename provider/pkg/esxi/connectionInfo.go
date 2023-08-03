@@ -5,12 +5,11 @@ import (
 )
 
 type ConnectionInfo struct {
-	Host        string
-	SSHPort     string
-	SslPort     string
-	UserName    string
-	Password    string
-	OvfLocation string
+	Host     string
+	SSHPort  string
+	SslPort  string
+	UserName string
+	Password string
 }
 
 func (c *ConnectionInfo) getSSHConnection() string {

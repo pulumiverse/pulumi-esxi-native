@@ -46,7 +46,7 @@ func ValidatePortGroup(resourceToken string, inputs resource.PropertyMap) []*pul
 		}
 	}
 
-	validatePropertyValueInBetween("vlan", 0, maxVlanId, inputs, &failures)
+	validatePropertyValueInBetween0Max("vlan", maxVlanId, inputs, &failures)
 
 	return validateResource(resourceToken, failures)
 }
@@ -63,8 +63,8 @@ func ValidateResourcePool(resourceToken string, inputs resource.PropertyMap) []*
 	}
 
 	// Validate "cpuShares" and "memShares".
-	validateCPUShares("cpuShares", inputs, &failures)
-	validateCPUShares("memShares", inputs, &failures)
+	validateShares("cpuShares", inputs, &failures)
+	validateShares("memShares", inputs, &failures)
 
 	// Validate boolean properties.
 	booleanProps := []string{"cpuMinExpandable", "memMinExpandable"}
@@ -104,10 +104,10 @@ func ValidateVirtualMachine(resourceToken string, inputs resource.PropertyMap) [
 	}
 
 	validateDiskType("bootDiskType", inputs, &failures)
-	validatePropertyValueInBetween("bootDiskSize", 0, maxDiskSize, inputs, &failures)
-	validatePropertyValueInBetween("shutdownTimeout", 0, maxShutdownTimeout, inputs, &failures)
-	validatePropertyValueInBetween("startupTimeout", 0, maxStartupTimeout, inputs, &failures)
-	validatePropertyValueInBetween("ovfPropertiesTimer", 0, maxOvfProperties, inputs, &failures)
+	validatePropertyValueInBetween0Max("bootDiskSize", maxDiskSize, inputs, &failures)
+	validatePropertyValueInBetween0Max("shutdownTimeout", maxShutdownTimeout, inputs, &failures)
+	validatePropertyValueInBetween0Max("startupTimeout", maxStartupTimeout, inputs, &failures)
+	validatePropertyValueInBetween0Max("ovfPropertiesTimer", maxOvfProperties, inputs, &failures)
 	validateKeyValuePairsProperty("ovfProperties", inputs, &failures)
 	validateKeyValuePairsProperty("info", inputs, &failures)
 	validateVirtualMachineOs(inputs, &failures)
@@ -139,16 +139,16 @@ func checkRequiredProperty(property string, inputs resource.PropertyMap, failure
 	}
 }
 
-func validatePropertyValueInBetween(key string, min, max float64, inputs resource.PropertyMap, failures *map[string]string) {
-	if val, has := inputs[resource.PropertyKey(key)]; has && val.NumberValue() < min || val.NumberValue() > max {
-		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("expected to be in the range (%f - %f), got %f", min, max, val.NumberValue()))
+func validatePropertyValueInBetween0Max(key string, max float64, inputs resource.PropertyMap, failures *map[string]string) {
+	if val, has := inputs[resource.PropertyKey(key)]; has && val.NumberValue() < 0 || val.NumberValue() > max {
+		(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("expected to be in the range (0 - %f), got %f", max, val.NumberValue()))
 	}
 }
 
-func validateCPUShares(key string, inputs resource.PropertyMap, failures *map[string]string) {
+func validateShares(key string, inputs resource.PropertyMap, failures *map[string]string) {
 	if value, has := inputs[resource.PropertyKey(key)]; has {
 		strVal := value.StringValue()
-		if _, err := strconv.Atoi(strVal); !contains([]string{"low", "normal", "high"}, strVal) || err != nil {
+		if _, err := strconv.Atoi(strVal); !contains([]string{"low", "normal", "high"}, strVal) && err != nil {
 			(*failures)[key] = fmt.Sprintf(invalidFormat, key, fmt.Sprintf("must be low/normal/high/<custom> (%s)", err))
 		}
 	}

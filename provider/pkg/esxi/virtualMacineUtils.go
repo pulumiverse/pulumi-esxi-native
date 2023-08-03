@@ -113,12 +113,14 @@ ide1:0.clientDevice = "TRUE"`
 		return VirtualMachine{}, fmt.Errorf("failed to use Resource Pool ID:%s", poolID)
 	}
 	command = fmt.Sprintf("vim-cmd solo/registervm \"%s\" %s %s", dstVmxFile, vm.Name, poolID)
-	_, err = esxi.Execute(command, "solo/registervm")
+	id, err := esxi.Execute(command, "solo/registervm")
 	if err != nil {
 		command = fmt.Sprintf("rm -fr \"%s\"", fullPATH)
 		_, _ = esxi.Execute(command, "cleanup guest path because of failed events")
 		return VirtualMachine{}, fmt.Errorf("failed to register guest err:%w", err)
 	}
+
+	vm.Id = id
 
 	return vm, nil
 }
@@ -131,19 +133,19 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 	}
 
 	// Step 2: Check if guest already exists
-	id, err := esxi.getOrCreateVirtualMachine(vm)
+	vm, err = esxi.getOrCreateVirtualMachine(vm)
 	if err != nil {
 		return VirtualMachine{}, err
 	}
 
 	// Step 3: Handle OVF properties, if present
-	err = esxi.handleOvfProperties(id, vm)
+	err = esxi.handleOvfProperties(vm)
 	if err != nil {
 		return VirtualMachine{}, err
 	}
 
 	// Step 4: Grow boot disk to boot_disk_size
-	err = esxi.growBootDisk(id, vm.BootDiskSize)
+	err = esxi.growBootDisk(vm.Id, vm.BootDiskSize)
 	if err != nil {
 		return VirtualMachine{}, err
 	}
@@ -158,10 +160,10 @@ func (esxi *Host) createVirtualMachine(vm VirtualMachine) (VirtualMachine, error
 }
 
 // getOrCreateVirtualMachine checks if the virtual machine already exists or creates it if not.
-func (esxi *Host) getOrCreateVirtualMachine(vm VirtualMachine) (string, error) {
+func (esxi *Host) getOrCreateVirtualMachine(vm VirtualMachine) (VirtualMachine, error) {
 	id, err := esxi.getVirtualMachineId(vm.Name)
 	if err != nil {
-		return "", fmt.Errorf("failed to get VM ID: %w", err)
+		return VirtualMachine{}, fmt.Errorf("failed to get VM ID: %w", err)
 	}
 
 	switch {
@@ -175,29 +177,30 @@ func (esxi *Host) getOrCreateVirtualMachine(vm VirtualMachine) (string, error) {
 		// Create a plain virtual machine
 		vm, err = esxi.createPlainVirtualMachine(vm)
 		if err != nil {
-			return "", err
+			return VirtualMachine{}, err
 		}
 	default:
 		// Build VM with ovftool or copy from local source
 		err = esxi.buildVirtualMachineFromSource(vm)
 		if err != nil {
-			return "", err
+			return VirtualMachine{}, err
 		}
 
 		// Retrieve the VM ID after building the virtual machine
 		id, err = esxi.getVirtualMachineId(vm.Name)
 		if err != nil {
-			return "", fmt.Errorf("failed to get VM ID: %w", err)
+			return VirtualMachine{}, fmt.Errorf("failed to get VM ID: %w", err)
 		}
+		vm.Id = id
 	}
 
-	return id, nil
+	return vm, nil
 }
 
 // handleOvfProperties handles OVF properties injection and power off if necessary.
-func (esxi *Host) handleOvfProperties(id string, vm VirtualMachine) error {
+func (esxi *Host) handleOvfProperties(vm VirtualMachine) error {
 	if len(vm.OvfProperties) > 0 {
-		currentPowerState := esxi.getVirtualMachinePowerState(id)
+		currentPowerState := esxi.getVirtualMachinePowerState(vm.Id)
 		if currentPowerState != vmTurnedOn {
 			return fmt.Errorf("failed to power on after ovfProperties injection")
 		}
@@ -205,7 +208,7 @@ func (esxi *Host) handleOvfProperties(id string, vm VirtualMachine) error {
 		// Allow cloud-init to process.
 		duration := time.Duration(vm.OvfPropertiesTimer) * time.Second
 		time.Sleep(duration)
-		esxi.powerOffVirtualMachine(id, vm.ShutdownTimeout)
+		esxi.powerOffVirtualMachine(vm.Id, vm.ShutdownTimeout)
 	}
 	return nil
 }
@@ -465,7 +468,7 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 		return fmt.Errorf("failed to get destination vmx file: %w", err)
 	}
 
-	_, err = esxi.CopyFile(strings.ReplaceAll(vmxContents, "\\\"", "\""), dstVmxFile, "write vmx file")
+	_, err = esxi.WriteFile(strings.ReplaceAll(vmxContents, "\\\"", "\""), dstVmxFile, "write vmx file")
 	if err != nil {
 		return fmt.Errorf("failed to write vmx file: %w", err)
 	}

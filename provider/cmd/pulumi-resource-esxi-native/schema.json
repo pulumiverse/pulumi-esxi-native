@@ -36,7 +36,8 @@
             },
             "password": {
                 "type": "string",
-                "description": "ESXi Password config"
+                "description": "ESXi Password config",
+                "secret": true
             }
         }
     },

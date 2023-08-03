@@ -20,7 +20,12 @@ func getConfig(t *testing.T) map[string]string {
 		t.Skipf("Skipping test due failure on reading .env file! Err: %s", err)
 		return nil
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		e := file.Close()
+		if e != nil {
+			log.Fatal(e)
+		}
+	}(file)
 
 	// Read the file line by line
 	scanner := bufio.NewScanner(file)
@@ -74,10 +79,17 @@ func getCwd(t *testing.T) string {
 
 func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	config := getConfig(t)
+	localProviders := make([]integration.LocalDependency, 1)
+	localProviders[0] = integration.LocalDependency{
+		Package: "github.com/pulumiverse/pulumi-esxi-native/provider",
+		Path:    filepath.Join(getCwd(t), "../provider"),
+	}
+
 	return integration.ProgramTestOptions{
 		Config:               config,
 		ExpectRefreshChanges: true,
 		SkipRefresh:          true,
 		Quick:                true,
+		LocalProviders:       localProviders,
 	}
 }

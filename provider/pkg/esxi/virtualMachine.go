@@ -142,7 +142,7 @@ func parseVirtualMachine(id string, inputs resource.PropertyMap, connection *Con
 
 	vm.Name = inputs["name"].StringValue()
 	vm.SourcePath = parseSourcePath(inputs, connection)
-	vm.BootFirmware = parseStringProperty(inputs, "bootFirmware", "")
+	vm.BootFirmware = parseStringProperty(inputs, "bootFirmware", "bios")
 	vm.DiskStore = inputs["diskStore"].StringValue()
 	vm.ResourcePoolName = parseStringProperty(inputs, "resourcePoolName", "/")
 	if vm.ResourcePoolName == rootPool {
