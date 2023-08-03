@@ -44,9 +44,6 @@ jobs:
         with:
           repo: pulumi/pulumictl
 
-      - name: Install Syft
-        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-
       - name: Build Provider
         run: make gen provider
 
