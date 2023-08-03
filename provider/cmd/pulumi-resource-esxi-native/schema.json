@@ -15,7 +15,7 @@
     "license": "Apache-2.0",
     "repository": "https://github.com/pulumiverse/pulumi-esxi-native",
     "logoUrl": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/fa724ca8721330922afc7056dc3ff648015423c336131364294def9378041324.png",
-    "publisher": "Edmond Shtogu",
+    "publisher": "Pulumiverse",
     "config": {
         "variables": {
             "host": {
