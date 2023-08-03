@@ -44,6 +44,9 @@ jobs:
         with:
           repo: pulumi/pulumictl
 
+      - name: Build Provider
+        run: make gen provider
+
       - name: Set PreRelease Version
         run: echo "GORELEASER_CURRENT_TAG=v$(pulumictl get version --language generic)" >> $GITHUB_ENV
 
