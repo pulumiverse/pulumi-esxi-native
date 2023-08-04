@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - 'main'
+    paths:
+      - 'provider'
+      - 'sdk'
   pull_request:
     branches:
       - 'main'
+    paths:
+      - 'provider'
+      - 'sdk'
   workflow_dispatch:
 
 env:

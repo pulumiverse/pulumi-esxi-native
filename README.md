@@ -2,6 +2,8 @@
 
 This repository crates a VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.
 
+[![ci](https://github.com/pulumiverse/pulumi-esxi-native/actions/workflows/ci.yaml/badge.svg)](https://github.com/pulumiverse/pulumi-esxi-native/actions/workflows/ci.yaml) [![release](https://github.com/pulumiverse/pulumi-esxi-native/actions/workflows/release.yml/badge.svg)](https://github.com/pulumiverse/pulumi-esxi-native/actions/workflows/release.yml)
+
 The repository is created based on the Terraform Provider [terraform-provider-esxi](https://github.com/josenk/terraform-provider-esxi/tree/master).
 Thanks to the wonderful work done there by [@josenk](https://github.com/josenk), I was able to build this provider for Pulumi users.
 
