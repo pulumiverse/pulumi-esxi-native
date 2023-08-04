@@ -38,6 +38,7 @@ jobs:
 
       - name: Lint
         run: make lint
+        shell: bash
 
     strategy:
       fail-fast: true
