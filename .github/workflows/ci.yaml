@@ -1,4 +1,4 @@
-name: CI
+name: ci
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
     branches:
       - 'main'
   workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   test:
