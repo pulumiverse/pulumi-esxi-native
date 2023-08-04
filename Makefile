@@ -80,12 +80,12 @@ only_build:: build
 
 lint::
 	for DIR in "provider" "sdk" ; do \
-		pushd $$DIR && golangci-lint run -c ../.golangci.yaml && popd ; \
+		cd $$DIR && pwd && golangci-lint run -c ../.golangci.yaml && cd .. ; \
 	done
 
 lint-fix:
 	for DIR in "provider" "sdk" ; do \
-		pushd $$DIR && golangci-lint run -c ../.golangci.yaml --fix && popd ; \
+		cd $$DIR && pwd && golangci-lint run -c ../.golangci.yaml --fix && cd .. ; \
 	done
 
 install_provider::
