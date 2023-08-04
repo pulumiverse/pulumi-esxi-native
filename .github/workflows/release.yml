@@ -38,6 +38,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.goversion }}
+          cache-dependency-path: provider/go.sum
 
       - name: Install pulumictl
         uses: jaxxstorm/action-install-gh-release@v1.5.0
@@ -77,6 +78,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.goversion }}
+          cache-dependency-path: provider/go.sum
 
       - name: Install pulumictl
         uses: jaxxstorm/action-install-gh-release@v1.5.0
@@ -106,7 +108,7 @@ jobs:
           python-version: ${{ matrix.pythonversion }}
 
       - name: Generate SDK
-        run: make gen provider ${{ matrix.language }}_sdk
+        run: make ${{ matrix.language }}_sdk
 
       - name: Check worktree clean
         run: |
@@ -144,6 +146,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        language:
+          - nodejs
+          - python
+          - dotnet
+          - go
         dotnetversion:
           - 3.1.301
         goversion:
@@ -152,8 +159,3 @@ jobs:
           - 18.x
         pythonversion:
           - "3.9"
-        language:
-          - nodejs
-          - python
-          - dotnet
-          - go
