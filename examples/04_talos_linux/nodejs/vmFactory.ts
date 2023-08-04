@@ -1,5 +1,5 @@
-import {VirtualMachine, DiskType, VirtualDisk} from "@pulumiverse/pulumi-esxi-native";
-import {VMVirtualDiskArgs} from "@pulumiverse/pulumi-esxi-native/types/input";
+import {VirtualMachine, DiskType, VirtualDisk} from "@pulumiverse/esxi-native";
+import {VMVirtualDiskArgs} from "@pulumiverse/esxi-native/types/input";
 
 export interface VirtualMachineConfig {
     Index: number

@@ -1,5 +1,5 @@
 import {base64gzip, userdata, ovfSource} from './utils';
-import {VirtualMachine} from "@pulumiverse/pulumi-esxi-native";
+import {VirtualMachine} from "@pulumiverse/esxi-native";
 
 base64gzip(userdata)
     .then((base64Compressed) => {

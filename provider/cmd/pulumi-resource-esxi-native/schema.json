@@ -1,21 +1,50 @@
 {
     "name": "esxi-native",
     "displayName": "ESXi Native",
-    "version": "0.0.1",
-    "pluginDownloadURL": "github://api.github.com/pulumiverse",
     "description": "VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.",
     "keywords": [
+        "pulumi",
         "esxi",
         "esxi-native",
-        "vsphere",
-        "infrastructure",
-        "on-prem"
+        "category/on-prem",
+        "kind/native"
     ],
-    "homepage": "https://github.com/pulumiverse/pulumi-esxi-native",
     "license": "Apache-2.0",
+    "attribution": "This Pulumi package is based on the Terraform Provider [terraform-provider-esxi](https://github.com/josenk/terraform-provider-esxi/tree/master).",
+    "homepage": "https://github.com/pulumiverse/pulumi-esxi-native",
+    "pluginDownloadURL": "github://api.github.com/pulumiverse/pulumi-esxi-native",
     "repository": "https://github.com/pulumiverse/pulumi-esxi-native",
-    "logoUrl": "https://qualified-production.s3.us-east-1.amazonaws.com/uploads/fa724ca8721330922afc7056dc3ff648015423c336131364294def9378041324.png",
-    "publisher": "Pulumiverse",
+    "logoUrl": "https://raw.githubusercontent.com/pulumiverse/pulumi-esxi-native/main/docs/esxi-logo.png",
+    "publisher": "pulumiverse",
+    "language": {
+        "csharp": {
+            "rootNamespace": "Pulumiverse",
+            "packageReferences": {
+                "Pulumi": "3.*"
+            },
+            "namespaces": {
+                "EsxiNative": "ESXiNative"
+            }
+        },
+        "go": {
+            "generateExtraInputTypes": true,
+            "generateResourceContainerTypes": true,
+            "importBasePath": "github.com/pulumiverse/pulumi-esxi-native/sdk/go/esxi"
+        },
+        "nodejs": {
+            "packageName": "@pulumiverse/esxi-native",
+            "packageDescription": "A Pulumi package for creating and managing ESXi resources",
+            "dependencies": {
+                "@pulumi/pulumi": "^3.0.0"
+            }
+        },
+        "python": {
+            "packageName": "pulumiverse_esxi_native",
+            "requires": {
+                "pulumi": ">=3.0.0,<4.0.0"
+            }
+        }
+    },
     "config": {
         "variables": {
             "host": {
@@ -909,30 +938,6 @@
                         }
                     }
                 }
-            }
-        }
-    },
-    "language": {
-        "csharp": {
-            "rootNamespace": "Pulumiverse",
-            "packageReferences": {
-                "Pulumi": "3.*"
-            }
-        },
-        "go": {
-            "generateResourceContainerTypes": true,
-            "importBasePath": "github.com/pulumiverse/pulumi-esxi-native/sdk/v3/go/esxi"
-        },
-        "nodejs": {
-            "packageName": "@pulumiverse/pulumi-esxi-native",
-            "dependencies": {
-                "@pulumi/pulumi": "^3.0.0"
-            }
-        },
-        "python": {
-            "packageName": "pulumiverse_pulumi-esxi-native",
-            "requires": {
-                "pulumi": ">=3.0.0,<4.0.0"
             }
         }
     }

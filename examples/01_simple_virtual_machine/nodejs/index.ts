@@ -1,4 +1,4 @@
-import * as esxi from "@pulumiverse/pulumi-esxi-native";
+import * as esxi from "@pulumiverse/esxi-native";
 
 const vm = new esxi.VirtualMachine("vm-test", {
     diskStore: "nvme-ssd-datastore",

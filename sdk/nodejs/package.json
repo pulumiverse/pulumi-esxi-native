@@ -1,12 +1,13 @@
 {
-    "name": "@pulumiverse/pulumi-esxi-native",
+    "name": "@pulumiverse/esxi-native",
     "version": "${VERSION}",
+    "description": "A Pulumi package for creating and managing ESXi resources",
     "keywords": [
+        "pulumi",
         "esxi",
         "esxi-native",
-        "vsphere",
-        "infrastructure",
-        "on-prem"
+        "category/on-prem",
+        "kind/native"
     ],
     "homepage": "https://github.com/pulumiverse/pulumi-esxi-native",
     "repository": "https://github.com/pulumiverse/pulumi-esxi-native",
@@ -25,6 +26,6 @@
     "pulumi": {
         "resource": true,
         "name": "esxi-native",
-        "server": "github://api.github.com/pulumiverse"
+        "server": "github://api.github.com/pulumiverse/pulumi-esxi-native"
     }
 }

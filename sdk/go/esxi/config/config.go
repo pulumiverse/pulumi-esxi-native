@@ -6,7 +6,7 @@ package config
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"github.com/pulumiverse/pulumi-esxi-native/sdk/v3/go/esxi/internal"
+	"github.com/pulumiverse/pulumi-esxi-native/sdk/go/esxi/internal"
 )
 
 var _ = internal.GetEnvOrDefault

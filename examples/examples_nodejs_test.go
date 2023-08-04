@@ -51,7 +51,7 @@ func getNodeJSBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	base := getBaseOptions(t)
 	baseJS := base.With(integration.ProgramTestOptions{
 		Dependencies: []string{
-			"@pulumiverse/pulumi-esxi-native",
+			"@pulumiverse/esxi-native",
 		},
 	})
 

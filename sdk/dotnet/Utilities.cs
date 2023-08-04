@@ -53,7 +53,7 @@ namespace Pulumiverse.EsxiNative
         {
             var dst = src ?? new global::Pulumi.InvokeOptions{};
             dst.Version = src?.Version ?? Version;
-            dst.PluginDownloadURL = src?.PluginDownloadURL ?? "github://api.github.com/pulumiverse";
+            dst.PluginDownloadURL = src?.PluginDownloadURL ?? "github://api.github.com/pulumiverse/pulumi-esxi-native";
             return dst;
         }
 

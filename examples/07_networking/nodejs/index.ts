@@ -1,4 +1,4 @@
-import {PortGroup, VirtualMachine, VirtualSwitch} from "@pulumiverse/pulumi-esxi-native";
+import {PortGroup, VirtualMachine, VirtualSwitch} from "@pulumiverse/esxi-native";
 
 // ESXI vSwitch resource
 // Example vSwitch with defaults.

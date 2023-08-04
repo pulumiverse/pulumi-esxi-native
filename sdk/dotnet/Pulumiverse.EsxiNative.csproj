@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Pulumiverse</Authors>
-    <Company>Pulumiverse</Company>
+    <Authors>pulumiverse</Authors>
+    <Company>pulumiverse</Company>
     <Description>VMWare ESXi provider to provision VMs directly on an ESXi hypervisor without a need for vCenter or vSphere.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pulumiverse/pulumi-esxi-native</PackageProjectUrl>

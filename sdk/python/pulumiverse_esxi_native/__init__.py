@@ -19,10 +19,10 @@ from . import outputs
 
 # Make subpackages available:
 if typing.TYPE_CHECKING:
-    import pulumiverse_pulumi-esxi-native.config as __config
+    import pulumiverse_esxi_native.config as __config
     config = __config
 else:
-    config = _utilities.lazy_import('pulumiverse_pulumi-esxi-native.config')
+    config = _utilities.lazy_import('pulumiverse_esxi_native.config')
 
 _utilities.register(
     resource_modules="""
@@ -30,7 +30,7 @@ _utilities.register(
  {
   "pkg": "esxi-native",
   "mod": "index",
-  "fqn": "pulumiverse_pulumi-esxi-native",
+  "fqn": "pulumiverse_esxi_native",
   "classes": {
    "esxi-native:index:PortGroup": "PortGroup",
    "esxi-native:index:ResourcePool": "ResourcePool",
@@ -46,7 +46,7 @@ _utilities.register(
  {
   "pkg": "esxi-native",
   "token": "pulumi:providers:esxi-native",
-  "fqn": "pulumiverse_pulumi-esxi-native",
+  "fqn": "pulumiverse_esxi_native",
   "class": "Provider"
  }
 ]

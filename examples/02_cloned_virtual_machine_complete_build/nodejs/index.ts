@@ -1,4 +1,4 @@
-import {ResourcePool, VirtualMachine} from "@pulumiverse/pulumi-esxi-native";
+import {ResourcePool, VirtualMachine} from "@pulumiverse/esxi-native";
 import {concat} from "@pulumi/pulumi";
 
 // This Guest VM is a clone of an existing Guest VM named "centos7" (must exist and
