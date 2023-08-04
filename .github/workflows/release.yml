@@ -87,23 +87,26 @@ jobs:
         uses: pulumi/action-install-pulumi-cli@v2.0.0
 
       - name: Setup Node
+        if: ${{ matrix.language == 'nodejs' }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.nodeversion }}
           registry-url: ${{ env.NPM_REGISTRY_URL }}
 
       - name: Setup DotNet
+        if: ${{ matrix.language == 'dotnet' }}
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnetverson }}
 
       - name: Setup Python
+        if: ${{ matrix.language == 'python' }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.pythonversion }}
 
       - name: Generate SDK
-        run: make ${{ matrix.language }}_sdk
+        run: make gen provider ${{ matrix.language }}_sdk
 
       - name: Check worktree clean
         run: |
@@ -145,12 +148,12 @@ jobs:
           - 3.1.301
         goversion:
           - 1.20.x
+        nodeversion:
+          - 18.x
+        pythonversion:
+          - "3.9"
         language:
           - nodejs
           - python
           - dotnet
           - go
-        nodeversion:
-          - 18.x
-        pythonversion:
-          - "3.9"
