@@ -58,37 +58,27 @@ pulumi.export("os", vm.os)
 package main
 
 import (
-	"fmt"
-
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-esxi-native/sdk/go/esxi"
 )
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		vm, err := esxi.VirtualMachine(ctx, "rotating", &time.RotatingArgs{
-			RotationDays: pulumi.Int(30),
-			Triggers: pulumi.StringMap{
-				"trigger1": pulumi.String(timeTrigger),
+		vm, err := esxi.NewVirtualMachine(ctx, "vm-test", &esxi.VirtualMachineArgs{
+			DiskStore:               pulumi.String("nvme-ssd-datastore"),
+			NetworkInterfaces:       esxi.NetworkInterfaceArray{
+				esxi.NetworkInterfaceArgs{
+					VirtualNetwork: pulumi.String("default"),
+				},
 			},
 		})
 		if err != nil {
 			return err
 		}
-		offset, err := time.NewOffset(ctx, "offset", &time.OffsetArgs{
-			OffsetDays: pulumi.Int(7),
-		})
-		if err != nil {
-			return err
-		}
-		ctx.Export("rotating-output-unix", rotating.Unix)
-		ctx.Export("rotating-output-rfc3339", rotating.Rfc3339)
-		ctx.Export("offset-date", pulumi.All(offset.Day, offset.Month, offset.Year).ApplyT(func(_args []interface{}) (string, error) {
-			day := _args[0].(int)
-			month := _args[1].(int)
-			year := _args[2].(int)
-			return fmt.Sprintf("%v-%v-%v", day, month, year), nil
-		}).(pulumi.StringOutput))
+
+		ctx.Export("id", vm.ID())
+		ctx.Export("name", vm.Name)
+		ctx.Export("os", vm.Os)
 		return nil
 	})
 }
@@ -98,10 +88,9 @@ func main() {
 {{% choosable language csharp %}}
 ```csharp
 using System.Collections.Generic;
-using System.Linq;
 using Pulumi;
-using Pulumi.EsxiNative;
-using Pulumi.EsxiNative.Inputs;
+using Pulumiverse.EsxiNative;
+using Pulumiverse.EsxiNative.Inputs;
 
 return await Deployment.RunAsync(() =>
 {
@@ -110,6 +99,7 @@ return await Deployment.RunAsync(() =>
         DiskStore = "nvme-ssd-datastore",
         NetworkInterfaces = new NetworkInterfaceArgs[]
         {
+            new ()
             {
                 VirtualNetwork = "default"
             }
@@ -123,6 +113,7 @@ return await Deployment.RunAsync(() =>
         ["os"] = vm.Os,
     };
 });
+
 ```
 {{% /choosable %}}
 

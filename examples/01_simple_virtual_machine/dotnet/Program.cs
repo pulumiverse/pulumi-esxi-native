@@ -1,7 +1,26 @@
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Pulumi;
+using Pulumiverse.EsxiNative;
+using Pulumiverse.EsxiNative.Inputs;
 
-class Program
+return await Deployment.RunAsync(() =>
 {
-    static Task<int> Main() => Deployment.RunAsync<MyStack>();
-}
+    var vm = new VirtualMachine("vm-test", new VirtualMachineArgs
+    {
+        DiskStore = "nvme-ssd-datastore",
+        NetworkInterfaces = new NetworkInterfaceArgs[]
+        {
+            new ()
+            {
+                VirtualNetwork = "default"
+            }
+        }
+    });
+
+    return new Dictionary<string, object?>
+    {
+        ["id"] = vm.Id,
+        ["name"] = vm.Name,
+        ["os"] = vm.Os,
+    };
+});

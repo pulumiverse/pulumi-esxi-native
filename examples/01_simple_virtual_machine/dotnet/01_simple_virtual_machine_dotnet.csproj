@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Pulumi" Version="3.55.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pulumiverse.EsxiNative" Version="0.0.2-alpha.1691156403" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RestoreSources>$(RestoreSources);../../../sdk/dotnet/bin/Debug;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+
 </Project>
