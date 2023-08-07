@@ -2,6 +2,8 @@ package examples
 
 import (
 	"bufio"
+	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,33 +22,35 @@ const (
 	PYTHON SDK = "python"
 )
 
-func testExample(name string, sdk SDK, t *testing.T) {
-	var opts integration.ProgramTestOptions
+type Test struct {
+	Name string
+	Path string
+	SDK  SDK
+}
 
-	switch sdk {
-	case DOTNET:
-		opts = getDotnetBaseOptions(t).
-			With(integration.ProgramTestOptions{
-				Dir: filepath.Join(getCwd(t), name, "dotnet"),
-			})
-	case NODEJS:
-		opts = getNodeJSBaseOptions(t).
-			With(integration.ProgramTestOptions{
-				Dir: filepath.Join(getCwd(t), name, "nodejs"),
-			})
-	case GO:
-		opts = getGoBaseOptions(t).
-			With(integration.ProgramTestOptions{
-				Dir: filepath.Join(getCwd(t), name, "go"),
-			})
-	case PYTHON:
-		opts = getPythonBaseOptions(t).
-			With(integration.ProgramTestOptions{
-				Dir: filepath.Join(getCwd(t), name, "python"),
-			})
+func TestExamples(t *testing.T) {
+	for _, test := range getTests(t) {
+		t.Run(test.Name, func(t *testing.T) {
+			var opts integration.ProgramTestOptions
+
+			switch test.SDK {
+			case DOTNET:
+				opts = getDotnetBaseOptions(t)
+			case NODEJS:
+				opts = getNodeJSBaseOptions(t)
+			case GO:
+				opts = getGoBaseOptions(t)
+			case PYTHON:
+				opts = getPythonBaseOptions(t)
+			}
+			opts = opts.
+				With(integration.ProgramTestOptions{
+					Dir: test.Path,
+				})
+
+			integration.ProgramTest(t, &opts)
+		})
 	}
-
-	integration.ProgramTest(t, &opts)
 }
 
 func getDotnetBaseOptions(t *testing.T) integration.ProgramTestOptions {
@@ -55,6 +59,7 @@ func getDotnetBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		Dependencies: []string{
 			"Pulumiverse.EsxiNative",
 		},
+		Env: []string{fmt.Sprintf("PULUMI_LOCAL_NUGET='%s'", filepath.Join(getCwd(t), "../nuget"))},
 	})
 
 	return baseCsharp
@@ -95,24 +100,26 @@ func getPythonBaseOptions(t *testing.T) integration.ProgramTestOptions {
 }
 
 func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
-	config := getConfig(t)
+	configs, secrets := getConfigsAndSecrets(t)
 
 	return integration.ProgramTestOptions{
-		Config:               config,
+		Config:               configs,
+		Secrets:              secrets,
 		ExpectRefreshChanges: true,
 		SkipRefresh:          true,
 		Quick:                true,
 	}
 }
 
-func getConfig(t *testing.T) map[string]string {
-	config := make(map[string]string)
+func getConfigsAndSecrets(t *testing.T) (map[string]string, map[string]string) {
+	configs := make(map[string]string)
+	secrets := make(map[string]string)
 
 	// Open the .env file
 	file, err := os.Open(filepath.Join(getCwd(t), ".env"))
 	if err != nil {
 		t.Skipf("Skipping test due failure on reading .env file! Err: %s", err)
-		return nil
+		return nil, nil
 	}
 	defer func(file *os.File) {
 		e := file.Close()
@@ -142,24 +149,24 @@ func getConfig(t *testing.T) map[string]string {
 
 		switch key {
 		case "ESXI_HOST":
-			config["esxi-native:config:host"] = value
+			configs["esxi-native:config:host"] = value
 		case "ESXI_USERNAME":
-			config["esxi-native:config:username"] = value
+			configs["esxi-native:config:username"] = value
 		case "ESXI_PASSWORD":
-			config["esxi-native:config:password"] = value
+			secrets["esxi-native:config:password"] = value
 		case "ESXI_SSH_PORT":
-			config["esxi-native:config:sshPort"] = value
+			configs["esxi-native:config:sshPort"] = value
 		case "ESXI_SSL_PORT":
-			config["esxi-native:config:sslPort"] = value
+			configs["esxi-native:config:sslPort"] = value
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
+	if err = scanner.Err(); err != nil {
 		t.Skipf("Skipping test due failure on reading .env file! Err: %s", err)
-		return nil
+		return nil, nil
 	}
 
-	return config
+	return configs, secrets
 }
 
 func getCwd(t *testing.T) string {
@@ -169,4 +176,40 @@ func getCwd(t *testing.T) string {
 	}
 
 	return cwd
+}
+
+func getTests(t *testing.T) []Test {
+	var tests []Test
+
+	baseDir := getCwd(t)
+	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			return nil
+		}
+
+		sdk := SDK(info.Name())
+
+		if sdk == GO || sdk == DOTNET || sdk == NODEJS || sdk == PYTHON {
+			test := Test{
+				Name: strings.ReplaceAll(path, "/", "_"),
+				Path: filepath.Join(baseDir, path),
+				SDK:  sdk,
+			}
+
+			tests = append(tests, test)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("error walking directory: %v", err)
+		return make([]Test, 0)
+	}
+
+	return tests
 }
