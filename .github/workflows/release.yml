@@ -89,7 +89,7 @@ jobs:
 
       - name: Setup Node
         if: ${{ matrix.language == 'nodejs' }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodeversion }}
           registry-url: ${{ env.NPM_REGISTRY_URL }}
