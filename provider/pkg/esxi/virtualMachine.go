@@ -27,7 +27,7 @@ func VirtualMachineGet(inputs resource.PropertyMap, esxi *Host) (resource.Proper
 
 	vm := esxi.readVirtualMachine(VirtualMachine{
 		Id:             id,
-		StartupTimeout: 1,
+		StartupTimeout: vmDefaultStartupTimeout,
 	})
 
 	if len(vm.Name) == 0 {
@@ -42,7 +42,7 @@ func VirtualMachineRead(id string, _ resource.PropertyMap, esxi *Host) (string, 
 	// read vm
 	vm := esxi.readVirtualMachine(VirtualMachine{
 		Id:             id,
-		StartupTimeout: 1,
+		StartupTimeout: vmDefaultStartupTimeout,
 	})
 
 	if len(vm.Name) == 0 {
@@ -68,6 +68,9 @@ func VirtualMachineCreate(inputs resource.PropertyMap, esxi *Host) (string, reso
 		}
 		vm.Power = vmTurnedOn
 	}
+
+	// read vm
+	vm = esxi.readVirtualMachine(vm)
 
 	result := vm.toMap()
 	return vm.Id, resource.NewPropertyMapFromMap(result), nil

@@ -1,11 +1,111 @@
 package esxi
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"fmt"
 	"os"
 	"reflect"
+	"regexp"
+	"strings"
+	"text/template"
+	"time"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
+
+func ParseTemplate(text string, data any) (string, error) {
+	// Check if we need to parse text
+	re := regexp.MustCompile(`{{.*}}`)
+	matches := re.FindAllString(text, -1)
+	if len(matches) == 0 {
+		return text, nil
+	}
+
+	funcMap := template.FuncMap{
+		"upper":        strings.ToUpper,
+		"lower":        strings.ToLower,
+		"trim":         strings.TrimSpace,
+		"len":          func(s string) int { return len(s) },
+		"substr":       func(s string, start, length int) string { return s[start : start+length] },
+		"replace":      strings.Replace,
+		"printf":       fmt.Sprintf,
+		"add":          func(n, add int) int { return n + add },
+		"formatAsDate": func(t time.Time, layout string) string { return t.Format(layout) },
+		"now":          time.Now,
+		"base64encode": func(s string) string { return base64.StdEncoding.EncodeToString([]byte(s)) },
+		"base64gzip": func(s string) (string, error) {
+			var buf bytes.Buffer
+			zw := gzip.NewWriter(&buf)
+			if _, err := zw.Write([]byte(s)); err != nil {
+				return "", err
+			}
+			if err := zw.Close(); err != nil {
+				return "", err
+			}
+			return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+		},
+		"parsedTemplateOutput": func(parsedOutput string) string { return parsedOutput },
+	}
+
+	// Check if parsedTemplate is at the end of the template text
+	re = regexp.MustCompile(`{{\s*parsedTemplateOutput\s*.*}}`)
+	matches = re.FindAllString(text, -1)
+
+	if len(matches) > 1 {
+		return text, fmt.Errorf("parsedTemplateOutput should be present only once")
+	}
+
+	if len(matches) > 0 {
+		// Get text after the last match
+		lastMatch := matches[len(matches)-1]
+		lastMatchIndex := strings.LastIndex(text, lastMatch)
+		remainingText := strings.TrimSpace(text[lastMatchIndex+len(lastMatch):])
+		if remainingText != "" {
+			return text, fmt.Errorf("parsedTemplateOutput should be at the bottom of the template")
+		}
+	}
+
+	parsedTextOutputTpl := ""
+
+	if len(matches) == 1 {
+		parsedTextOutputTpl = re.FindString(text)
+		text = re.ReplaceAllString(text, "")
+	}
+
+	tmpl, err := template.New("text-functions").Funcs(funcMap).Parse(text)
+	if err != nil {
+		return text, err
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return text, err
+	}
+
+	output := buf.String()
+
+	if parsedTextOutputTpl == "" {
+		return output, nil
+	}
+
+	tmpl, err = template.New("text-final-functions").Funcs(funcMap).Parse(parsedTextOutputTpl)
+	if err != nil {
+		return text, err
+	}
+
+	var parsedBuf bytes.Buffer
+	err = tmpl.Execute(&parsedBuf, output)
+	if err != nil {
+		return text, err
+	}
+
+	output = parsedBuf.String()
+
+	return output, nil
+}
 
 func CloseFile(file *os.File) {
 	if e := file.Close(); e != nil {

@@ -269,7 +269,11 @@ func (esxi *Host) buildVirtualMachineFromSource(vm VirtualMachine) error {
 		extraParams = fmt.Sprintf("%s --X:injectOvfEnv --allowExtraConfig --powerOn", extraParams)
 
 		for _, prop := range vm.OvfProperties {
-			extraParams = fmt.Sprintf("%s --prop:%s='%s'", extraParams, prop.Key, prop.Value)
+			value, err := ParseTemplate(prop.Value, vm)
+			if err != nil {
+				return fmt.Errorf("unable to parse templated ovfProperty '%s', err: %w", prop.Key, err)
+			}
+			extraParams = fmt.Sprintf("%s --prop:%s='%s'", extraParams, prop.Key, value)
 		}
 	}
 
@@ -443,9 +447,13 @@ func (esxi *Host) updateVmxContents(isNew bool, vm VirtualMachine) error {
 
 	if len(vm.Info) > 0 {
 		parsedVmx := ParseVMX(vmxContents)
-		for _, config := range vm.Info {
-			logging.V(logLevel).Infof("SAVING %s => %s", config.Key, config.Value)
-			parsedVmx["guestinfo."+config.Key] = config.Value
+		for _, prop := range vm.Info {
+			value, err := ParseTemplate(prop.Value, vm)
+			if err != nil {
+				return fmt.Errorf("unable to parse templated info property '%s', err: %w", prop.Key, err)
+			}
+			logging.V(logLevel).Infof("SAVING %s => %s", prop.Key, value)
+			parsedVmx["guestinfo."+prop.Key] = value
 		}
 		vmxContents = EncodeVMX(parsedVmx)
 	}
