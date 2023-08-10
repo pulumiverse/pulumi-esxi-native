@@ -50,20 +50,11 @@ export class VirtualMachineFactory {
 
         return new VirtualMachine(name, {
             diskStore: config.Datastore,
-            info: [
-                {
-                    key: "guestinfo.talos.config",
-                    value: talosConfig
-                },
-            ],
             memSize: config.Memory,
             numVCpus: config.Cpu,
             bootDiskType: DiskType.Thin,
             bootDiskSize: config.Disk,
             power: machinePowerState,
-            // ovfNetworkMap: [{
-            //   "Network 1": config.Network,
-            // }],
             networkInterfaces: [
                 {
                     virtualNetwork: config.Network,
@@ -71,6 +62,12 @@ export class VirtualMachineFactory {
                 }
             ],
             ovfSource: config.OvaRemoteUrl,
+            ovfProperties: [
+                {
+                    key: "talos.config",
+                    value: talosConfig
+                },
+            ],
             os: machineOs,
             resourcePoolName: "/",
             startupTimeout: 35,

@@ -31,7 +31,7 @@ const vmConfigs: VirtualMachineConfig[] = [
 ]
 
 // Talos Linux Setup
-//   See: https://www.talos.dev/v1.3/talos-guides/install/virtualized-platforms/vmware/
+//   See: https://www.talos.dev/v1.4/talos-guides/install/virtualized-platforms/vmware/
 setupTalos().then(_ => {
     const factory = new VirtualMachineFactory(getTalosCpConfig(), getTalosWorkerConfig())
     vmConfigs.forEach(config => factory.make(config))
