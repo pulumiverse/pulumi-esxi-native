@@ -1,0 +1,8 @@
+encryptionsalt: v1:H7uLfca/OiY=:v1:17Xrp6ljpIQ/k+zs:Ou+biXzbdm4oua8CH0N+srzlJVw8+g==
+config:
+  esxi-native:host: 192.168.20.10
+  esxi-native:password:
+    secure: v1:RUjXSV3XxIldkrW6:ry99MmB7/zFE8jH3dUItmC0nRKYHrHHv2ycCaQ==
+  esxi-native:sshPort: "22"
+  esxi-native:sslPort: "443"
+  esxi-native:username: root

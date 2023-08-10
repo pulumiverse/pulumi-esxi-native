@@ -5,6 +5,9 @@
         "@types/node": "latest"
     },
     "dependencies": {
-        "@pulumi/pulumi": "latest"
+        "@pulumi/pulumi": "latest",
+        "@pulumi/command": "latest",
+        "@pulumi/tls": "latest",
+        "@pulumi/random": "latest"
     }
 }

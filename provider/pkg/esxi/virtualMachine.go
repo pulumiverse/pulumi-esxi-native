@@ -183,6 +183,9 @@ func parseSourcePath(inputs resource.PropertyMap, connection *ConnectionInfo) st
 
 func parseStringProperty(inputs resource.PropertyMap, key string, defaultValue string) string {
 	if property, has := inputs[resource.PropertyKey(key)]; has {
+		if property.IsSecret() {
+			return property.SecretValue().Element.StringValue()
+		}
 		return property.StringValue()
 	}
 	return defaultValue
