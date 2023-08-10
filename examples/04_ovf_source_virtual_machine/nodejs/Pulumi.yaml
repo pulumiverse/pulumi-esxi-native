@@ -1,0 +1,3 @@
+name: 04_ovf_source_virtual_machine_nodejs
+runtime: nodejs
+description: An esxi ovf source usage example
