@@ -5,7 +5,7 @@ import * as tls from "@pulumi/tls";
 import {interpolate} from "@pulumi/pulumi";
 
 export = async () => {
-    // https://github.com/tsugliani/packer-alpine
+    // See this repo for more details: https://github.com/tsugliani/packer-alpine
     const ovfSource = "https://cloud.tsugliani.fr/ova/alpine-3.15.6.ova";
 
     const key = new tls.PrivateKey("ssh-key", {
@@ -66,7 +66,7 @@ export = async () => {
             },
             {
                 key: "guestinfo.sshkey",
-                value: key.publicKeyOpenssh.apply(v => v.trim())
+                value: key.publicKeyOpenssh
             },
         ],
         // Specify an ovf file to use as a source.
@@ -80,41 +80,54 @@ export = async () => {
         password: password.result,
     };
 
-    new remote.Command("cloud-init-ssh-setup", {
-        connection: passwordConnection,
-        create: interpolate`mkdir -vp ~/.ssh; echo "${key.publicKeyOpenssh}" > ~/.ssh/authorized_keys`,
-        delete: `rm ~/.ssh/authorized_keys`
-    }, { deleteBeforeReplace: true });
-
-    const connection: types.input.remote.ConnectionArgs = {
+    const sshKeyConnection: types.input.remote.ConnectionArgs = {
         host: vm.ipAddress,
         user: "root",
         privateKey: key.privateKeyOpenssh,
     };
 
-    new remote.CopyFile("cloud-init", {
-        connection,
+    // We poll the server until it responds.
+    //
+    // Because other commands depend on this command, other commands are guaranteed
+    // to hit an already booted server.
+    const passPoll = new remote.Command("poll-password", {
+        connection: { ...passwordConnection, dialErrorLimit: -1 },
+        create: "echo 'Connection established using password connection'",
+    }, { customTimeouts: { create: "10m" } })
+
+    // Seems that the ova file is not setting up the SSH key, we add the ssh public key to the server connecting with password.
+    const sshSetup = new remote.Command("cloud-init-ssh-setup", {
+        connection: passwordConnection,
+        create: interpolate`mkdir -vp /root/.ssh; echo "${key.publicKeyOpenssh}" > /root/.ssh/authorized_keys`,
+        delete: `rm /root/.ssh/authorized_keys`,
+    }, { deleteBeforeReplace: true, dependsOn: passPoll });
+
+    const keyPoll = new remote.Command("poll-ssh-key", {
+        connection: { ...sshKeyConnection, dialErrorLimit: -1 },
+        create: "echo 'Connection established using ssh key'",
+    }, { customTimeouts: { create: "10m" }, dependsOn: sshSetup })
+
+    const copyFile = new remote.CopyFile("cloud-init-copy-script", {
+        connection: sshKeyConnection,
         localPath: "./init.sh",
-        remotePath: "init.sh",
-    })
+        remotePath: "/root/init.sh",
+    }, { dependsOn: keyPoll })
 
-    new remote.Command("cloud-init-chmod", {
-        connection,
-        create: `chmod +x init.sh`,
-        delete: `chmod -x init.sh`,
-    }, { deleteBeforeReplace: true });
+    const chmod = new remote.Command("cloud-init-chmod-script", {
+        connection: sshKeyConnection,
+        create: `chmod +x /root/init.sh`,
+    }, { deleteBeforeReplace: true, dependsOn: copyFile });
 
-    new remote.Command("cloud-init-exec", {
-        connection,
-        create: `sh init.sh`,
-    }, { deleteBeforeReplace: true });
-
-    password.result.apply(console.log)
+    const init = new remote.Command("cloud-init-exec-script", {
+        connection: sshKeyConnection,
+        create: `sh /root/init.sh`,
+    }, { deleteBeforeReplace: true, dependsOn: chmod });
 
     return {
         "id": vm.id,
         "name": vm.name,
         "os": vm.os,
         "ip": vm.ipAddress,
+        "init": init.stdout
     };
 }
