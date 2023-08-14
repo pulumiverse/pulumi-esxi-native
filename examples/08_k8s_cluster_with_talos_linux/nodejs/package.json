@@ -7,6 +7,7 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "latest",
+        "@pulumi/command": "latest",
         "axios": "^1.4.0"
     }
 }

@@ -1,3 +1,3 @@
-name: 08_core_os_and_ignition_nodejs
+name: 08_k8s_cluster_with_talos_linux_nodejs
 runtime: nodejs
 description: An esxi CoreOS and Ignition example

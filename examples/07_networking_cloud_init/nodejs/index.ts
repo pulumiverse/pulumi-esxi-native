@@ -1,4 +1,5 @@
 import {PortGroup, VirtualSwitch, VirtualMachine} from "@pulumiverse/esxi-native";
+import * as random from "@pulumi/random";
 
 export = async () => {
     // https://github.com/tsugliani/packer-alpine
@@ -26,6 +27,11 @@ export = async () => {
         // vSwitch: "vSwitch0", // using default vlan
     });
 
+    const password = new random.RandomPassword("password", {
+        length: 16,
+        special: false,
+    });
+
     const vm = new VirtualMachine("vm-test", {
         diskStore: "nvme-ssd-datastore",
         os: "otherlinux",
@@ -44,16 +50,16 @@ export = async () => {
         ovfProperties: [
             {
                 key: "guestinfo.hostname",
-                value: "pulumi"
+                value: "{{.Name}}"
+            },
+            {
+                key: "guestinfo.password",
+                value: password.result
             },
             {
                 key: "guestinfo.gateway",
                 value: gateway
             },
-            // {
-            //     key: "guestinfo.netprefix",
-            //     value: "20"
-            // },
             {
                 key: "guestinfo.ipaddress",
                 value: ipAddress
@@ -65,10 +71,6 @@ export = async () => {
             {
                 key: "guestinfo.domain",
                 value: "alpine.local"
-            },
-            {
-                key: "guestinfo.password",
-                value: "secret"
             },
         ],
         // Specify an ovf file to use as a source.

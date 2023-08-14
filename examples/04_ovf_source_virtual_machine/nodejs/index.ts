@@ -36,13 +36,6 @@ export = async () => {
                 key: "guestinfo.password",
                 value: "secret"
             },
-            // guestinfo.ipaddress "192.168.0.11"
-            // guestinfo.netprefix "24"
-            // guestinfo.gateway "192.168.0.1"
-            // guestinfo.dns "1.1.1.1"
-            // guestinfo.domain "zpod.io"
-            // guestinfo.password "VMware1!" (default password)
-            // guestinfo.sshkey "ssh-rsa AAAA...[concatened].... tsugliani@zpod"
         ],
         // Specify an ovf file to use as a source.
         ovfSource: ovfSource,

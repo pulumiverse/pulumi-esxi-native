@@ -1,12 +1,12 @@
 import {VirtualMachine, DiskType, VirtualDisk} from "@pulumiverse/esxi-native";
 import {VMVirtualDiskArgs} from "@pulumiverse/esxi-native/types/input";
+import {Output} from "@pulumi/pulumi";
 
 export interface VirtualMachineConfig {
-    Index: number
     Type: string;
     Datastore: string;
     Network: string;
-    OvaRemoteUrl: string;
+    OvfSource: string;
     StorageDisk?: {
         Size: number;
         Datastore: string;
@@ -17,10 +17,10 @@ export interface VirtualMachineConfig {
 }
 
 export class VirtualMachineFactory {
-    private readonly _talosCPConfig: string;
-    private readonly _talosWorkerConfig: string;
+    private readonly _talosCPConfig: Output<string>;
+    private readonly _talosWorkerConfig: Output<string>;
 
-    constructor(cpConfig: string, workerConfig: string) {
+    constructor(cpConfig: Output<string>, workerConfig: Output<string>) {
         this._talosCPConfig = cpConfig;
         this._talosWorkerConfig = workerConfig;
     }
@@ -28,9 +28,9 @@ export class VirtualMachineFactory {
     make(config: VirtualMachineConfig): VirtualMachine {
         const machinePowerState = "on";
         const machineOs = "other3xlinux-64";
-        const name = `${config.Type}-${config.Index}`;
-        const talosConfig = config.Type == "control-plane" ?
-            this._talosCPConfig : this._talosWorkerConfig;
+        const name = `vm-${config.Type}`;
+        const talosConfig = (config.Type == "control-plane" ?
+            this._talosCPConfig : this._talosWorkerConfig).apply(config => `${config}{{ parsedTemplateOutput . | base64encode -}}`);
 
         let disks: VMVirtualDiskArgs[] = [];
 
@@ -61,7 +61,13 @@ export class VirtualMachineFactory {
                     nicType: "vmxnet3"
                 }
             ],
-            ovfSource: config.OvaRemoteUrl,
+            ovfSource: config.OvfSource,
+            info: [
+                {
+                    key: "talos.config",
+                    value: talosConfig
+                },
+            ],
             ovfProperties: [
                 {
                     key: "talos.config",
@@ -70,9 +76,12 @@ export class VirtualMachineFactory {
             ],
             os: machineOs,
             resourcePoolName: "/",
-            startupTimeout: 35,
-            shutdownTimeout: 30,
-            virtualDisks: disks
+            // in this case we will lower the startup timeout as the vm-tools are not yet
+            // up and running and the IP will not be fetched
+            startupTimeout: 5,
+            shutdownTimeout: 5,
+            virtualDisks: disks,
+            virtualHWVer: 13
         })
     }
 }

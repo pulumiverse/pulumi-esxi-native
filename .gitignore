@@ -18,4 +18,5 @@ provider/**/schema-embed.json
 **/controlplane.yaml
 **/worker.yaml
 **/talosconfig
-**/cp.patch.yaml
+**/cp.patch.json
+**/worker.patch.yaml
