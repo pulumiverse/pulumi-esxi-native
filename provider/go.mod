@@ -7,7 +7,7 @@ require (
 	github.com/jszwec/csvutil v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.77.1
-	github.com/pulumi/pulumi/sdk/v3 v3.77.1
+	github.com/pulumi/pulumi/sdk/v3 v3.79.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
 	golang.org/x/crypto v0.12.0
