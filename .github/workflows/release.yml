@@ -51,7 +51,7 @@ jobs:
         run: echo "GORELEASER_CURRENT_TAG=v$(pulumictl get version --language generic)" >> $GITHUB_ENV
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v4
         with:
           args: -p 3 release --rm-dist
           version: latest
@@ -129,7 +129,7 @@ jobs:
 
       - name: Publish package to NPM
         if: ${{ matrix.language == 'nodejs' && env.PUBLISH_NPM == 'true' }}
-        uses: JS-DevTools/npm-publish@v1
+        uses: JS-DevTools/npm-publish@v2
         with:
           access: "public"
           token: ${{ env.NPM_TOKEN }}
