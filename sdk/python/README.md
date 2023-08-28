@@ -12,7 +12,7 @@ Thanks to the wonderful work done there by [@josenk](https://github.com/josenk),
 **Note for Pull Requests (PRs)**: When creating a pull request, please do it onto the **MAIN branch** which is
 the consolidated work-in-progress branch. Do not request it onto another branch.
 
-> **PLEASE** Read our [branch guide](./branch-guide.md) to know about our branching policy
+> **PLEASE** Read our [branch guide](branch-guide.md) to know about our branching policy
 >
 > ### CONTRIBUTING
 >
