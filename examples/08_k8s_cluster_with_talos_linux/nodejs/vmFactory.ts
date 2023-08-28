@@ -76,9 +76,8 @@ export class VirtualMachineFactory {
             ],
             os: machineOs,
             resourcePoolName: "/",
-            // in this case we will lower the startup timeout as the vm-tools are not yet
-            // up and running and the IP will not be fetched
-            startupTimeout: 5,
+            // in this case we will set the startup timeout to 300 as the vm-tools need to be configured, up and running, so the IP can be fetched
+            startupTimeout: 300,
             shutdownTimeout: 5,
             virtualDisks: disks,
             virtualHWVer: 13

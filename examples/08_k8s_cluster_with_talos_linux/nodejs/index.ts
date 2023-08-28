@@ -1,6 +1,7 @@
 import {VirtualMachineFactory, VirtualMachineConfig} from './vmFactory';
 import {VirtualMachine} from "@pulumiverse/esxi-native";
 import {local} from "@pulumi/command";
+import {interpolate} from "@pulumi/pulumi";
 
 export = async () => {
     const outputs = {
@@ -54,6 +55,16 @@ export = async () => {
         },
         {
             op: "replace",
+            path: "/cluster/inlineManifests",
+            value: [
+                {
+                    name: "talos-vmtoolsd-config",
+                    contents: "apiVersion: v1\ndata:\n  talosconfig: <TALOS_CONFIG>\nkind: Secret\nmetadata:\n  name: talos-vmtoolsd-config\n  namespace: kube-system\n"
+                }
+            ]
+        },
+        {
+            op: "replace",
             path: "/cluster/extraManifests",
             value: [ "https://raw.githubusercontent.com/mologie/talos-vmtoolsd/master/deploy/unstable.yaml" ]
         }
@@ -93,9 +104,9 @@ export = async () => {
     });
 
     const controlPlaneConfig = new local.Command("control-plane-config", {
-        create: `cat controlplane.yaml`,
+        create: "config=$(cat controlplane.yaml) && echo ${config//<TALOS_CONFIG>/$(base64 talosconfig)}",
         dir: process.cwd(),
-    }, {dependsOn: validateConfigs})
+    }, {dependsOn: talosConfig})
 
     const workerConfig = new local.Command("worker-config", {
         create: `cat worker.yaml`,
@@ -103,10 +114,13 @@ export = async () => {
     }, {dependsOn: validateConfigs})
 
     let vms: VirtualMachine[] = []
+    let cp: VirtualMachine
     const factory = new VirtualMachineFactory(controlPlaneConfig.stdout, workerConfig.stdout)
 
     vmConfigs.forEach(config => {
             const vm = factory.make(config);
+            if (config.Type ==  "control-plane" && cp == null)
+                cp = vm
             vms.push(vm)
             outputs.nodes.push({
                     id: vm.id,
@@ -115,20 +129,19 @@ export = async () => {
                 })
         })
 
-    const controlPlaneIp1 = "192.168.20.211";
     const bootstrap = new local.Command("cluster-bootstrap", {
-        create: `talosctl --talosconfig talosconfig bootstrap -e ${controlPlaneIp1} -n ${controlPlaneIp1}`,
+        create: `talosctl --talosconfig talosconfig bootstrap -e ${cp.ipAddress} -n ${cp.ipAddress}`,
         dir: process.cwd(),
     }, {dependsOn: vms})
 
-    // const k8sConfig = new local.Command("cluster-bootstrap", {
-    //     create: `talosctl --talosconfig talosconfig bootstrap -e ${controlPlaneIp} -n ${controlPlaneIp}`,
-    //     dir: process.cwd(),
-    // }, {dependsOn: vms})
-    //
-    // Object.assign(outputs, outputs, {
-    //     talosConfig: talosConfig.stdout,
-    // });
+    const k8sConfig = new local.Command("cluster-bootstrap", {
+        create: `talosctl --talosconfig talosconfig bootstrap -e ${controlPlaneIp} -n ${controlPlaneIp}`,
+        dir: process.cwd(),
+    }, {dependsOn: bootstrap})
+
+    Object.assign(outputs, outputs, {
+        k8sConfig: k8sConfig.stdout,
+    });
 
     return outputs;
 }
