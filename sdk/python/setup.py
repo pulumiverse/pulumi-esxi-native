@@ -46,7 +46,7 @@ setup(name='pulumiverse_esxi_native',
       cmdclass={
           'install': InstallPluginCommand,
       },
-      keywords='pulumi esxi esxi-native category/on-prem kind/native',
+      keywords='pulumi esxi esxi-native category/infrastructure kind/native',
       url='https://github.com/pulumiverse/pulumi-esxi-native',
       project_urls={
           'Repository': 'https://github.com/pulumiverse/pulumi-esxi-native'
