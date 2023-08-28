@@ -6,7 +6,7 @@
         "pulumi",
         "esxi",
         "esxi-native",
-        "category/on-prem",
+        "category/infrastructure",
         "kind/native"
     ],
     "license": "Apache-2.0",
