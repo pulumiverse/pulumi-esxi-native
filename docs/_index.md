@@ -10,7 +10,6 @@ The ESXi Native provider is used to provision VMs directly on an ESXi hypervisor
 
 {{< chooser language "typescript,python,go,csharp" >}}
 
-
 {{% choosable language typescript %}}
 ```typescript
 import * as esxi from "@pulumiverse/esxi-native";
