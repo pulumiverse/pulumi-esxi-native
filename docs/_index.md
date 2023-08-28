@@ -8,7 +8,7 @@ The ESXi Native provider is used to provision VMs directly on an ESXi hypervisor
 
 ## Example
 
-{{< chooser language "typescript,python,go,csharp,yaml" >}}
+{{< chooser language "typescript,python,go,csharp" >}}
 
 
 {{% choosable language typescript %}}
