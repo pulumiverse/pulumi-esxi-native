@@ -12,7 +12,7 @@ Thanks to the wonderful work done there by [@josenk](https://github.com/josenk),
 **Note for Pull Requests (PRs)**: When creating a pull request, please do it onto the **MAIN branch** which is
 the consolidated work-in-progress branch. Do not request it onto another branch.
 
-> **PLEASE** Read our [branch guide](branch-guide.md) to know about our branching policy
+> **PLEASE** Read our [branch guide](./branch-guide.md) to know about our branching policy
 >
 > ### CONTRIBUTING
 >
@@ -44,15 +44,78 @@ If you do not have a vCenter or vSphere, especially if you are running a home la
 
 ## How to install
 
-TODO: Details will be added here
+The Pulumi ESXi Native provider is available as a package in all Pulumi languages:
+
+* JavaScript/TypeScript: [`@pulumiverse/esxi-native`](https://www.npmjs.com/package/@pulumiverse/esxi-native)
+* Python: [`pulumiverse_esxi_native`](https://pypi.org/project/pulumiverse_esxi_native/)
+* Go: [`github.com/pulumiverse/pulumi-esxi-native/sdk/go/esxi`](https://pkg.go.dev/github.com/pulumiverse/pulumi-esxi-native/sdk/go/esxi)
+* .NET: [`Pulumiverse.EsxiNative`](https://www.nuget.org/packages/Pulumiverse.EsxiNative)
+
+### Provider Binary
+
+The ESXi Native provider binary is a third party binary. It can be installed using the `pulumi plugin` command.
+
+```bash
+pulumi plugin install resource esxi-native <version> --server github://api.github.com/pulumiverse
+```
+
+Replace the `<version>` string with your desired version.
 
 ## How to use and configure
 
-TODO: Details will be added here
+In order to use the provider, we need to provide SSH credentials to the ESXi Host
 
-## Available resources
+### Set configuration using `pulumi config`
 
-TODO: Details will be added here
+Remember to pass `--secret` when setting `password` so that it is properly encrypted:
+
+```bash
+$ pulumi config set esxi-native:username <username>
+$ pulumi config set esxi-native:password <password> --secret
+$ pulumi config set esxi-native:host <host IP or FQDN>
+```
+
+### Set configuration using environment variables
+
+For bash users
+
+```bash
+$ export ESXI_USERNAME=<YOUR_ESXI_USERNAME>
+$ export ESXI_PASSWORD=<YOUR_ESXI_PASSWORD>
+$ export ESXI_HOST=<YOUR_ESXI_HOST_IP>
+```
+
+For powershell users
+
+```powershell
+> $env:ESXI_USERNAME = "<YOUR_ESXI_USERNAME>"
+> $env:ESXI_PASSWORD = "<YOUR_ESXI_PASSWORD>"
+> $env:ESXI_HOST = "<YOUR_ESXI_HOST>"
+```
+
+### Getting started example
+
+```typescript
+import * as esxi from "@pulumiverse/esxi-native";
+
+
+export = async () => {
+    const vm = new esxi.VirtualMachine("vm-test", {
+        diskStore: "nvme-ssd-datastore",
+        networkInterfaces: [
+            {
+                virtualNetwork: "default"
+            }
+        ]
+    });
+
+    return {
+        "id": vm.id,
+        "name": vm.name,
+        "os": vm.os,
+    };
+}
+```
 
 ## Known issues with vmware_esxi
 

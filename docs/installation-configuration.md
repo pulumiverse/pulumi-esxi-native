@@ -22,3 +22,65 @@ pulumi plugin install resource esxi-native <version> --server github://api.githu
 ```
 
 Replace the `<version>` string with your desired version.
+
+## Configuration
+
+In order to use the provider, we need to provide SSH credentials to the ESXi Host
+
+### Set configuration using `pulumi config`
+
+Remember to pass `--secret` when setting `password` so that it is properly encrypted:
+
+    ```bash
+    $ pulumi config set esxi-native:username <username>
+    $ pulumi config set esxi-native:password <password> --secret
+    $ pulumi config set esxi-native:host <host IP or FQDN>
+    ```
+
+### Set configuration using environment variables
+
+{{< chooser os "linux,macos,windows" >}}
+{{% choosable os linux %}}
+
+```bash
+$ export ESXI_USERNAME=<YOUR_ESXI_USERNAME>
+$ export ESXI_PASSWORD=<YOUR_ESXI_PASSWORD>
+$ export ESXI_HOST=<YOUR_ESXI_HOST_IP>
+```
+
+{{% /choosable %}}
+
+{{% choosable os macos %}}
+
+```bash
+$ export ESXI_USERNAME=<YOUR_ESXI_USERNAME>
+$ export ESXI_PASSWORD=<YOUR_ESXI_PASSWORD>
+$ export ESXI_HOST=<YOUR_ESXI_HOST_IP>
+```
+
+{{% /choosable %}}
+
+{{% choosable os windows %}}
+
+```powershell
+> $env:ESXI_USERNAME = "<YOUR_ESXI_USERNAME>"
+> $env:ESXI_PASSWORD = "<YOUR_ESXI_PASSWORD>"
+> $env:ESXI_HOST = "<YOUR_ESXI_HOST>"
+```
+
+{{% /choosable %}}
+{{< /chooser >}}
+
+### Configuration options
+
+Use `pulumi config set esxi-native:<option>` or pass options to the [constructor of `new esxi-native.Provider`](/registry/packages/esxi-native/api-docs/provider).
+
+> Note: Each config can also be sourced from the environment variables given below
+
+| Option     | Required? | Description                                    | Default | Env. Variable   |
+|------------|-----------|------------------------------------------------|---------|-----------------|
+| `username` | Required  | The ESXi Username                              |         | `ESXI_USERNAME` |
+| `password` | Required  | The ESXi Password, has support for secrets too |         | `ESXI_PASSWORD` |
+| `host`     | Required  | The ESXi Host Name where to connect            |         | `ESXI_HOST`     |
+| `sshPort`  | Optional  | The ESXi Host SSH Port where to connect        | `22`    | `ESXI_SSH_PORT` |
+| `sslPort`  | Optional  | The ESXi Host SSL Port where to connect        | `443`   | `ESXI_SSL_PORT` |
