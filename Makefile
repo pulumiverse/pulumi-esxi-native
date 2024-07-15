@@ -118,5 +118,5 @@ install_nodejs_sdk::
 	-yarn unlink --cwd $(WORKING_DIR)/sdk/nodejs/bin
 	yarn link --cwd $(WORKING_DIR)/sdk/nodejs/bin
 
-setup_nodejs_examples:: provider install_provider install_nodejs_sdk
+setup_nodejs_examples:: provider_debug install_provider install_nodejs_sdk
 	find ./examples/ -maxdepth 2 -type d -name 'nodejs' -exec sh -c 'cd "{}" && yarn link "$(NODE_MODULE_NAME)"' \;
