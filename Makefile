@@ -27,6 +27,7 @@ gen::
 	(cd provider && go build -o $(WORKING_DIR)/bin/${CODEGEN} $(VERSION_FLAGS) ${PROJECT}/${PROVIDER_PATH}/cmd/$(CODEGEN))
 
 provider::
+	(sed -i "s/^var Version string = \".*\"/var Version string = \"$$(pulumictl get version)\"/g" provider/pkg/version/version.go)
 	(cd provider && VERSION=${VERSION} go generate cmd/${PROVIDER}/main.go)
 	(cd provider && go build -o $(WORKING_DIR)/bin/${PROVIDER} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_PATH}/cmd/$(PROVIDER))
 
