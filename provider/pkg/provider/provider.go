@@ -156,10 +156,10 @@ func (p *esxiProvider) Configure(_ context.Context, req *pulumirpc.ConfigureRequ
 	pass, passErr := getConfig(vars, "password", "ESXI_PASSWORD")
 	sshPort, sshPortErr := getConfig(vars, "sshPort", "ESXI_SSH_PORT")
 	sslPort, sslPortErr := getConfig(vars, "sslPort", "ESXI_SSL_PORT")
-	if len(sshPort) > 0 {
+	if len(sshPort) == 0 {
 		sshPort = "22"
 	}
-	if len(sslPort) > 0 {
+	if len(sslPort) == 0 {
 		sslPort = "443"
 	}
 
@@ -378,7 +378,7 @@ func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pul
 	}
 
 	// Process Read call.
-	id, newState, err := p.resourceService.Read(id, resourceToken, readInputs, p.esxi)
+	id, newState, err := p.resourceService.Read(resourceToken, id, readInputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +432,7 @@ func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (
 	}
 
 	// Process Update call.
-	outputs, err := p.resourceService.Update(id, resourceToken, make(resource.PropertyMap), p.esxi)
+	outputs, err := p.resourceService.Update(resourceToken, id, newInputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
@@ -523,15 +523,18 @@ func (p *esxiProvider) diffState(olds *structpb.Struct, news *structpb.Struct, l
 
 // checkpointObject puts inputs in the `__inputs` field of the state.
 func checkpointObject(inputs resource.PropertyMap, outputs resource.PropertyMap) resource.PropertyMap {
-	object := outputs
-	object["__inputs"] = resource.MakeSecret(resource.NewObjectProperty(inputs))
+	object := make(resource.PropertyMap, len(outputs)+1)
+	for k, v := range outputs {
+		object[k] = v
+	}
+	object["__inputs"] = resource.NewPropertyValue(inputs.Mappable())
 	return object
 }
 
 // parseCheckpointObject returns inputs that are saved in the `__inputs` field of the state.
 func parseCheckpointObject(obj resource.PropertyMap) resource.PropertyMap {
 	if inputs, ok := obj["__inputs"]; ok {
-		return inputs.SecretValue().Element.ObjectValue()
+		return inputs.ObjectValue()
 	}
 
 	return nil
