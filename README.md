@@ -24,7 +24,7 @@ the consolidated work-in-progress branch. Do not request it onto another branch.
       You will need to manually set your path.
 -   You MUST enable ssh access on your ESXi hypervisor.
     > Google 'How to enable ssh access on esxi'
-      >- In general, you should know how to use terraform, esxi and some networking...
+      >- In general, you should know how to use pulumi, esxi and some networking...
 * You will most likely need a DHCP server on your primary network if you are deploying VMs with public OVF/OVA/VMX images.  (Sources that have unconfigured primary interfaces.)
 - The source OVF/OVA/VMX images must have open-vm-tools or vmware-tools installed to properly import an IPAddress.  (you need this to run provisioners)
 
