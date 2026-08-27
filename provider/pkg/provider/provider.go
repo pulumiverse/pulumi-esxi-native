@@ -378,7 +378,7 @@ func (p *esxiProvider) Read(_ context.Context, req *pulumirpc.ReadRequest) (*pul
 	}
 
 	// Process Read call.
-	id, newState, err := p.resourceService.Read(id, resourceToken, readInputs, p.esxi)
+	id, newState, err := p.resourceService.Read(resourceToken, id, readInputs, p.esxi)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +432,7 @@ func (p *esxiProvider) Update(_ context.Context, req *pulumirpc.UpdateRequest) (
 	}
 
 	// Process Update call.
-	outputs, err := p.resourceService.Update(id, resourceToken, make(resource.PropertyMap), p.esxi)
+	outputs, err := p.resourceService.Update(resourceToken, id, make(resource.PropertyMap), p.esxi)
 	if err != nil {
 		return nil, err
 	}

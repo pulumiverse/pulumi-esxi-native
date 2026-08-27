@@ -28,6 +28,14 @@ type Test struct {
 	SDK  SDK
 }
 
+func TestOnlyK8SExample(t *testing.T) {
+	opts := getNodeJSBaseOptions(t).
+		With(integration.ProgramTestOptions{
+			Dir: filepath.Join(getCwd(t), "08_k8s_cluster_with_talos_linux/nodejs"),
+		})
+	integration.ProgramTest(t, &opts)
+}
+
 func TestExamples(t *testing.T) {
 	for _, test := range getTests(t) {
 		t.Run(test.Name, func(t *testing.T) {

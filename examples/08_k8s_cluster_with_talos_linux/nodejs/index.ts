@@ -9,9 +9,9 @@ export = async () => {
     }
 
     // See this repo for more details: https://github.com/tsugliani/packer-alpine
-    const ovfSource = "https://github.com/siderolabs/talos/releases/download/v1.4.8/vmware-amd64.ova";
+    const ovfSource = "https://github.com/siderolabs/talos/releases/download/v1.5.1/vmware-amd64.ova";
 
-    const controlPlaneIp = '192.168.20.20'
+    const controlPlaneIp = '192.168.20.22'
 
     const vmConfigs: VirtualMachineConfig[] = [
         {
@@ -31,10 +31,6 @@ export = async () => {
             Disk: 50,
             Memory: 8192,
             Cpu: 4,
-            StorageDisk: {
-                Datastore: "nvme-ssd-datastore",
-                Size: 200
-            }
         }
     ]
 
@@ -52,16 +48,6 @@ export = async () => {
                     }
                 ]
             }
-        },
-        {
-            op: "replace",
-            path: "/cluster/inlineManifests",
-            value: [
-                {
-                    name: "talos-vmtoolsd-config",
-                    contents: "apiVersion: v1\ndata:\n  talosconfig: <TALOS_CONFIG>\nkind: Secret\nmetadata:\n  name: talos-vmtoolsd-config\n  namespace: kube-system\n"
-                }
-            ]
         },
         {
             op: "replace",
@@ -104,7 +90,7 @@ export = async () => {
     });
 
     const controlPlaneConfig = new local.Command("control-plane-config", {
-        create: "config=$(cat controlplane.yaml) && echo ${config//<TALOS_CONFIG>/$(base64 talosconfig)}",
+        create: `cat controlplane.yaml`,
         dir: process.cwd(),
     }, {dependsOn: talosConfig})
 
@@ -129,19 +115,24 @@ export = async () => {
                 })
         })
 
-    const bootstrap = new local.Command("cluster-bootstrap", {
-        create: `talosctl --talosconfig talosconfig bootstrap -e ${cp.ipAddress} -n ${cp.ipAddress}`,
-        dir: process.cwd(),
-    }, {dependsOn: vms})
+    // const bootstrap = new local.Command("cluster-bootstrap", {
+    //     create: interpolate`talosctl --talosconfig talosconfig bootstrap -e ${cp.ipAddress} -n ${cp.ipAddress}`,
+    //     dir: process.cwd(),
+    // }, {dependsOn: vms})
 
-    const k8sConfig = new local.Command("cluster-bootstrap", {
-        create: `talosctl --talosconfig talosconfig bootstrap -e ${controlPlaneIp} -n ${controlPlaneIp}`,
-        dir: process.cwd(),
-    }, {dependsOn: bootstrap})
+    // const k8sConfig = new local.Command("create-k8s-config", {
+    //     create: `talosctl --talosconfig talosconfig -e ${controlPlaneIp} -n ${controlPlaneIp} kubeconfig . ; cat kubeconfig`,
+    //     dir: process.cwd(),
+    // }, {dependsOn: bootstrap})
+    //
+    // Object.assign(outputs, outputs, {
+    //     k8sConfig: k8sConfig.stdout,
+    // });
 
-    Object.assign(outputs, outputs, {
-        k8sConfig: k8sConfig.stdout,
-    });
+    // const vmToolsDConfig = new local.Command("create-vmtoolsd-config", {
+    //     create: interpolate`talosctl --talosconfig talosconfig -e ${cp.ipAddress} -n ${cp.ipAddress} config new vmtoolsd-secret.yaml --roles os:admin && KUBECONFIG=kubeconfig && kubectl -n kube-system create secret generic talos-vmtoolsd-config --from-file=talosconfig=./vmtoolsd-secret.yaml && rm vmtoolsd-secret.yaml`,
+    //     dir: process.cwd(),
+    // }, {dependsOn: vms})
 
     return outputs;
 }
